@@ -129,20 +129,7 @@ export default function Login() {
           </button>
         </form>
 
-        {/* Demo hint */}
-        <div style={{
-          marginTop: 24, padding: '12px 16px',
-          background: 'rgba(6,182,212,0.06)', border: '1px solid rgba(6,182,212,0.2)',
-          borderRadius: 'var(--radius-md)'
-        }}>
-          <div style={{ fontSize: 11, color: 'var(--accent-cyan-light)', fontWeight: 700, marginBottom: 6 }}>
-            🎯 DEMO CREDENTIALS
-          </div>
-          <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            <strong>Admin:</strong> admin@tileshow.com / admin123<br />
-            <strong>Staff:</strong> rahul@tileshow.com / staff123
-          </div>
-        </div>
+
       </div>
     </div>
   );
