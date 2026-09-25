@@ -3,21 +3,21 @@ import { useAuth } from '../context/AuthContext';
 import {
   MdDashboard, MdPeople, MdFeedback, MdWarning, MdBarChart,
   MdFileDownload, MdPersonAdd, MdAssignment, MdStar, MdLogout,
-  MdStorefront
+  MdStorefront,
 } from 'react-icons/md';
 
 const adminNav = [
   { label: 'MAIN', items: [
     { to: '/admin/dashboard', icon: <MdDashboard />, label: 'Dashboard' },
-    { to: '/admin/analytics', icon: <MdBarChart />, label: 'Analytics' },
+    { to: '/admin/analytics', icon: <MdBarChart />,  label: 'Analytics' },
   ]},
   { label: 'MANAGEMENT', items: [
-    { to: '/admin/staff', icon: <MdPeople />, label: 'Staff Management' },
-    { to: '/admin/feedback', icon: <MdFeedback />, label: 'Feedback' },
-    { to: '/admin/complaints', icon: <MdWarning />, label: 'Complaints' },
+    { to: '/admin/staff',      icon: <MdPeople />,      label: 'Staff Management' },
+    { to: '/admin/feedback',   icon: <MdFeedback />,    label: 'Feedback' },
+    { to: '/admin/complaints', icon: <MdWarning />,     label: 'Complaints' },
   ]},
   { label: 'REPORTS', items: [
-    { to: '/admin/reports', icon: <MdFileDownload />, label: 'Reports & Export' },
+    { to: '/admin/reports',    icon: <MdFileDownload />, label: 'Reports & Export' },
   ]},
 ];
 

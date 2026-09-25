@@ -3,13 +3,13 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 
-const authRoutes = require('./routes/authRoutes');
-const staffRoutes = require('./routes/staffRoutes');
-const customerRoutes = require('./routes/customerRoutes');
-const feedbackRoutes = require('./routes/feedbackRoutes');
+const authRoutes      = require('./routes/authRoutes');
+const staffRoutes     = require('./routes/staffRoutes');
+const customerRoutes  = require('./routes/customerRoutes');
+const feedbackRoutes  = require('./routes/feedbackRoutes');
 const complaintRoutes = require('./routes/complaintRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
-const reportRoutes = require('./routes/reportRoutes');
+const reportRoutes    = require('./routes/reportRoutes');
 
 connectDB();
 
@@ -27,13 +27,13 @@ app.use(express.json());
 app.get('/api/health', (req, res) => res.json({ status: 'TileShow CRM API running ✅' }));
 
 // Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/staff', staffRoutes);
-app.use('/api', customerRoutes);
-app.use('/api/feedback', feedbackRoutes);
-app.use('/api/complaints', complaintRoutes);
+app.use('/api/auth',      authRoutes);
+app.use('/api/staff',     staffRoutes);
+app.use('/api',           customerRoutes);
+app.use('/api/feedback',  feedbackRoutes);
+app.use('/api/complaints',complaintRoutes);
 app.use('/api/analytics', analyticsRoutes);
-app.use('/api/reports', reportRoutes);
+app.use('/api/reports',   reportRoutes);
 
 
 
