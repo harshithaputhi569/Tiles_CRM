@@ -4,7 +4,7 @@ import { useSidebar } from '../context/SidebarContext';
 import {
   MdDashboard, MdPeople, MdFeedback, MdWarning, MdBarChart,
   MdFileDownload, MdPersonAdd, MdStar, MdLogout,
-  MdStorefront, MdClose,
+  MdStorefront, MdClose, MdMenu,
 } from 'react-icons/md';
 
 const adminNav = [
@@ -13,31 +13,48 @@ const adminNav = [
     { to: '/admin/analytics', icon: <MdBarChart />,  label: 'Analytics' },
   ]},
   { label: 'MANAGEMENT', items: [
-    { to: '/admin/staff',      icon: <MdPeople />,      label: 'Staff Management' },
+    { to: '/admin/staff',      icon: <MdPeople />,      label: 'Staff' },
     { to: '/admin/feedback',   icon: <MdFeedback />,    label: 'Feedback' },
     { to: '/admin/complaints', icon: <MdWarning />,     label: 'Complaints' },
   ]},
   { label: 'REPORTS', items: [
-    { to: '/admin/reports',    icon: <MdFileDownload />, label: 'Reports & Export' },
+    { to: '/admin/reports',    icon: <MdFileDownload />, label: 'Reports' },
   ]},
 ];
 
 const staffNav = [
   { label: 'MAIN', items: [
-    { to: '/staff/dashboard', icon: <MdDashboard />, label: 'My Dashboard' },
-    { to: '/staff/performance', icon: <MdStar />, label: 'My Performance' },
+    { to: '/staff/dashboard', icon: <MdDashboard />, label: 'Dashboard' },
+    { to: '/staff/performance', icon: <MdStar />, label: 'Performance' },
   ]},
   { label: 'ACTIONS', items: [
-    { to: '/staff/visit', icon: <MdPersonAdd />, label: 'Register Visit' },
-    { to: '/staff/feedback', icon: <MdFeedback />, label: 'Submit Feedback' },
+    { to: '/staff/visit', icon: <MdPersonAdd />, label: 'Register' },
+    { to: '/staff/feedback', icon: <MdFeedback />, label: 'Feedback' },
   ]},
+];
+
+// Flat list for the bottom nav bar (mobile) — max 5 items
+const adminBottomNav = [
+  { to: '/admin/dashboard',   icon: <MdDashboard />,    label: 'Home' },
+  { to: '/admin/analytics',   icon: <MdBarChart />,     label: 'Analytics' },
+  { to: '/admin/staff',       icon: <MdPeople />,       label: 'Staff' },
+  { to: '/admin/feedback',    icon: <MdFeedback />,     label: 'Feedback' },
+  { to: '/admin/complaints',  icon: <MdWarning />,      label: 'Complaints' },
+];
+
+const staffBottomNav = [
+  { to: '/staff/dashboard',    icon: <MdDashboard />,   label: 'Home' },
+  { to: '/staff/performance',  icon: <MdStar />,        label: 'Performance' },
+  { to: '/staff/visit',        icon: <MdPersonAdd />,   label: 'Register' },
+  { to: '/staff/feedback',     icon: <MdFeedback />,    label: 'Feedback' },
 ];
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { isOpen, close } = useSidebar();
+  const { isOpen, open, close } = useSidebar();
   const navItems = user?.role === 'admin' ? adminNav : staffNav;
+  const bottomNavItems = user?.role === 'admin' ? adminBottomNav : staffBottomNav;
   const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
 
   const handleLogout = () => {
@@ -56,6 +73,7 @@ export default function Sidebar() {
         <div className="sidebar-overlay" onClick={close} aria-hidden="true" />
       )}
 
+      {/* Desktop / drawer sidebar */}
       <aside className={`sidebar${isOpen ? ' sidebar-open' : ''}`}>
         <div className="sidebar-logo">
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -71,7 +89,6 @@ export default function Sidebar() {
               <div className="logo-sub">CRM System</div>
             </div>
           </div>
-          {/* Close button — shown only on mobile via CSS */}
           <button className="sidebar-close-btn" onClick={close} aria-label="Close menu">
             <MdClose />
           </button>
@@ -110,6 +127,25 @@ export default function Sidebar() {
           </button>
         </div>
       </aside>
+
+      {/* ===== MOBILE BOTTOM NAV BAR ===== */}
+      <nav className="bottom-nav" aria-label="Mobile navigation">
+        {bottomNavItems.map((item) => (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            className={({ isActive }) => `bottom-nav-item${isActive ? ' active' : ''}`}
+          >
+            <span className="bottom-nav-icon">{item.icon}</span>
+            <span className="bottom-nav-label">{item.label}</span>
+          </NavLink>
+        ))}
+        {/* More / logout button */}
+        <button className="bottom-nav-item bottom-nav-more" onClick={open} aria-label="More options">
+          <span className="bottom-nav-icon"><MdMenu /></span>
+          <span className="bottom-nav-label">More</span>
+        </button>
+      </nav>
     </>
   );
 }
