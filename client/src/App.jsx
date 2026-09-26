@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import { SidebarProvider } from './context/SidebarContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Sidebar from './components/Sidebar';
 
@@ -19,12 +20,14 @@ import MyPerformance from './pages/staff/MyPerformance';
 
 function AppLayout({ children }) {
   return (
-    <div className="app-layout">
-      <Sidebar />
-      <main className="main-content">
-        {children}
-      </main>
-    </div>
+    <SidebarProvider>
+      <div className="app-layout">
+        <Sidebar />
+        <main className="main-content">
+          {children}
+        </main>
+      </div>
+    </SidebarProvider>
   );
 }
 

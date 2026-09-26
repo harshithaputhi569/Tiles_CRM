@@ -1,9 +1,10 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSidebar } from '../context/SidebarContext';
 import {
   MdDashboard, MdPeople, MdFeedback, MdWarning, MdBarChart,
-  MdFileDownload, MdPersonAdd, MdAssignment, MdStar, MdLogout,
-  MdStorefront,
+  MdFileDownload, MdPersonAdd, MdStar, MdLogout,
+  MdStorefront, MdClose,
 } from 'react-icons/md';
 
 const adminNav = [
@@ -35,6 +36,7 @@ const staffNav = [
 export default function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { isOpen, close } = useSidebar();
   const navItems = user?.role === 'admin' ? adminNav : staffNav;
   const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
 
@@ -43,55 +45,71 @@ export default function Sidebar() {
     navigate('/login');
   };
 
+  const handleNavClick = () => {
+    close();
+  };
+
   return (
-    <aside className="sidebar">
-      <div className="sidebar-logo">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 10,
-            background: 'linear-gradient(135deg, #7c3aed, #06b6d4)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
-          }}>
-            <MdStorefront style={{ color: 'white', fontSize: 18 }} />
+    <>
+      {/* Mobile overlay backdrop */}
+      {isOpen && (
+        <div className="sidebar-overlay" onClick={close} aria-hidden="true" />
+      )}
+
+      <aside className={`sidebar${isOpen ? ' sidebar-open' : ''}`}>
+        <div className="sidebar-logo">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 10,
+              background: 'linear-gradient(135deg, #7c3aed, #06b6d4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+            }}>
+              <MdStorefront style={{ color: 'white', fontSize: 18 }} />
+            </div>
+            <div>
+              <div className="logo-text">TileShow</div>
+              <div className="logo-sub">CRM System</div>
+            </div>
           </div>
-          <div>
-            <div className="logo-text">TileShow</div>
-            <div className="logo-sub">CRM System</div>
+          {/* Close button — shown only on mobile via CSS */}
+          <button className="sidebar-close-btn" onClick={close} aria-label="Close menu">
+            <MdClose />
+          </button>
+        </div>
+
+        <div className="sidebar-user">
+          <div className="user-avatar">{initials}</div>
+          <div className="user-info">
+            <div className="user-name">{user?.name}</div>
+            <div className="user-role">{user?.role}</div>
           </div>
         </div>
-      </div>
 
-      <div className="sidebar-user">
-        <div className="user-avatar">{initials}</div>
-        <div className="user-info">
-          <div className="user-name">{user?.name}</div>
-          <div className="user-role">{user?.role}</div>
+        <nav className="sidebar-nav">
+          {navItems.map((section) => (
+            <div key={section.label}>
+              <div className="nav-section-label">{section.label}</div>
+              {section.items.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
+                  onClick={handleNavClick}
+                >
+                  <span className="nav-icon">{item.icon}</span>
+                  {item.label}
+                </NavLink>
+              ))}
+            </div>
+          ))}
+        </nav>
+
+        <div className="sidebar-footer">
+          <button className="logout-btn" onClick={handleLogout}>
+            <MdLogout /> Logout
+          </button>
         </div>
-      </div>
-
-      <nav className="sidebar-nav">
-        {navItems.map((section) => (
-          <div key={section.label}>
-            <div className="nav-section-label">{section.label}</div>
-            {section.items.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) => `nav-item${isActive ? ' active' : ''}`}
-              >
-                <span className="nav-icon">{item.icon}</span>
-                {item.label}
-              </NavLink>
-            ))}
-          </div>
-        ))}
-      </nav>
-
-      <div className="sidebar-footer">
-        <button className="logout-btn" onClick={handleLogout}>
-          <MdLogout /> Logout
-        </button>
-      </div>
-    </aside>
+      </aside>
+    </>
   );
 }
