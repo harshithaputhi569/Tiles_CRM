@@ -868,8 +868,9 @@ tbody tr:last-child td { border-bottom: none; }
     align-items: stretch;
   }
 
-  /* Push page content above the bottom nav */
+  /* Push page content above the bottom nav — keep bottom padding so content isn't hidden */
   .page-content {
+    padding: 16px;
     padding-bottom: calc(72px + env(safe-area-inset-bottom));
   }
 
@@ -895,11 +896,6 @@ tbody tr:last-child td { border-bottom: none; }
   /* Hide the long date on very small screens to save space */
   .topbar-date {
     display: none;
-  }
-
-  /* Smaller padding for page content */
-  .page-content {
-    padding: 16px;
   }
 
   /* Collapse grids to single column */
@@ -991,7 +987,10 @@ tbody tr:last-child td { border-bottom: none; }
     height: 58px;
   }
 
-  .page-content { padding: 12px; }
+  .page-content {
+    padding: 12px;
+    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+  }
 
   .chart-container { height: 200px; }
 

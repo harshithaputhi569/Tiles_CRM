@@ -135,6 +135,7 @@ export default function Sidebar() {
             key={item.to}
             to={item.to}
             className={({ isActive }) => `bottom-nav-item${isActive ? ' active' : ''}`}
+            onClick={close}
           >
             <span className="bottom-nav-icon">{item.icon}</span>
             <span className="bottom-nav-label">{item.label}</span>
