@@ -142,91 +142,52 @@ export default function StaffManagement() {
     <>
       <Topbar title="Staff Management" subtitle="Add, edit, and manage staff members" />
 
-      <div style={{
-        height: 'calc(100vh - 64px)',
-        display: 'flex',
-        flexDirection: 'column',
-        padding: '16px 24px',
-        gap: 14,
-        overflow: 'hidden',
-        background: 'var(--bg-primary)',
-      }}>
+      <div className="staff-page-wrap">
 
         {/* ── Stats strip ── */}
-        <div style={{ display: 'flex', gap: 12, flexShrink: 0 }}>
+        <div className="staff-stats-strip">
           {[
-            { label: 'Total Staff', value: staff.length,  color: '#7c3aed', bg: 'rgba(124,58,237,0.09)', border: 'rgba(124,58,237,0.2)' },
-            { label: 'Active',      value: activeCount,   color: '#059669', bg: 'rgba(5,150,105,0.09)',  border: 'rgba(5,150,105,0.2)'  },
-            { label: 'Inactive',    value: inactiveCount, color: '#dc2626', bg: 'rgba(220,38,38,0.09)',  border: 'rgba(220,38,38,0.2)'  },
+            { label: 'Total Staff', value: staff.length,  color: '#7c3aed', bg: 'rgba(124,58,237,0.09)', border: 'rgba(124,58,237,0.2)',  icon: <MdPeople style={{ color: '#7c3aed', fontSize: 22 }} /> },
+            { label: 'Active',      value: activeCount,   color: '#059669', bg: 'rgba(5,150,105,0.09)',  border: 'rgba(5,150,105,0.2)',   icon: <MdPeople style={{ color: '#059669', fontSize: 22 }} /> },
+            { label: 'Inactive',    value: inactiveCount, color: '#dc2626', bg: 'rgba(220,38,38,0.09)',  border: 'rgba(220,38,38,0.2)',   icon: <MdPersonOff style={{ color: '#dc2626', fontSize: 22 }} /> },
           ].map(s => (
-            <div key={s.label} style={{
-              flex: 1, background: '#fff',
-              border: `1px solid ${s.border}`,
-              borderRadius: 14, padding: '14px 22px',
-              display: 'flex', alignItems: 'center', gap: 16,
-              boxShadow: '0 2px 12px rgba(100,80,200,0.07)',
-            }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: 12,
-                background: s.bg,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <MdPeople style={{ color: s.color, fontSize: 22 }} />
+            <div key={s.label} className="staff-stat-card" style={{ borderColor: s.border }}>
+              <div className="staff-stat-icon" style={{ background: s.bg }}>
+                {s.icon}
               </div>
               <div>
-                <div style={{ fontSize: 26, fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1, letterSpacing: '-0.5px' }}>
-                  {s.value.toLocaleString()}
-                </div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 3, textTransform: 'uppercase', letterSpacing: '0.6px', fontWeight: 600 }}>
-                  {s.label}
-                </div>
+                <div className="staff-stat-value">{s.value.toLocaleString()}</div>
+                <div className="staff-stat-label">{s.label}</div>
               </div>
             </div>
           ))}
         </div>
 
         {/* ── Main card ── */}
-        <div style={{
-          flex: 1, background: '#fff',
-          border: '1px solid var(--border-glass)',
-          borderRadius: 16,
-          boxShadow: '0 2px 16px rgba(100,80,200,0.08)',
-          display: 'flex', flexDirection: 'column',
-          overflow: 'hidden', minHeight: 0,
-        }}>
+        <div className="staff-main-card">
 
           {/* Toolbar */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '13px 20px',
-            borderBottom: '1px solid var(--border-glass)',
-            background: 'rgba(124,58,237,0.025)',
-            flexShrink: 0, gap: 12, flexWrap: 'wrap',
-          }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className="staff-toolbar">
+            <span className="staff-toolbar-title">
               👥 All Staff Members
-              <span style={{
-                padding: '2px 10px', borderRadius: 20,
-                background: 'rgba(124,58,237,0.1)', color: '#6d28d9',
-                fontSize: 12, fontWeight: 700, border: '1px solid rgba(124,58,237,0.2)',
-              }}>{filtered.length.toLocaleString()}</span>
+              <span className="staff-count-badge">{filtered.length.toLocaleString()}</span>
             </span>
 
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-              <div style={{ position: 'relative' }}>
+            <div className="staff-toolbar-actions">
+              <div style={{ position: 'relative', flex: '1 1 160px', minWidth: 140 }}>
                 <MdSearch style={{
                   position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)',
                   color: 'var(--text-muted)', fontSize: 17, pointerEvents: 'none',
                 }} />
                 <input className="form-control"
-                  style={{ paddingLeft: 32, width: 210, height: 36, fontSize: 13 }}
+                  style={{ paddingLeft: 32, height: 36, fontSize: 13, width: '100%' }}
                   placeholder="Search staff..."
                   value={search}
                   onChange={e => setSearch(e.target.value)} />
               </div>
 
               <select className="form-control"
-                style={{ height: 36, fontSize: 13, width: 130 }}
+                style={{ height: 36, fontSize: 13, flex: '0 0 120px' }}
                 value={statusFilter}
                 onChange={e => setStatusFilter(e.target.value)}>
                 <option value="all">All Status</option>
@@ -235,7 +196,7 @@ export default function StaffManagement() {
               </select>
 
               <button className="btn btn-primary"
-                style={{ height: 36, padding: '0 18px', fontSize: 13 }}
+                style={{ height: 36, padding: '0 16px', fontSize: 13, flexShrink: 0 }}
                 onClick={openAdd}>
                 <MdAdd /> Add Staff
               </button>
@@ -243,7 +204,7 @@ export default function StaffManagement() {
           </div>
 
           {/* Table */}
-          <div style={{ flex: 1, overflowY: 'auto', overflowX: 'auto', minHeight: 0 }}>
+          <div className="staff-table-wrap">
             {loading ? (
               <LoadingSpinner />
             ) : paginated.length === 0 ? (
