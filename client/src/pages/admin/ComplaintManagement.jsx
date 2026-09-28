@@ -57,7 +57,7 @@ export default function ComplaintManagement() {
       <div className="page-content">
 
         {/* Summary Bar */}
-        <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', marginBottom: 20 }}>
+        <div className="stats-grid complaint-summary-grid" style={{ marginBottom: 20 }}>
           {[
             { label: 'Total', val: counts.all, color: '#8b5cf6', bg: 'rgba(124,58,237,0.15)', icon: '📋' },
             { label: 'Pending', val: counts.Pending, color: '#fbbf24', bg: 'rgba(245,158,11,0.15)', icon: '⏳' },

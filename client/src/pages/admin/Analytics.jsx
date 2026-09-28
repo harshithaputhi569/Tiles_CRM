@@ -118,15 +118,15 @@ export default function Analytics() {
       <div className="page-content">
 
         {/* Controls */}
-        <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 14 }}>
+        <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 14 }}>
           <div>
             <div className="section-title">Performance Analytics</div>
             <div className="section-subtitle">Data-driven insights for your showroom</div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-            {/* Quick Preset Buttons */}
-            <div style={{ display: 'flex', gap: 6, background: '#eef2f6', padding: '3px 4px', borderRadius: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 520 }}>
+            {/* Quick Preset Buttons — scrollable on mobile */}
+            <div className="analytics-presets" style={{ background: '#eef2f6', padding: '3px 4px', borderRadius: 8 }}>
               <button
                 type="button"
                 className={`btn btn-sm ${activePreset === 'today' ? 'btn-primary' : 'btn-ghost'}`}
@@ -167,10 +167,11 @@ export default function Analytics() {
               alignItems: 'center',
               gap: 8,
               background: '#ffffff',
-              padding: '4px 12px',
+              padding: '6px 12px',
               borderRadius: 8,
               border: '1px solid var(--border-glass)',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+              flexWrap: 'wrap',
             }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
                 📅 Date:
@@ -178,7 +179,7 @@ export default function Analytics() {
               <input
                 type="date"
                 className="form-control"
-                style={{ padding: '4px 8px', fontSize: 12, width: 'auto', border: '1px solid #d1d5db', borderRadius: 6, background: '#f8fafc' }}
+                style={{ padding: '4px 8px', fontSize: 12, flex: '1 1 120px', border: '1px solid #d1d5db', borderRadius: 6, background: '#f8fafc' }}
                 value={startDate}
                 onChange={(e) => {
                   setStartDate(e.target.value);
@@ -190,7 +191,7 @@ export default function Analytics() {
               <input
                 type="date"
                 className="form-control"
-                style={{ padding: '4px 8px', fontSize: 12, width: 'auto', border: '1px solid #d1d5db', borderRadius: 6, background: '#f8fafc' }}
+                style={{ padding: '4px 8px', fontSize: 12, flex: '1 1 120px', border: '1px solid #d1d5db', borderRadius: 6, background: '#f8fafc' }}
                 value={endDate}
                 onChange={(e) => {
                   setEndDate(e.target.value);
@@ -201,6 +202,7 @@ export default function Analytics() {
             </div>
           </div>
         </div>
+
 
         {loading ? <LoadingSpinner /> : (
           <>
