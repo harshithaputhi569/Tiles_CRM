@@ -59,8 +59,27 @@ export default function FeedbackManagement() {
               <option value="false">No Complaint</option>
               <option value="true">With Complaint</option>
             </select>
-            <input type="date" className="form-control" value={filters.startDate} onChange={e => setFilters({ ...filters, startDate: e.target.value })} />
-            <input type="date" className="form-control" value={filters.endDate} onChange={e => setFilters({ ...filters, endDate: e.target.value })} />
+
+            {/* Date picker with visible label + icon */}
+            <label className="date-filter-wrap">
+              <span className="date-filter-label">📅 From</span>
+              <input
+                type="date"
+                className="form-control date-filter-input"
+                value={filters.startDate}
+                onChange={e => setFilters({ ...filters, startDate: e.target.value })}
+              />
+            </label>
+            <label className="date-filter-wrap">
+              <span className="date-filter-label">📅 To</span>
+              <input
+                type="date"
+                className="form-control date-filter-input"
+                value={filters.endDate}
+                onChange={e => setFilters({ ...filters, endDate: e.target.value })}
+              />
+            </label>
+
             <button className="btn btn-ghost btn-sm" onClick={() => setFilters({ staff: '', hasComplaint: '', startDate: '', endDate: '' })}>
               Clear
             </button>
@@ -68,6 +87,7 @@ export default function FeedbackManagement() {
               {feedbacks.length} records
             </span>
           </div>
+
 
           {loading ? <LoadingSpinner /> : feedbacks.length === 0 ? (
             <EmptyState icon="💬" message="No feedback found" sub="Try adjusting your filters" />

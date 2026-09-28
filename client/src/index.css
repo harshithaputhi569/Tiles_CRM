@@ -642,6 +642,34 @@ tbody tr:last-child td { border-bottom: none; }
   min-width: 130px; max-width: 200px;
 }
 
+/* Date picker wrapper — shows label + input together */
+.date-filter-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  cursor: pointer;
+  min-width: 130px;
+  max-width: 180px;
+  flex: 1 1 130px;
+}
+
+.date-filter-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent-purple);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding-left: 2px;
+  white-space: nowrap;
+}
+
+.date-filter-input {
+  min-width: unset !important;
+  max-width: unset !important;
+  width: 100% !important;
+}
+
+
 /* ===== CHARTS ===== */
 .chart-container { height: 280px; }
 
@@ -1062,6 +1090,12 @@ tbody tr:last-child td { border-bottom: none; }
     padding: 10px 12px;
   }
   .filter-bar .form-control {
+    min-width: unset;
+    max-width: unset;
+    width: 100%;
+    flex: unset;
+  }
+  .date-filter-wrap {
     min-width: unset;
     max-width: unset;
     width: 100%;
