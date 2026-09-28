@@ -258,39 +258,98 @@ export default function Analytics() {
             </div>
 
             <div className="analytics-grid-3" style={{ marginBottom: 20 }}>
+
+              {/* ── Rating Distribution ── */}
               <div className="card fade-in">
                 <div className="card-header">
                   <span className="card-title">⭐ Rating Distribution</span>
                 </div>
-                <div className="card-body chart-container">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={ratingDist} cx="50%" cy="50%" innerRadius={60} outerRadius={90}
-                        dataKey="value" nameKey="name" paddingAngle={4}>
-                        {ratingDist.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                      </Pie>
-                      <Tooltip />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
+                <div className="card-body" style={{ padding: '16px 12px 12px' }}>
+                  {/* Compact donut */}
+                  <div style={{ height: 180 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={ratingDist}
+                          cx="50%" cy="50%"
+                          innerRadius={50} outerRadius={78}
+                          dataKey="value" nameKey="name"
+                          paddingAngle={3}
+                        >
+                          {ratingDist.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                        </Pie>
+                        <Tooltip
+                          formatter={(value, name) => [value, name]}
+                          contentStyle={{
+                            background: '#fff', border: '1px solid var(--border-glass)',
+                            borderRadius: 8, fontSize: 12,
+                            boxShadow: '0 4px 12px rgba(100,60,200,0.12)'
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  {/* Custom compact legend */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 12px', justifyContent: 'center', marginTop: 8 }}>
+                    {ratingDist.map((entry, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <span style={{
+                          width: 10, height: 10, borderRadius: '50%',
+                          background: COLORS[i % COLORS.length], flexShrink: 0,
+                          display: 'inline-block'
+                        }} />
+                        <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600 }}>
+                          {entry.name} <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>({entry.value})</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
+              {/* ── Complaint Categories ── */}
               <div className="card fade-in">
                 <div className="card-header">
                   <span className="card-title">🔴 Complaint Categories</span>
                 </div>
-                <div className="card-body chart-container">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={complaintCats.map(c => ({ name: c._id, value: c.count }))}
-                        cx="50%" cy="50%" outerRadius={90} dataKey="value" nameKey="name">
-                        {complaintCats.map((_, i) => <Cell key={i} fill={COLORS[(i + 2) % COLORS.length]} />)}
-                      </Pie>
-                      <Tooltip />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
+                <div className="card-body" style={{ padding: '16px 12px 12px' }}>
+                  <div style={{ height: 180 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={complaintCats.map(c => ({ name: c._id, value: c.count }))}
+                          cx="50%" cy="50%"
+                          outerRadius={78}
+                          dataKey="value" nameKey="name"
+                          paddingAngle={3}
+                        >
+                          {complaintCats.map((_, i) => <Cell key={i} fill={COLORS[(i + 2) % COLORS.length]} />)}
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            background: '#fff', border: '1px solid var(--border-glass)',
+                            borderRadius: 8, fontSize: 12,
+                            boxShadow: '0 4px 12px rgba(100,60,200,0.12)'
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  {/* Custom compact legend */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 10px', justifyContent: 'center', marginTop: 8 }}>
+                    {complaintCats.map((c, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <span style={{
+                          width: 10, height: 10, borderRadius: '50%',
+                          background: COLORS[(i + 2) % COLORS.length], flexShrink: 0,
+                          display: 'inline-block'
+                        }} />
+                        <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 600 }}>
+                          {c._id} <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>({c.count})</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
