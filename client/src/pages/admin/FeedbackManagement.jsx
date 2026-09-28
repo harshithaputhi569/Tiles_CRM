@@ -60,24 +60,34 @@ export default function FeedbackManagement() {
               <option value="true">With Complaint</option>
             </select>
 
-            {/* Date picker with visible label + icon */}
+            {/* Date picker — label shows From/To + format hint */}
             <label className="date-filter-wrap">
               <span className="date-filter-label">📅 From</span>
-              <input
-                type="date"
-                className="form-control date-filter-input"
-                value={filters.startDate}
-                onChange={e => setFilters({ ...filters, startDate: e.target.value })}
-              />
+              <div className="date-input-box">
+                <input
+                  type="date"
+                  className="form-control date-filter-input"
+                  value={filters.startDate}
+                  onChange={e => setFilters({ ...filters, startDate: e.target.value })}
+                />
+                {!filters.startDate && (
+                  <span className="date-placeholder">dd-mm-yyyy</span>
+                )}
+              </div>
             </label>
             <label className="date-filter-wrap">
               <span className="date-filter-label">📅 To</span>
-              <input
-                type="date"
-                className="form-control date-filter-input"
-                value={filters.endDate}
-                onChange={e => setFilters({ ...filters, endDate: e.target.value })}
-              />
+              <div className="date-input-box">
+                <input
+                  type="date"
+                  className="form-control date-filter-input"
+                  value={filters.endDate}
+                  onChange={e => setFilters({ ...filters, endDate: e.target.value })}
+                />
+                {!filters.endDate && (
+                  <span className="date-placeholder">dd-mm-yyyy</span>
+                )}
+              </div>
             </label>
 
             <button className="btn btn-ghost btn-sm" onClick={() => setFilters({ staff: '', hasComplaint: '', startDate: '', endDate: '' })}>

@@ -667,6 +667,45 @@ tbody tr:last-child td { border-bottom: none; }
   min-width: unset !important;
   max-width: unset !important;
   width: 100% !important;
+  /* Make the native date input transparent when empty so placeholder shows */
+  position: relative;
+  z-index: 1;
+  background: transparent;
+}
+
+/* Wrapper that holds both the date input and the placeholder overlay */
+.date-input-box {
+  position: relative;
+  width: 100%;
+}
+
+/* "dd-mm-yyyy" placeholder shown when input is empty */
+.date-placeholder {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: #b0b0c8;
+  pointer-events: none;   /* clicks pass through to the input */
+  user-select: none;
+  letter-spacing: 0.4px;
+  z-index: 0;
+}
+
+/* On WebKit (Chrome/Safari/Android): hide native empty date text so our placeholder shows */
+.date-filter-input::-webkit-datetime-edit-year-field,
+.date-filter-input::-webkit-datetime-edit-month-field,
+.date-filter-input::-webkit-datetime-edit-day-field,
+.date-filter-input::-webkit-datetime-edit-text {
+  color: transparent;
+}
+/* Once a value exists, show the real date text */
+.date-filter-input:not([value=""])::-webkit-datetime-edit-year-field,
+.date-filter-input:not([value=""])::-webkit-datetime-edit-month-field,
+.date-filter-input:not([value=""])::-webkit-datetime-edit-day-field,
+.date-filter-input:not([value=""])::-webkit-datetime-edit-text {
+  color: var(--text-primary);
 }
 
 
