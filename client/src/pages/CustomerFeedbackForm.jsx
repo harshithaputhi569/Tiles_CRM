@@ -70,6 +70,8 @@ export default function CustomerFeedbackForm() {
   const [complaintCategory, setComplaintCategory] = useState('Other');
   const [complaintDescription, setComplaintDescription] = useState('');
 
+  const [submitError, setSubmitError] = useState('');
+
   useEffect(() => {
     const loadVisit = async () => {
       try {
@@ -122,6 +124,7 @@ export default function CustomerFeedbackForm() {
     }
 
     setSaving(true);
+    setSubmitError('');
     try {
       await axios.post(`${API_BASE}/feedback/public/${token}`, {
         ratings,
@@ -135,10 +138,11 @@ export default function CustomerFeedbackForm() {
       setStatus('submitted');
     } catch (err) {
       if (err.response?.status === 409) {
-        setStatus('submitted');
+        setErrorMsg('Feedback has already been recorded for this visit. Thank you!');
+        setStatus('error');
       } else {
-        // If server is updating, still mark submitted gracefully for customer
-        setStatus('submitted');
+        const msg = err.response?.data?.message || 'Failed to submit feedback. Please check your connection and try again.';
+        setSubmitError(msg);
       }
     } finally {
       setSaving(false);
@@ -160,13 +164,22 @@ export default function CustomerFeedbackForm() {
   }
 
   if (status === 'error') {
+    const isAlreadySubmitted = errorMsg.toLowerCase().includes('already');
     return (
       <div style={pageWrap}>
         <div style={card}>
-          <div style={{ textAlign: 'center', padding: '48px 24px' }}>
-            <div style={{ fontSize: 56, marginBottom: 16 }}>❌</div>
-            <h2 style={{ color: '#dc2626', marginBottom: 8 }}>Link Unavailable</h2>
-            <p style={{ color: '#6b7280', maxWidth: 320, margin: '0 auto' }}>{errorMsg}</p>
+          <div style={{ textAlign: 'center', padding: '56px 24px' }}>
+            <div style={{ fontSize: 64, marginBottom: 16 }}>{isAlreadySubmitted ? '✅' : '❌'}</div>
+            <h2 style={{
+              color: isAlreadySubmitted ? '#059669' : '#dc2626',
+              marginBottom: 10,
+              fontWeight: 800
+            }}>
+              {isAlreadySubmitted ? 'Feedback Already Recorded' : 'Link Unavailable'}
+            </h2>
+            <p style={{ color: '#4b5563', maxWidth: 360, margin: '0 auto', lineHeight: 1.6, fontSize: 14 }}>
+              {errorMsg}
+            </p>
           </div>
         </div>
       </div>
@@ -362,6 +375,31 @@ export default function CustomerFeedbackForm() {
               </div>
             )}
           </div>
+
+          {/* Error alert if submission failed */}
+          {submitError && (
+            <div style={{
+              background: '#fef2f2',
+              border: '1.5px solid #f87171',
+              borderRadius: 10,
+              padding: '12px 16px',
+              marginBottom: 16,
+              color: '#991b1b',
+              fontSize: 13,
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 10,
+              lineHeight: 1.5,
+            }}>
+              <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
+              <div>
+                <strong>Submission Error:</strong> {submitError}
+                <div style={{ fontSize: 12, marginTop: 4, color: '#b91c1c' }}>
+                  Please verify your connection and tap Submit again.
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Submit */}
           <button

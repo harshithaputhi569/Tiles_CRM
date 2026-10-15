@@ -30,12 +30,12 @@ app.get('/api/health', (req, res) => res.json({ status: 'TileShow CRM API runnin
 // Routes
 app.use('/api/auth',          authRoutes);
 app.use('/api/staff',         staffRoutes);
-app.use('/api',               customerRoutes);
 app.use('/api/feedback',      feedbackRoutes);
 app.use('/api/complaints',    complaintRoutes);
 app.use('/api/analytics',     analyticsRoutes);
 app.use('/api/reports',       reportRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api',               customerRoutes);
 
 
 
