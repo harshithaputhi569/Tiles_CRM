@@ -1,6 +1,7 @@
 const Customer = require('../models/Customer');
 const Visit = require('../models/Visit');
 const crypto = require('crypto');
+const mongoose = require('mongoose');
 
 // @route GET /api/customers
 const getCustomers = async (req, res) => {
@@ -197,7 +198,13 @@ const createVisit = async (req, res) => {
 // Used by the customer to load their feedback form
 const getVisitByFeedbackToken = async (req, res) => {
   try {
-    const visit = await Visit.findOne({ feedbackToken: req.params.token })
+    const isObjectId = mongoose.Types.ObjectId.isValid(req.params.token);
+    const visit = await Visit.findOne({
+      $or: [
+        { feedbackToken: req.params.token },
+        ...(isObjectId ? [{ _id: req.params.token }] : []),
+      ],
+    })
       .populate('customer', 'name mobile')
       .populate('staff', 'name designation');
 

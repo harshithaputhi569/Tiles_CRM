@@ -3,7 +3,7 @@ import Topbar from '../../components/Topbar';
 import { LoadingSpinner, EmptyState } from '../../components/UI';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
-import { MdSearch, MdRefresh, MdFilterList, MdWhatsapp, MdContentCopy, MdTableChart, MdPictureAsPdf } from 'react-icons/md';
+import { MdSearch, MdRefresh, MdFilterList, MdWhatsapp, MdSms, MdContentCopy, MdTableChart, MdPictureAsPdf } from 'react-icons/md';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -424,25 +424,40 @@ export default function AllVisits() {
               {/* Feedback Link Section (Admin) */}
               <div style={{ padding: '14px 16px', background: selected.feedbackSubmitted ? 'rgba(16,185,129,0.06)' : 'rgba(124,58,237,0.06)', border: `1px solid ${selected.feedbackSubmitted ? 'rgba(16,185,129,0.2)' : 'rgba(124,58,237,0.2)'}`, borderRadius: 10 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 10, color: selected.feedbackSubmitted ? '#059669' : '#7c3aed' }}>
-                  {selected.feedbackSubmitted ? '✅ Customer Feedback Submitted' : '📱 Feedback Link (Not Yet Sent / Submitted)'}
+                  {selected.feedbackSubmitted ? '✅ Customer Feedback Submitted' : '📱 Share Feedback & Complaint Link'}
                 </div>
-                {!selected.feedbackSubmitted && selected.feedbackToken && (
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <button
-                      className="btn btn-primary btn-sm"
-                      style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, #25d366, #128c7e)', fontSize: 12 }}
-                      onClick={() => openWhatsApp(selected.customer?.mobile, `${window.location.origin}/feedback/${selected.feedbackToken}`, selected.customer?.name)}
-                    >
-                      <MdWhatsapp style={{ fontSize: 15 }} /> Send via WhatsApp
-                    </button>
-                    <button
-                      className="btn btn-outline btn-sm"
-                      style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}
-                      onClick={() => copyLink(`${window.location.origin}/feedback/${selected.feedbackToken}`)}
-                    >
-                      <MdContentCopy style={{ fontSize: 13 }} /> Copy Link
-                    </button>
-                  </div>
+                {!selected.feedbackSubmitted && (
+                  (() => {
+                    const token = selected.feedbackToken || selected._id;
+                    const link = `${window.location.origin}/feedback/${token}`;
+                    const cleanMobile = (selected.customer?.mobile || '').replace(/\D/g, '');
+                    const smsMsg = `Dear ${selected.customer?.name || 'Customer'}, thank you for visiting TileShow! Please share your feedback or complaint here: ${link}`;
+                    return (
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        <button
+                          className="btn btn-primary btn-sm"
+                          style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, #25d366, #128c7e)', fontSize: 12 }}
+                          onClick={() => openWhatsApp(selected.customer?.mobile, link, selected.customer?.name)}
+                        >
+                          <MdWhatsapp style={{ fontSize: 15 }} /> Send via WhatsApp
+                        </button>
+                        <a
+                          href={`sms:${cleanMobile}?body=${encodeURIComponent(smsMsg)}`}
+                          className="btn btn-secondary btn-sm"
+                          style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', fontSize: 12 }}
+                        >
+                          <MdSms style={{ fontSize: 14 }} /> Send via SMS
+                        </a>
+                        <button
+                          className="btn btn-outline btn-sm"
+                          style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}
+                          onClick={() => copyLink(link)}
+                        >
+                          <MdContentCopy style={{ fontSize: 13 }} /> Copy Link
+                        </button>
+                      </div>
+                    );
+                  })()
                 )}
               </div>
             </div>

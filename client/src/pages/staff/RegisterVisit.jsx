@@ -2,7 +2,18 @@ import { useState, useRef } from 'react';
 import Topbar from '../../components/Topbar';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
-import { MdPersonAdd, MdPersonSearch, MdCheckCircle, MdShoppingBag, MdCancel } from 'react-icons/md';
+import {
+  MdPersonAdd,
+  MdPersonSearch,
+  MdCheckCircle,
+  MdShoppingBag,
+  MdCancel,
+  MdWhatsapp,
+  MdSms,
+  MdContentCopy,
+  MdOpenInNew,
+  MdPhoneIphone,
+} from 'react-icons/md';
 
 const CUSTOMER_TYPES = [
   'New Customer',
@@ -182,7 +193,19 @@ export default function RegisterVisit() {
         source: visit.source || customer.source,
         ...visit,
       });
-      setCreatedVisit(vis);
+
+      const customerInfo = (vis.customer && typeof vis.customer === 'object' && vis.customer.name)
+        ? vis.customer
+        : (existingCustomer || customer);
+
+      const tokenOrId = vis.feedbackToken || vis._id;
+      const feedbackLink = vis.feedbackLink || `${window.location.origin}/feedback/${tokenOrId}`;
+
+      setCreatedVisit({
+        ...vis,
+        customer: customerInfo,
+        feedbackLink,
+      });
       setStep(3);
       toast.success('Visit registered successfully!');
     } catch (err) {
@@ -756,42 +779,153 @@ export default function RegisterVisit() {
                 </div>
               </div>
 
-              {/* Feedback Link — Send via WhatsApp / Copy */}
-              {createdVisit.feedbackLink && (
-                <div style={{
-                  padding: '18px 20px',
-                  background: 'linear-gradient(135deg, rgba(37,211,102,0.08) 0%, rgba(18,140,126,0.06) 100%)',
-                  border: '1px solid rgba(37,211,102,0.35)',
-                  borderRadius: 14,
-                  marginBottom: 24,
-                  textAlign: 'left',
-                }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#059669', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    📱 Share Feedback & Complaint Form Link
+              {/* Always display Customer Feedback & Complaint Link with WhatsApp, SMS, Copy, and Preview */}
+              {(() => {
+                const cust = (createdVisit.customer && typeof createdVisit.customer === 'object' && createdVisit.customer.name)
+                  ? createdVisit.customer
+                  : (existingCustomer || customer);
+                const custName = cust?.name || 'Valued Customer';
+                const rawMobile = cust?.mobile || mobile || '';
+                const cleanDigits = rawMobile.replace(/\D/g, '');
+                const phoneForWhatsApp = cleanDigits.length === 10 ? `91${cleanDigits}` : cleanDigits;
+                const link = createdVisit.feedbackLink || `${window.location.origin}/feedback/${createdVisit.feedbackToken || createdVisit._id}`;
+
+                const messageText = `Dear ${custName}, thank you for visiting TileShow!\n\nWe value your experience with us. Please click the link below to share your feedback or register any complaint:\n${link}\n\nYour response helps us serve you better. 🙏`;
+
+                const waUrl = `https://wa.me/${phoneForWhatsApp}?text=${encodeURIComponent(messageText)}`;
+                const smsUrl = `sms:${cleanDigits}?body=${encodeURIComponent(messageText)}`;
+
+                return (
+                  <div style={{
+                    background: 'linear-gradient(135deg, rgba(37,211,102,0.06) 0%, rgba(124,58,237,0.06) 100%)',
+                    border: '1.5px solid rgba(37,211,102,0.4)',
+                    borderRadius: 16,
+                    padding: '24px',
+                    marginBottom: 24,
+                    textAlign: 'left',
+                    boxShadow: '0 8px 24px rgba(37,211,102,0.08)',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 12 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 16, fontWeight: 800, color: '#047857' }}>
+                        <span style={{ fontSize: 20 }}>📲</span> Customer Complaint & Feedback Link
+                      </div>
+                      {rawMobile && (
+                        <span style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          background: 'rgba(37,211,102,0.15)',
+                          color: '#065f46',
+                          padding: '4px 12px',
+                          borderRadius: 20,
+                          fontSize: 12,
+                          fontWeight: 700,
+                        }}>
+                          <MdPhoneIphone style={{ fontSize: 14 }} /> {custName} ({cleanDigits.length === 10 ? `+91 ${cleanDigits}` : rawMobile})
+                        </span>
+                      )}
+                    </div>
+
+                    <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.5 }}>
+                      Send this unique, secure complaint/feedback form link directly to the customer's phone number. The customer can rate their showroom experience and submit any complaints without logging in.
+                    </div>
+
+                    {/* Link display & copy */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      background: '#ffffff',
+                      border: '1px solid var(--border-glass)',
+                      borderRadius: 10,
+                      padding: '8px 12px',
+                      marginBottom: 16,
+                    }}>
+                      <input
+                        type="text"
+                        readOnly
+                        value={link}
+                        style={{
+                          flex: 1,
+                          border: 'none',
+                          background: 'transparent',
+                          fontSize: 12,
+                          fontFamily: 'monospace',
+                          color: 'var(--text-primary)',
+                          outline: 'none',
+                        }}
+                      />
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        style={{ padding: '4px 10px', fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                        onClick={() => {
+                          navigator.clipboard.writeText(link);
+                          toast.success('Form link copied to clipboard!');
+                        }}
+                      >
+                        <MdContentCopy /> Copy
+                      </button>
+                    </div>
+
+                    {/* Action Buttons: WhatsApp, SMS, Open Form */}
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      <a
+                        href={waUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-primary"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          textDecoration: 'none',
+                          background: 'linear-gradient(135deg, #25d366, #128c7e)',
+                          fontSize: 14,
+                          fontWeight: 700,
+                          padding: '10px 18px',
+                          boxShadow: '0 4px 14px rgba(37,211,102,0.3)',
+                        }}
+                      >
+                        <MdWhatsapp style={{ fontSize: 18 }} /> Send via WhatsApp
+                      </a>
+
+                      <a
+                        href={smsUrl}
+                        className="btn btn-secondary"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          textDecoration: 'none',
+                          fontSize: 14,
+                          fontWeight: 700,
+                          padding: '10px 18px',
+                        }}
+                      >
+                        <MdSms style={{ fontSize: 18 }} /> Send via SMS
+                      </a>
+
+                      <a
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-ghost"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          textDecoration: 'none',
+                          fontSize: 13,
+                          padding: '10px 14px',
+                        }}
+                      >
+                        <MdOpenInNew style={{ fontSize: 16 }} /> Open Form Preview
+                      </a>
+                    </div>
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 14 }}>
-                    Send <strong>{createdVisit.customer?.name || 'this customer'}</strong> a unique link via WhatsApp or copy it to share via SMS. The customer can rate their experience and raise a complaint.
-                  </div>
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    <a
-                      href={`https://wa.me/${(createdVisit.customer?.mobile || '').replace(/\D/g, '')}?text=${encodeURIComponent(`Dear ${createdVisit.customer?.name || 'Customer'}, thank you for visiting TileShow!\n\nWe value your feedback. Please take a moment to share your experience:\n${createdVisit.feedbackLink}\n\nYour response helps us serve you better. 🙏`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn btn-primary"
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none', background: 'linear-gradient(135deg, #25d366, #128c7e)', fontSize: 14, padding: '10px 18px' }}
-                    >
-                      <MdCheckCircle style={{ fontSize: 16 }} /> Send via WhatsApp
-                    </a>
-                    <button
-                      className="btn btn-ghost"
-                      style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
-                      onClick={() => { navigator.clipboard.writeText(createdVisit.feedbackLink); toast.success('Feedback link copied to clipboard!'); }}
-                    >
-                      📋 Copy Link
-                    </button>
-                  </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Visit ID */}
               <div style={{ padding: '12px 16px', background: 'rgba(124,58,237,0.03)', borderRadius: 8, marginBottom: 24, fontSize: 13, border: '1px solid rgba(124,58,237,0.1)' }}>

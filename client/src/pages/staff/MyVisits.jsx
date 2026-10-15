@@ -3,7 +3,7 @@ import Topbar from '../../components/Topbar';
 import { LoadingSpinner, EmptyState, StatusBadge } from '../../components/UI';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
-import { MdSearch, MdRefresh, MdWhatsapp, MdContentCopy, MdFilterList } from 'react-icons/md';
+import { MdSearch, MdRefresh, MdWhatsapp, MdSms, MdContentCopy, MdFilterList } from 'react-icons/md';
 
 const PURCHASE_COLORS = {
   Purchased: { bg: 'rgba(16,185,129,0.12)', color: '#059669', border: 'rgba(16,185,129,0.3)' },
@@ -346,33 +346,48 @@ export default function MyVisits() {
               {/* Feedback Link Section */}
               <div style={{ padding: '14px 16px', background: selected.feedbackSubmitted ? 'rgba(16,185,129,0.06)' : 'rgba(124,58,237,0.06)', border: `1px solid ${selected.feedbackSubmitted ? 'rgba(16,185,129,0.2)' : 'rgba(124,58,237,0.2)'}`, borderRadius: 10 }}>
                 <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 10, color: selected.feedbackSubmitted ? '#059669' : '#7c3aed' }}>
-                  {selected.feedbackSubmitted ? '✅ Feedback Already Submitted' : '📱 Share Feedback Link with Customer'}
+                  {selected.feedbackSubmitted ? '✅ Feedback Already Submitted' : '📱 Share Feedback & Complaint Link'}
                 </div>
-                {!selected.feedbackSubmitted && selected.feedbackToken && (
+                {!selected.feedbackSubmitted && (
                   <>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>
-                      Send the customer a unique feedback link via WhatsApp or copy it to share via SMS/message.
+                      Send the customer a unique link via WhatsApp or SMS. The customer can rate their experience and raise a complaint.
                     </div>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      <button
-                        className="btn btn-primary btn-sm"
-                        style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, #25d366, #128c7e)', fontSize: 13 }}
-                        onClick={() => openWhatsApp(
-                          selected.customer?.mobile,
-                          `${window.location.origin}/feedback/${selected.feedbackToken}`,
-                          selected.customer?.name
-                        )}
-                      >
-                        <MdWhatsapp style={{ fontSize: 16 }} /> Send via WhatsApp
-                      </button>
-                      <button
-                        className="btn btn-outline btn-sm"
-                        style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
-                        onClick={() => copyLink(`${window.location.origin}/feedback/${selected.feedbackToken}`)}
-                      >
-                        <MdContentCopy style={{ fontSize: 14 }} /> Copy Link
-                      </button>
-                    </div>
+                    {(() => {
+                      const token = selected.feedbackToken || selected._id;
+                      const link = `${window.location.origin}/feedback/${token}`;
+                      const cleanMobile = (selected.customer?.mobile || '').replace(/\D/g, '');
+                      const smsMsg = `Dear ${selected.customer?.name || 'Customer'}, thank you for visiting TileShow! Please share your feedback or complaint here: ${link}`;
+                      return (
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                          <button
+                            className="btn btn-primary btn-sm"
+                            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, #25d366, #128c7e)', fontSize: 13 }}
+                            onClick={() => openWhatsApp(
+                              selected.customer?.mobile,
+                              link,
+                              selected.customer?.name
+                            )}
+                          >
+                            <MdWhatsapp style={{ fontSize: 16 }} /> Send via WhatsApp
+                          </button>
+                          <a
+                            href={`sms:${cleanMobile}?body=${encodeURIComponent(smsMsg)}`}
+                            className="btn btn-secondary btn-sm"
+                            style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', fontSize: 13 }}
+                          >
+                            <MdSms style={{ fontSize: 15 }} /> Send via SMS
+                          </a>
+                          <button
+                            className="btn btn-outline btn-sm"
+                            style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
+                            onClick={() => copyLink(link)}
+                          >
+                            <MdContentCopy style={{ fontSize: 14 }} /> Copy Link
+                          </button>
+                        </div>
+                      );
+                    })()}
                   </>
                 )}
               </div>
