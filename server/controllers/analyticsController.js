@@ -240,13 +240,19 @@ const getPurchaseAnalytics = async (req, res) => {
       matchFilter.staff = new mongoose.Types.ObjectId(staff);
     }
 
-    const [totalVisits, purchasedCount, notPurchasedCount] = await Promise.all([
+    const [totalVisits, purchasedCount, notPurchasedCount, billingAgg] = await Promise.all([
       Visit.countDocuments(matchFilter),
       Visit.countDocuments({ ...matchFilter, purchaseStatus: 'Purchased' }),
       Visit.countDocuments({ ...matchFilter, purchaseStatus: 'Not Purchased' }),
+      Visit.aggregate([
+        { $match: matchFilter },
+        { $group: { _id: null, totalBilling: { $sum: '$totalBillingValue' } } },
+      ]),
     ]);
 
+    const totalBillingValue = billingAgg.length > 0 ? (billingAgg[0].totalBilling || 0) : 0;
     const conversionRate = totalVisits > 0 ? parseFloat(((purchasedCount / totalVisits) * 100).toFixed(1)) : 0;
+
 
     // Reason counts for Not Purchased
     const reasonsAgg = await Visit.aggregate([
@@ -385,6 +391,7 @@ const getPurchaseAnalytics = async (req, res) => {
       purchasedCount,
       notPurchasedCount,
       conversionRate,
+      totalBillingValue,
       reasonsBreakdown,
       sourcesBreakdown,
       dailyTrend: trendAgg.map((t) => ({

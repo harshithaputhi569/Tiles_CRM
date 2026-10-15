@@ -26,6 +26,11 @@ const visitSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    totalBillingValue: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     source: {
       type: String,
       default: 'Walk-in / Signboard',

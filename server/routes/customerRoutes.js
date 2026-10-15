@@ -7,6 +7,7 @@ const {
   getCustomersWithNoVisit,
   getVisits,
   createVisit,
+  updateVisit,
   getVisitByFeedbackToken,
 } = require('../controllers/customerController');
 const { protect } = require('../middleware/auth');
@@ -21,5 +22,6 @@ router.get('/customers/:id/history', protect, getCustomerHistory);
 router.post('/customers', protect, createCustomer);
 router.get('/visits', protect, getVisits);
 router.post('/visits', protect, createVisit);
+router.put('/visits/:id', protect, updateVisit);
 
 module.exports = router;

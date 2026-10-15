@@ -58,7 +58,31 @@ export default function MyVisits() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
+  const [billingValueInput, setBillingValueInput] = useState('');
+  const [savingBilling, setSavingBilling] = useState(false);
   const LIMIT = 15;
+
+  useEffect(() => {
+    if (selected) {
+      setBillingValueInput(selected.totalBillingValue || '');
+    }
+  }, [selected]);
+
+  const handleUpdateBilling = async () => {
+    if (!selected) return;
+    setSavingBilling(true);
+    try {
+      const val = Math.max(0, Number(billingValueInput) || 0);
+      const { data } = await api.put(`/visits/${selected._id}`, { totalBillingValue: val });
+      setSelected(data);
+      setVisits(prev => prev.map(v => v._id === data._id ? { ...v, totalBillingValue: val } : v));
+      toast.success(`Billing value updated to ₹${val.toLocaleString('en-IN')}`);
+    } catch {
+      toast.error('Failed to update billing value');
+    } finally {
+      setSavingBilling(false);
+    }
+  };
 
   const [filters, setFilters] = useState({
     search: '',
@@ -230,6 +254,7 @@ export default function MyVisits() {
                     <th>Visit Date & Time</th>
                     <th>Purpose</th>
                     <th>Source</th>
+                    <th>Billing Value</th>
                     <th>Status</th>
                     <th>Feedback</th>
                     <th>Action</th>
@@ -256,6 +281,15 @@ export default function MyVisits() {
                       </td>
                       <td style={{ fontSize: 12 }}>{v.purpose}</td>
                       <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{v.source}</td>
+                      <td>
+                        {v.totalBillingValue > 0 ? (
+                          <span style={{ fontWeight: 800, color: '#047857', fontSize: 13 }}>
+                            ₹{Number(v.totalBillingValue).toLocaleString('en-IN')}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>—</span>
+                        )}
+                      </td>
                       <td><StatusChip status={v.purchaseStatus} /></td>
                       <td>
                         {v.feedbackSubmitted
@@ -293,13 +327,104 @@ export default function MyVisits() {
             </div>
             <div className="modal-body">
 
-              {/* Customer Info */}
-              <div style={{ padding: '12px 16px', background: 'linear-gradient(135deg, rgba(124,58,237,0.06) 0%, rgba(6,182,212,0.04) 100%)', border: '1px solid rgba(124,58,237,0.15)', borderRadius: 10, marginBottom: 16 }}>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>{selected.customer?.name}</div>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>📱 {selected.customer?.mobile} · {selected.customer?.customerType}</div>
-                {selected.isRepeatVisit && (
-                  <div style={{ fontSize: 12, color: '#b45309', marginTop: 4, fontWeight: 600 }}>🔁 Repeat Visitor · Visit #{selected.visitNumber}</div>
-                )}
+              {/* Customer Info & Instant Billing Input Card */}
+              <div style={{
+                padding: '14px 16px',
+                background: 'linear-gradient(135deg, rgba(124,58,237,0.06) 0%, rgba(6,182,212,0.04) 100%)',
+                border: '1px solid rgba(124,58,237,0.18)',
+                borderRadius: 12,
+                marginBottom: 16,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10 }}>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--text-primary)' }}>{selected.customer?.name}</div>
+                    <div style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 2 }}>
+                      📱 {selected.customer?.mobile} · {selected.customer?.customerType}
+                    </div>
+                    {selected.isRepeatVisit && (
+                      <div style={{ fontSize: 12, color: '#b45309', marginTop: 4, fontWeight: 700 }}>
+                        🔁 Repeat Visitor · Visit #{selected.visitNumber}
+                      </div>
+                    )}
+                  </div>
+                  {selected.totalBillingValue > 0 && (
+                    <span style={{
+                      background: 'rgba(16,185,129,0.15)',
+                      color: '#047857',
+                      border: '1px solid rgba(16,185,129,0.35)',
+                      padding: '4px 12px',
+                      borderRadius: 20,
+                      fontWeight: 800,
+                      fontSize: 13,
+                    }}>
+                      💰 ₹{Number(selected.totalBillingValue).toLocaleString('en-IN')}
+                    </span>
+                  )}
+                </div>
+
+                {/* Instant Total Billing Value Input */}
+                <div style={{
+                  marginTop: 14,
+                  paddingTop: 12,
+                  borderTop: '1px dashed rgba(124,58,237,0.25)',
+                }}>
+                  <label style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    color: '#059669',
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    marginBottom: 6,
+                  }}>
+                    <span>💰</span> Total Billing Value (₹) — Enter Instantly:
+                  </label>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <div style={{ position: 'relative', flex: 1 }}>
+                      <span style={{
+                        position: 'absolute',
+                        left: 10,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        fontWeight: 700,
+                        color: '#059669',
+                        fontSize: 14,
+                      }}>
+                        ₹
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        className="form-control"
+                        placeholder="Enter total bill/invoice amount"
+                        value={billingValueInput}
+                        onChange={(e) => setBillingValueInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') handleUpdateBilling(); }}
+                        style={{
+                          paddingLeft: 26,
+                          fontWeight: 700,
+                          fontSize: 14,
+                          background: '#ffffff',
+                          borderColor: 'rgba(16,185,129,0.5)',
+                        }}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-primary"
+                      disabled={savingBilling}
+                      onClick={handleUpdateBilling}
+                      style={{ whiteSpace: 'nowrap', minWidth: 85 }}
+                    >
+                      {savingBilling ? 'Saving…' : '💾 Save'}
+                    </button>
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                    Type the billing amount and click Save to update instantly.
+                  </div>
+                </div>
               </div>
 
               {/* Visit Details Grid */}

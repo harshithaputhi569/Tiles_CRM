@@ -4,7 +4,7 @@ import Topbar from '../../components/Topbar';
 import { StatCard, LoadingSpinner, RatingBadge, EmptyState } from '../../components/UI';
 import {
   MdPeople, MdFeedback, MdStar, MdTrendingUp,
-  MdShoppingBag, MdCancel, MdList
+  MdShoppingBag, MdCancel, MdList, MdReceipt
 } from 'react-icons/md';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '../../api/axios';
@@ -149,6 +149,7 @@ export default function StaffDashboard() {
             <div className="stats-grid" style={{ marginBottom: 20 }}>
               <StatCard icon={<MdPeople />} label="Visits Handled" value={purchaseData?.totalVisits ?? 0} iconBg="rgba(124,58,237,0.12)" iconColor="#7c3aed" />
               <StatCard icon={<MdShoppingBag />} label="Purchased" value={purchaseData?.purchasedCount ?? 0} iconBg="rgba(16,185,129,0.12)" iconColor="#059669" />
+              <StatCard icon={<MdReceipt />} label="Total Billing Value" value={purchaseData?.totalBillingValue > 0 ? `₹${Number(purchaseData.totalBillingValue).toLocaleString('en-IN')}` : '₹0'} iconBg="rgba(16,185,129,0.18)" iconColor="#047857" />
               <StatCard icon={<MdCancel />} label="Not Purchased" value={purchaseData?.notPurchasedCount ?? 0} iconBg="rgba(239,68,68,0.12)" iconColor="#dc2626" />
               <StatCard icon={<MdTrendingUp />} label="My Conversion Rate" value={`${purchaseData?.conversionRate ?? 0}%`} iconBg="rgba(6,182,212,0.12)" iconColor="#0891b2" />
             </div>
@@ -270,7 +271,7 @@ export default function StaffDashboard() {
             <div className="table-wrapper">
               <table>
                 <thead>
-                  <tr><th>Customer</th><th>Visit Date</th><th>Purpose</th><th>Status</th><th>Feedback</th></tr>
+                  <tr><th>Customer</th><th>Visit Date</th><th>Purpose</th><th>Billing</th><th>Status</th><th>Feedback</th></tr>
                 </thead>
                 <tbody>
                   {recentVisits.map(v => {
@@ -285,6 +286,15 @@ export default function StaffDashboard() {
                           {new Date(v.visitDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
                         </td>
                         <td style={{ fontSize: 12 }}>{v.purpose}</td>
+                        <td>
+                          {v.totalBillingValue > 0 ? (
+                            <span style={{ fontWeight: 800, color: '#047857', fontSize: 12 }}>
+                              ₹{Number(v.totalBillingValue).toLocaleString('en-IN')}
+                            </span>
+                          ) : (
+                            <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>—</span>
+                          )}
+                        </td>
                         <td>
                           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, background: ps.bg, color: ps.color }}>
                             {v.purchaseStatus === 'Purchased' ? '✓' : v.purchaseStatus === 'Interested' ? '◎' : '✗'} {v.purchaseStatus}

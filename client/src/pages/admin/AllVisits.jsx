@@ -42,6 +42,8 @@ export default function AllVisits() {
   const [staff, setStaff] = useState([]);
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
+  const [billingValueInput, setBillingValueInput] = useState('');
+  const [savingBilling, setSavingBilling] = useState(false);
   const LIMIT = 20;
 
   const [filters, setFilters] = useState({
@@ -109,10 +111,33 @@ export default function AllVisits() {
     window.open(`https://wa.me/${phone}?text=${msg}`, '_blank');
   };
 
+  useEffect(() => {
+    if (selected) {
+      setBillingValueInput(selected.totalBillingValue ? String(selected.totalBillingValue) : '');
+    }
+  }, [selected]);
+
+  const handleUpdateBilling = async () => {
+    if (!selected) return;
+    const num = Math.max(0, Number(billingValueInput) || 0);
+    setSavingBilling(true);
+    try {
+      await api.put(`/visits/${selected._id}`, { totalBillingValue: num });
+      toast.success('Total billing value updated!');
+      const updated = { ...selected, totalBillingValue: num };
+      setSelected(updated);
+      setVisits((prev) => prev.map((v) => (v._id === selected._id ? { ...v, totalBillingValue: num } : v)));
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update billing value');
+    } finally {
+      setSavingBilling(false);
+    }
+  };
+
   /* CSV Export */
   const handleCsvExport = () => {
     if (visits.length === 0) return toast.error('No visits to export');
-    const headers = ['#', 'Customer Name', 'Mobile', 'Visit Date', 'Visit #', 'Staff', 'Purpose', 'Source', 'Purchase Status', 'Reason', 'Repeat Reason', 'Feedback Submitted', 'Notes'];
+    const headers = ['#', 'Customer Name', 'Mobile', 'Visit Date', 'Visit #', 'Staff', 'Purpose', 'Source', 'Billing Value (₹)', 'Purchase Status', 'Reason', 'Repeat Reason', 'Feedback Submitted', 'Notes'];
     const rows = visits.map((v, i) => [
       i + 1,
       `"${(v.customer?.name || '').replace(/"/g, '""')}"`,
@@ -122,6 +147,7 @@ export default function AllVisits() {
       `"${(v.staff?.name || '').replace(/"/g, '""')}"`,
       `"${v.purpose || ''}"`,
       `"${v.source || ''}"`,
+      v.totalBillingValue || 0,
       `"${v.purchaseStatus || ''}"`,
       `"${(v.nonPurchaseReason || '').replace(/"/g, '""')}"`,
       `"${(v.repeatReason || '').replace(/"/g, '""')}"`,
@@ -151,7 +177,7 @@ export default function AllVisits() {
 
       autoTable(doc, {
         startY: 65,
-        head: [['#', 'Customer', 'Mobile', 'Date', 'Visit#', 'Staff', 'Purpose', 'Source', 'Status', 'Feedback']],
+        head: [['#', 'Customer', 'Mobile', 'Date', 'Visit#', 'Staff', 'Purpose', 'Source', 'Billing (₹)', 'Status', 'Feedback']],
         body: visits.map((v, i) => [
           i + 1,
           v.customer?.name || '—',
@@ -161,6 +187,7 @@ export default function AllVisits() {
           v.staff?.name || '—',
           v.purpose || '—',
           v.source || '—',
+          v.totalBillingValue ? `₹${Number(v.totalBillingValue).toLocaleString('en-IN')}` : '—',
           v.purchaseStatus || '—',
           v.feedbackSubmitted ? 'Yes' : 'No',
         ]),
@@ -180,6 +207,7 @@ export default function AllVisits() {
   const notPurchased = visits.filter(v => v.purchaseStatus === 'Not Purchased').length;
   const interested = visits.filter(v => v.purchaseStatus === 'Interested').length;
   const feedbackPending = visits.filter(v => !v.feedbackSubmitted).length;
+  const totalBilling = visits.reduce((sum, v) => sum + (v.totalBillingValue || 0), 0);
 
   return (
     <>
@@ -189,11 +217,11 @@ export default function AllVisits() {
         {/* Summary Cards */}
         <div className="stats-grid" style={{ marginBottom: 20 }}>
           {[
-            { label: 'Total Visits', value: total,         icon: '👥', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)' },
-            { label: 'Purchased',    value: purchased,     icon: '✅', color: '#059669', bg: 'rgba(16,185,129,0.12)' },
-            { label: 'Not Purchased',value: notPurchased,  icon: '❌', color: '#dc2626', bg: 'rgba(239,68,68,0.12)' },
-            { label: 'Interested',   value: interested,    icon: '⭐', color: '#b45309', bg: 'rgba(245,158,11,0.12)' },
-            { label: 'Feedback Pending', value: feedbackPending, icon: '💬', color: '#0891b2', bg: 'rgba(6,182,212,0.12)' },
+            { label: 'Total Visits',    value: total,         icon: '👥', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)' },
+            { label: 'Total Billing',   value: `₹${totalBilling.toLocaleString('en-IN')}`, icon: '💰', color: '#047857', bg: 'rgba(16,185,129,0.15)' },
+            { label: 'Purchased',       value: purchased,     icon: '✅', color: '#059669', bg: 'rgba(16,185,129,0.12)' },
+            { label: 'Not Purchased',   value: notPurchased,  icon: '❌', color: '#dc2626', bg: 'rgba(239,68,68,0.12)' },
+            { label: 'Feedback Pending',value: feedbackPending, icon: '💬', color: '#0891b2', bg: 'rgba(6,182,212,0.12)' },
           ].map(s => (
             <div key={s.label} className="stat-card">
               <div className="stat-icon" style={{ background: s.bg, color: s.color }}>{s.icon}</div>
@@ -303,6 +331,7 @@ export default function AllVisits() {
                     <th>Visit Date</th>
                     <th>Purpose</th>
                     <th>Source</th>
+                    <th>Billing Value</th>
                     <th>Status</th>
                     <th>Feedback</th>
                     <th>Action</th>
@@ -333,6 +362,15 @@ export default function AllVisits() {
                       </td>
                       <td style={{ fontSize: 12 }}>{v.purpose}</td>
                       <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{v.source}</td>
+                      <td>
+                        {v.totalBillingValue > 0 ? (
+                          <span style={{ fontWeight: 800, color: '#047857', fontSize: 13 }}>
+                            ₹{Number(v.totalBillingValue).toLocaleString('en-IN')}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>—</span>
+                        )}
+                      </td>
                       <td><StatusChip status={v.purchaseStatus} /></td>
                       <td>
                         {v.feedbackSubmitted
@@ -384,6 +422,84 @@ export default function AllVisits() {
                   <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, marginBottom: 6, textTransform: 'uppercase' }}>Staff Member</div>
                   <div style={{ fontWeight: 700, fontSize: 14 }}>{selected.staff?.name}</div>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{selected.staff?.designation}</div>
+                </div>
+              </div>
+
+              {/* Instant Total Billing Value Input */}
+              <div style={{
+                padding: '12px 16px',
+                background: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(6,182,212,0.05) 100%)',
+                border: '1.5px solid rgba(16,185,129,0.3)',
+                borderRadius: 10,
+                marginBottom: 16,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
+                  <label style={{
+                    fontSize: 12,
+                    fontWeight: 800,
+                    color: '#047857',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    margin: 0,
+                  }}>
+                    <span>💰</span> Total Billing Value (₹) — Enter Instantly:
+                  </label>
+                  {selected.totalBillingValue > 0 && (
+                    <span style={{
+                      background: 'rgba(16,185,129,0.2)',
+                      color: '#065f46',
+                      padding: '2px 10px',
+                      borderRadius: 12,
+                      fontWeight: 800,
+                      fontSize: 12,
+                    }}>
+                      Current: ₹{Number(selected.totalBillingValue).toLocaleString('en-IN')}
+                    </span>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <div style={{ position: 'relative', flex: 1 }}>
+                    <span style={{
+                      position: 'absolute',
+                      left: 10,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      fontWeight: 700,
+                      color: '#059669',
+                      fontSize: 14,
+                    }}>
+                      ₹
+                    </span>
+                    <input
+                      type="number"
+                      min="0"
+                      className="form-control"
+                      placeholder="Enter total bill/invoice amount"
+                      value={billingValueInput}
+                      onChange={(e) => setBillingValueInput(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleUpdateBilling(); }}
+                      style={{
+                        paddingLeft: 26,
+                        fontWeight: 700,
+                        fontSize: 14,
+                        background: '#ffffff',
+                        borderColor: 'rgba(16,185,129,0.5)',
+                      }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-primary"
+                    disabled={savingBilling}
+                    onClick={handleUpdateBilling}
+                    style={{ whiteSpace: 'nowrap', minWidth: 85 }}
+                  >
+                    {savingBilling ? 'Saving…' : '💾 Save'}
+                  </button>
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                  Enter the invoice or bill amount and click Save to record instantly.
                 </div>
               </div>
 

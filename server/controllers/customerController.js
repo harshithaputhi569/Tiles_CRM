@@ -228,6 +228,45 @@ const getVisitByFeedbackToken = async (req, res) => {
   }
 };
 
+// @route PUT /api/visits/:id
+// Allows staff or admin to instantly enter/update totalBillingValue, purchase outcome, and notes
+const updateVisit = async (req, res) => {
+  try {
+    const { totalBillingValue, purchaseStatus, nonPurchaseReason, notes, purpose } = req.body;
+    const visit = await Visit.findById(req.params.id);
+    if (!visit) return res.status(404).json({ message: 'Visit not found' });
+
+    if (totalBillingValue !== undefined) {
+      visit.totalBillingValue = Math.max(0, Number(totalBillingValue) || 0);
+    }
+    if (purchaseStatus !== undefined) {
+      visit.purchaseStatus = purchaseStatus;
+      if (purchaseStatus !== 'Not Purchased') visit.nonPurchaseReason = '';
+    }
+    if (nonPurchaseReason !== undefined) {
+      visit.nonPurchaseReason = nonPurchaseReason;
+    }
+    if (notes !== undefined) {
+      visit.notes = notes;
+    }
+    if (purpose !== undefined) {
+      visit.purpose = purpose;
+    }
+
+    await visit.save();
+
+    const populated = await visit.populate([
+      { path: 'customer', select: 'name mobile customerType source address' },
+      { path: 'staff', select: 'name designation' },
+    ]);
+
+    res.json(populated);
+  } catch (err) {
+    console.error('updateVisit error:', err);
+    res.status(500).json({ message: 'Failed to update visit' });
+  }
+};
+
 module.exports = {
   getCustomers,
   getCustomerHistory,
@@ -235,5 +274,6 @@ module.exports = {
   getCustomersWithNoVisit,
   getVisits,
   createVisit,
+  updateVisit,
   getVisitByFeedbackToken,
 };

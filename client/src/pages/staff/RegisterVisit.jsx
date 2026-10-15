@@ -83,6 +83,7 @@ const emptyVisit = {
   nonPurchaseReason: '',
   repeatReason: 'Follow-up on Previous Enquiry',
   source: 'Walk-in / Signboard',
+  totalBillingValue: '',
   notes: '',
 };
 
@@ -681,6 +682,57 @@ export default function RegisterVisit() {
                     </div>
                   </div>
 
+                  {/* Total Billing Value Input */}
+                  {visit.purchaseStatus === 'Purchased' && (
+                    <div
+                      className="form-group fade-in"
+                      style={{
+                        padding: '14px 16px',
+                        background: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(6,182,212,0.05) 100%)',
+                        border: '1.5px solid rgba(16,185,129,0.35)',
+                        borderRadius: 10,
+                        marginTop: 14,
+                      }}
+                    >
+                      <label className="form-label" style={{ color: '#047857', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span>💰</span> Total Billing Value (₹) *
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        <span style={{
+                          position: 'absolute',
+                          left: 12,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          fontSize: 16,
+                          fontWeight: 700,
+                          color: '#059669',
+                        }}>
+                          ₹
+                        </span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          className="form-control"
+                          placeholder="Enter invoice/bill amount (e.g. 45000)"
+                          value={visit.totalBillingValue}
+                          onChange={(e) => setVisit({ ...visit, totalBillingValue: e.target.value })}
+                          style={{
+                            paddingLeft: 30,
+                            fontSize: 15,
+                            fontWeight: 700,
+                            borderColor: 'rgba(16,185,129,0.5)',
+                            background: '#ffffff',
+                            color: '#065f46',
+                          }}
+                        />
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                        Enter the total invoice/bill amount generated for this customer visit.
+                      </div>
+                    </div>
+                  )}
+
                   {/* Reason for not purchasing */}
                   {visit.purchaseStatus === 'Not Purchased' && (
                     <div
@@ -770,6 +822,15 @@ export default function RegisterVisit() {
                 }}>
                   {createdVisit.purchaseStatus === 'Purchased' ? '✓ Purchased' : createdVisit.purchaseStatus === 'Interested' ? '⭐ Interested' : `✗ Not Purchased: ${createdVisit.nonPurchaseReason || 'Other'}`}
                 </div>
+                {createdVisit.totalBillingValue > 0 && (
+                  <div style={{
+                    padding: '8px 16px', borderRadius: 20, fontWeight: 800, fontSize: 13,
+                    background: 'rgba(16,185,129,0.15)', color: '#047857', border: '1.5px solid rgba(16,185,129,0.4)',
+                    display: 'flex', alignItems: 'center', gap: 6,
+                  }}>
+                    💰 Billing: ₹{Number(createdVisit.totalBillingValue).toLocaleString('en-IN')}
+                  </div>
+                )}
                 {createdVisit.repeatReason && (
                   <div style={{ padding: '8px 16px', borderRadius: 20, background: 'rgba(245,158,11,0.12)', color: '#b45309', fontWeight: 700, fontSize: 13, border: '1px solid rgba(245,158,11,0.3)' }}>
                     🔁 {createdVisit.repeatReason}
