@@ -9,7 +9,6 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
-import { useNotifications } from '../../context/NotificationContext';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload?.length) {
@@ -31,7 +30,6 @@ const PURCHASE_COLORS = {
 
 export default function StaffDashboard() {
   const { user } = useAuth();
-  const { notifications, unreadCount, markAsRead } = useNotifications();
   const [feedbacks, setFeedbacks] = useState([]);
   const [purchaseData, setPurchaseData] = useState(null);
   const [repeatData, setRepeatData] = useState(null);
@@ -127,67 +125,6 @@ export default function StaffDashboard() {
             </div>
           </div>
         </div>
-
-        {/* Customer Feedback Notifications Alert for Staff */}
-        {notifications.length > 0 && (
-          <div style={{
-            background: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(124,58,237,0.05) 100%)',
-            border: '1.5px solid rgba(245,158,11,0.3)',
-            borderRadius: 14,
-            padding: '16px 20px',
-            marginBottom: 24,
-          }} className="fade-in">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 800, fontSize: 14, color: '#92400e' }}>
-                <span style={{ fontSize: 18 }}>🔔</span> Customer Feedback Updates
-                {unreadCount > 0 && (
-                  <span style={{ background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 12 }}>
-                    {unreadCount} New
-                  </span>
-                )}
-              </div>
-              <Link to="/staff/performance" style={{ fontSize: 12, color: 'var(--accent-purple)', fontWeight: 700, textDecoration: 'none' }}>
-                View My Performance & Ratings →
-              </Link>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {notifications.slice(0, 3).map((n) => (
-                <div
-                  key={n._id}
-                  onClick={() => { markAsRead(n._id); }}
-                  style={{
-                    background: '#ffffff',
-                    border: `1px solid ${n.unread ? 'rgba(245,158,11,0.4)' : 'var(--border-glass)'}`,
-                    borderRadius: 10,
-                    padding: '12px 14px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 12,
-                    boxShadow: n.unread ? '0 2px 8px rgba(245,158,11,0.1)' : 'none',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 20 }}>{n.type === 'complaint' ? '⚠️' : '⭐'}</span>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: n.unread ? 800 : 600, color: 'var(--text-primary)' }}>
-                        {n.title}
-                      </div>
-                      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                        {n.message}
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 11, color: '#94a3b8', flexShrink: 0 }}>
-                    {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Section 1: Purchase Conversion */}
         <div className="card fade-in" style={{ marginBottom: 24 }}>
