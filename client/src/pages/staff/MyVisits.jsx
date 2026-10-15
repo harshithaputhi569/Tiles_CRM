@@ -3,7 +3,7 @@ import Topbar from '../../components/Topbar';
 import { LoadingSpinner, EmptyState, StatusBadge } from '../../components/UI';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
-import { MdSearch, MdRefresh, MdWhatsapp, MdSms, MdContentCopy, MdFilterList } from 'react-icons/md';
+import { MdSearch, MdRefresh, MdWhatsapp, MdOpenInNew, MdContentCopy, MdFilterList } from 'react-icons/md';
 
 const PURCHASE_COLORS = {
   Purchased: { bg: 'rgba(16,185,129,0.12)', color: '#059669', border: 'rgba(16,185,129,0.3)' },
@@ -351,15 +351,13 @@ export default function MyVisits() {
                 {!selected.feedbackSubmitted && (
                   <>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 10 }}>
-                      Send the customer a unique link via WhatsApp or SMS. The customer can rate their experience and raise a complaint.
+                      Send the customer a unique link via WhatsApp or copy it. The customer can rate their experience and raise a complaint.
                     </div>
                     {(() => {
                       const token = selected.feedbackToken || selected._id;
                       const link = `${window.location.origin}/feedback/${token}`;
-                      const cleanMobile = (selected.customer?.mobile || '').replace(/\D/g, '');
-                      const smsMsg = `Dear ${selected.customer?.name || 'Customer'}, thank you for visiting TileShow! Please share your feedback or complaint here: ${link}`;
                       return (
-                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                           <button
                             className="btn btn-primary btn-sm"
                             style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, #25d366, #128c7e)', fontSize: 13 }}
@@ -371,13 +369,6 @@ export default function MyVisits() {
                           >
                             <MdWhatsapp style={{ fontSize: 16 }} /> Send via WhatsApp
                           </button>
-                          <a
-                            href={`sms:${cleanMobile}?body=${encodeURIComponent(smsMsg)}`}
-                            className="btn btn-secondary btn-sm"
-                            style={{ display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none', fontSize: 13 }}
-                          >
-                            <MdSms style={{ fontSize: 15 }} /> Send via SMS
-                          </a>
                           <button
                             className="btn btn-outline btn-sm"
                             style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
@@ -385,6 +376,15 @@ export default function MyVisits() {
                           >
                             <MdContentCopy style={{ fontSize: 14 }} /> Copy Link
                           </button>
+                          <a
+                            href={link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn btn-ghost btn-sm"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none', fontSize: 13 }}
+                          >
+                            <MdOpenInNew style={{ fontSize: 14 }} /> Preview Form
+                          </a>
                         </div>
                       );
                     })()}

@@ -9,7 +9,7 @@ import {
   MdShoppingBag,
   MdCancel,
   MdWhatsapp,
-  MdSms,
+  MdVisibility,
   MdContentCopy,
   MdOpenInNew,
   MdPhoneIphone,
@@ -98,6 +98,7 @@ export default function RegisterVisit() {
   const [visit, setVisit] = useState(emptyVisit);
   const [createdVisit, setCreatedVisit] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
   const debounceRef = useRef(null);
 
   const handleMobileChange = (val) => {
@@ -779,7 +780,7 @@ export default function RegisterVisit() {
                 </div>
               </div>
 
-              {/* Always display Customer Feedback & Complaint Link with WhatsApp, SMS, Copy, and Preview */}
+              {/* Always display Customer Feedback & Complaint Link with WhatsApp, Copy, and Live Form Preview */}
               {(() => {
                 const cust = (createdVisit.customer && typeof createdVisit.customer === 'object' && createdVisit.customer.name)
                   ? createdVisit.customer
@@ -790,10 +791,9 @@ export default function RegisterVisit() {
                 const phoneForWhatsApp = cleanDigits.length === 10 ? `91${cleanDigits}` : cleanDigits;
                 const link = createdVisit.feedbackLink || `${window.location.origin}/feedback/${createdVisit.feedbackToken || createdVisit._id}`;
 
-                const messageText = `Dear ${custName}, thank you for visiting TileShow!\n\nWe value your experience with us. Please click the link below to share your feedback or register any complaint:\n${link}\n\nYour response helps us serve you better. 🙏`;
+                const messageText = `Dear ${custName}, thank you for visiting TileShow!\n\nWe value your feedback. Please click the link below to share your experience or register any complaint:\n${link}\n\nYour response helps us serve you better. 🙏`;
 
                 const waUrl = `https://wa.me/${phoneForWhatsApp}?text=${encodeURIComponent(messageText)}`;
-                const smsUrl = `sms:${cleanDigits}?body=${encodeURIComponent(messageText)}`;
 
                 return (
                   <div style={{
@@ -827,7 +827,7 @@ export default function RegisterVisit() {
                     </div>
 
                     <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.5 }}>
-                      Send this unique, secure complaint/feedback form link directly to the customer's phone number. The customer can rate their showroom experience and submit any complaints without logging in.
+                      Send this unique, secure complaint & feedback form link to the customer via WhatsApp or copy the link below. The customer can rate their showroom experience and submit any complaints without logging in.
                     </div>
 
                     {/* Link display & copy */}
@@ -864,12 +864,12 @@ export default function RegisterVisit() {
                           toast.success('Form link copied to clipboard!');
                         }}
                       >
-                        <MdContentCopy /> Copy
+                        <MdContentCopy /> Copy Link
                       </button>
                     </div>
 
-                    {/* Action Buttons: WhatsApp, SMS, Open Form */}
-                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    {/* Action Buttons: WhatsApp, Live Preview, Open in New Tab */}
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
                       <a
                         href={waUrl}
                         target="_blank"
@@ -890,21 +890,21 @@ export default function RegisterVisit() {
                         <MdWhatsapp style={{ fontSize: 18 }} /> Send via WhatsApp
                       </a>
 
-                      <a
-                        href={smsUrl}
+                      <button
+                        type="button"
                         className="btn btn-secondary"
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: 8,
-                          textDecoration: 'none',
                           fontSize: 14,
                           fontWeight: 700,
                           padding: '10px 18px',
                         }}
+                        onClick={() => setShowPreviewModal(true)}
                       >
-                        <MdSms style={{ fontSize: 18 }} /> Send via SMS
-                      </a>
+                        <MdVisibility style={{ fontSize: 18 }} /> Live Form Preview
+                      </button>
 
                       <a
                         href={link}
@@ -920,7 +920,7 @@ export default function RegisterVisit() {
                           padding: '10px 14px',
                         }}
                       >
-                        <MdOpenInNew style={{ fontSize: 16 }} /> Open Form Preview
+                        <MdOpenInNew style={{ fontSize: 16 }} /> Open in New Tab
                       </a>
                     </div>
                   </div>
@@ -944,6 +944,100 @@ export default function RegisterVisit() {
           )}
         </div>
       </div>
+
+      {/* Live Form Preview Modal */}
+      {showPreviewModal && createdVisit && (
+        <div
+          className="modal-overlay"
+          onClick={() => setShowPreviewModal(false)}
+          style={{ zIndex: 9999, background: 'rgba(15,23,42,0.65)', backdropFilter: 'blur(4px)' }}
+        >
+          <div
+            className="modal"
+            style={{
+              maxWidth: 720,
+              width: '95%',
+              height: '88vh',
+              maxHeight: 820,
+              display: 'flex',
+              flexDirection: 'column',
+              padding: 0,
+              borderRadius: 16,
+              overflow: 'hidden',
+              boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className="modal-header"
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '14px 20px',
+                borderBottom: '1px solid var(--border-glass)',
+                background: 'var(--bg-card)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 8,
+                    background: 'rgba(124,58,237,0.12)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--accent-purple)',
+                    fontSize: 16,
+                  }}
+                >
+                  <MdVisibility />
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 14 }}>Customer Feedback & Complaint Form Preview</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    Exact view for {createdVisit.customer?.name || 'Customer'}
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <a
+                  href={createdVisit.feedbackLink || `${window.location.origin}/feedback/${createdVisit.feedbackToken || createdVisit._id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-ghost btn-sm"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, textDecoration: 'none' }}
+                >
+                  <MdOpenInNew /> Open in Full Tab
+                </a>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-icon btn-sm"
+                  onClick={() => setShowPreviewModal(false)}
+                  style={{ fontSize: 16 }}
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <div style={{ flex: 1, position: 'relative', background: '#f8fafc' }}>
+              <iframe
+                src={createdVisit.feedbackLink || `${window.location.origin}/feedback/${createdVisit.feedbackToken || createdVisit._id}`}
+                title="Customer Form Live Preview"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                  display: 'block',
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
