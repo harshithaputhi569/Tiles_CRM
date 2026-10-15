@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import Topbar from '../../components/Topbar';
 import { StatCard, LoadingSpinner, RatingBadge } from '../../components/UI';
 import {
   MdPeople, MdFeedback, MdWarning, MdStar, MdTrendingUp, MdCheckCircle,
-  MdPending, MdPeopleAlt
+  MdPending, MdPeopleAlt, MdShoppingBag, MdCancel
 } from 'react-icons/md';
 import {
-  AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
+  BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import api from '../../api/axios';
@@ -32,8 +33,9 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [metrics, setMetrics] = useState(null);
-  const [trend, setTrend] = useState([]);
+  const [visitorTrend, setVisitorTrend] = useState([]);
   const [ratingDist, setRatingDist] = useState([]);
   const [staffPerf, setStaffPerf] = useState([]);
   const [complaintCats, setComplaintCats] = useState([]);
@@ -44,13 +46,13 @@ export default function AdminDashboard() {
       try {
         const [m, t, r, s, c] = await Promise.all([
           api.get('/analytics/dashboard'),
-          api.get('/analytics/feedback-trend?days=30'),
+          api.get('/analytics/visitor-trend?months=6'),
           api.get('/analytics/rating-distribution'),
           api.get('/analytics/staff-performance'),
           api.get('/analytics/complaint-categories'),
         ]);
         setMetrics(m.data);
-        setTrend(t.data.map(d => ({ date: d._id?.slice(5), count: d.count, rating: parseFloat(d.avgRating?.toFixed(1)) })));
+        setVisitorTrend(t.data);
         setRatingDist(r.data.map(d => ({ name: `${d._id}★`, value: d.count })));
         setStaffPerf(s.data.slice(0, 5));
         setComplaintCats(c.data);
@@ -69,47 +71,107 @@ export default function AdminDashboard() {
 
         {/* Stat Cards */}
         <div className="stats-grid">
-          <StatCard icon={<MdPeopleAlt />} label="Total Customers" value={metrics?.totalCustomers}
+          <StatCard icon={<MdPeopleAlt />} label="Unique Customers" value={metrics?.totalCustomers}
             iconBg="rgba(124,58,237,0.15)" iconColor="#a78bfa" />
           <StatCard icon={<MdPeople />} label="Total Visits" value={metrics?.totalVisits}
             iconBg="rgba(6,182,212,0.15)" iconColor="#22d3ee" />
+          <StatCard icon={<MdShoppingBag />} label="Purchased" value={metrics?.purchasedVisits ?? 0}
+            iconBg="rgba(16,185,129,0.15)" iconColor="#059669" />
+          <StatCard icon={<MdCancel />} label="Not Purchased" value={metrics?.notPurchasedVisits ?? 0}
+            iconBg="rgba(239,68,68,0.15)" iconColor="#dc2626" />
+          <StatCard icon={<MdTrendingUp />} label="Conversion Rate"
+            value={`${metrics?.conversionRate ?? 0}%`}
+            iconBg="rgba(16,185,129,0.15)" iconColor="#34d399" />
           <StatCard icon={<MdFeedback />} label="Total Feedback" value={metrics?.totalFeedback}
             iconBg="rgba(16,185,129,0.15)" iconColor="#34d399" />
           <StatCard icon={<MdStar />} label="Avg. Rating"
             value={<span style={{ fontSize: 22 }}>{metrics?.avgRating} <span style={{ fontSize: 16 }}>/ 5</span></span>}
             iconBg="rgba(245,158,11,0.15)" iconColor="#fbbf24" />
-          <StatCard icon={<MdTrendingUp />} label="Satisfaction Rate"
-            value={`${metrics?.satisfactionRate}%`}
-            iconBg="rgba(16,185,129,0.15)" iconColor="#34d399" />
-          <StatCard icon={<MdWarning />} label="Total Complaints" value={metrics?.totalComplaints}
-            iconBg="rgba(239,68,68,0.15)" iconColor="#f87171" />
-          <StatCard icon={<MdPending />} label="Pending Complaints" value={metrics?.pendingComplaints}
-            iconBg="rgba(245,158,11,0.15)" iconColor="#fbbf24" />
-          <StatCard icon={<MdCheckCircle />} label="Active Staff" value={metrics?.activeStaff}
-            iconBg="rgba(124,58,237,0.15)" iconColor="#8b5cf6" />
+          <div onClick={() => navigate('/admin/complaints')} style={{ cursor: 'pointer' }} title="Click to view Complaints Report & Date Filters">
+            <StatCard icon={<MdWarning />} label="Complaints" value={metrics?.totalComplaints}
+              iconBg="rgba(239,68,68,0.15)" iconColor="#f87171" />
+          </div>
         </div>
+
+        {/* Visit ↔ Customer Accuracy Info Bar */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          padding: '10px 16px', marginBottom: 8, marginTop: 4,
+          background: metrics?.totalCustomers === metrics?.totalVisits
+            ? 'linear-gradient(90deg, rgba(16,185,129,0.08), rgba(6,182,212,0.05))'
+            : 'linear-gradient(90deg, rgba(124,58,237,0.08), rgba(6,182,212,0.05))',
+          border: `1px solid ${metrics?.totalCustomers === metrics?.totalVisits ? 'rgba(16,185,129,0.25)' : 'rgba(124,58,237,0.2)'}`,
+          borderRadius: 10, fontSize: 13,
+        }} className="fade-in">
+          <span style={{ fontSize: 16 }}>{metrics?.totalCustomers === metrics?.totalVisits ? '✅' : 'ℹ️'}</span>
+          <span style={{ color: 'var(--text-secondary)' }}>
+            <strong style={{ color: 'var(--text-primary)' }}>{metrics?.totalCustomers}</strong> unique customer{metrics?.totalCustomers !== 1 ? 's' : ''} made{' '}
+            <strong style={{ color: 'var(--text-primary)' }}>{metrics?.totalVisits}</strong> visit{metrics?.totalVisits !== 1 ? 's' : ''}.
+            {metrics?.totalVisits > metrics?.totalCustomers
+              ? ` ${metrics.totalVisits - metrics.totalCustomers} visit(s) are repeat showroom visits from existing customers.`
+              : ' Every customer is a first-time visitor.'}
+          </span>
+        </div>
+
+        {/* Repeat Visitors Alert Banner */}
+        {metrics?.repeatCustomersCount > 0 && (
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '12px 18px', marginBottom: 16, marginTop: 4,
+            background: 'linear-gradient(135deg, rgba(245,158,11,0.12) 0%, rgba(124,58,237,0.06) 100%)',
+            border: '1px solid rgba(245,158,11,0.35)',
+            borderRadius: 12, fontSize: 13, flexWrap: 'wrap', gap: 10,
+          }} className="fade-in">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 22 }}>🔔</span>
+              <div>
+                <div style={{ fontWeight: 800, color: '#92400e', fontSize: 14 }}>
+                  Repeat Visitor Alert: {metrics.repeatCustomersCount} customer{metrics.repeatCustomersCount !== 1 ? 's' : ''} visited 2 or 3 times to our showroom!
+                </div>
+                <div style={{ color: 'var(--text-secondary)', fontSize: 12, marginTop: 2 }}>
+                  Why do they return? Common reasons: Price negotiation, bringing family for approval, or tile shortage.
+                </div>
+              </div>
+            </div>
+            <a href="/admin/analytics" className="btn btn-sm btn-primary" style={{ padding: '6px 14px', fontSize: 12, textDecoration: 'none' }}>
+              View Repeat Reasons & Journeys →
+            </a>
+          </div>
+        )}
 
         {/* Charts Row 1 */}
         <div className="analytics-grid" style={{ marginBottom: 20 }}>
           <div className="card fade-in">
             <div className="card-header">
-              <span className="card-title">📈 Feedback Trend (Last 30 Days)</span>
+              <span className="card-title">👥 Customers Visited (Last 6 Months)</span>
             </div>
             <div className="card-body chart-container">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={trend}>
-                  <defs>
-                    <linearGradient id="gradCount" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="date" tick={{ fill: '#606080', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: '#606080', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Area type="monotone" dataKey="count" name="Feedback" stroke="#7c3aed" fill="url(#gradCount)" strokeWidth={2} dot={false} />
-                </AreaChart>
+                <BarChart data={visitorTrend} barCategoryGap="35%" margin={{ top: 20, right: 8, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(124,58,237,0.1)" vertical={false} />
+                  <XAxis dataKey="month" tick={{ fill: '#8b8baf', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis allowDecimals={false} tick={{ fill: '#8b8baf', fontSize: 11 }} axisLine={false} tickLine={false} width={30} />
+                  <Tooltip
+                    contentStyle={{
+                      background: '#fff', border: '1px solid #e2d9f3',
+                      borderRadius: 8, fontSize: 12,
+                      boxShadow: '0 4px 12px rgba(100,60,200,0.15)'
+                    }}
+                    formatter={(value) => [value, 'Customers Visited']}
+                  />
+                  <Bar
+                    dataKey="customersVisited"
+                    name="Customers Visited"
+                    radius={[6, 6, 0, 0]}
+                    maxBarSize={56}
+                    minPointSize={6}
+                    label={{ position: 'top', fontSize: 11, fill: '#8b8baf', formatter: (v) => v > 0 ? v : '0' }}
+                  >
+                    {visitorTrend.map((_, i) => (
+                      <Cell key={i} fill={i % 2 === 0 ? '#7c3aed' : '#06b6d4'} fillOpacity={visitorTrend[i]?.customersVisited === 0 ? 0.35 : 1} />
+                    ))}
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
@@ -183,8 +245,11 @@ export default function AdminDashboard() {
           </div>
 
           <div className="card fade-in">
-            <div className="card-header">
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span className="card-title">🔴 Complaint Categories</span>
+              <Link to="/admin/complaints" className="btn btn-xs btn-outline" style={{ fontSize: 11, padding: '4px 10px', textDecoration: 'none' }}>
+                Complaints Report & Filters →
+              </Link>
             </div>
             <div className="card-body chart-container">
               <ResponsiveContainer width="100%" height="100%">

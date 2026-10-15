@@ -83,13 +83,13 @@ export default function Reports() {
 
       /* ── Table ── */
       const columns = [
-        'Customer', 'Mobile', 'Type', 'Visit Date', 'Purpose', 'Staff',
+        'Customer', 'Mobile', 'Type', 'Lead Source', 'Status', 'Reason', 'Visit Date', 'Purpose', 'Staff',
         'Beh.', 'Help.', 'Prod.', 'Tile', 'Price', 'Exp.', 'Rec.', 'Rating',
         'Complaint', 'Comments',
       ];
 
       const tableRows = rows.map(r => [
-        r.customerName, r.mobile, r.customerType, r.visitDate,
+        r.customerName, r.mobile, r.customerType, r.source || '—', r.purchaseStatus || '—', r.nonPurchaseReason || '—', r.visitDate,
         r.purpose, r.staffName,
         r.behaviour, r.helpfulness, r.productKnowledge, r.tileCollection,
         r.pricing, r.overall, r.recommendation, r.overallRating,
@@ -172,10 +172,10 @@ export default function Reports() {
   };
 
   const reportFields = [
-    'Customer Name', 'Mobile Number', 'Customer Type', 'Visit Date', 'Visit Purpose',
-    'Staff Name', 'Behaviour Rating', 'Helpfulness Rating', 'Product Knowledge',
-    'Tile Collection Rating', 'Pricing Explanation', 'Overall Experience',
-    'Recommendation Score', 'Overall Rating', 'Complaint', 'Customer Comments', 'Suggestions',
+    'Customer Name', 'Mobile Number', 'Customer Type', 'Lead Source', 'Purchase Status',
+    'Non-Purchase Reason', 'Visit Date', 'Visit Purpose', 'Staff Name', 'Behaviour Rating',
+    'Helpfulness Rating', 'Product Knowledge', 'Tile Collection Rating', 'Pricing Explanation',
+    'Overall Experience', 'Recommendation Score', 'Overall Rating', 'Complaint', 'Customer Comments', 'Suggestions',
   ];
 
   return (

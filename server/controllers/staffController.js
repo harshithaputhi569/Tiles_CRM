@@ -11,10 +11,18 @@ const getAllStaff = async (req, res) => {
 
 // @route POST /api/staff  [admin]
 const createStaff = async (req, res) => {
-  const { name, email, password, phone, designation } = req.body;
+  const { name, email, password, phone, designation, joinDate } = req.body;
   const exists = await User.findOne({ email });
   if (exists) return res.status(400).json({ message: 'Email already registered' });
-  const staff = await User.create({ name, email, password, phone, designation, role: 'staff' });
+  const staff = await User.create({
+    name,
+    email,
+    password,
+    phone,
+    designation,
+    joinDate: joinDate ? new Date(joinDate) : new Date(),
+    role: 'staff',
+  });
   res.status(201).json({ _id: staff._id, name: staff.name, email: staff.email, role: staff.role });
 };
 
@@ -22,11 +30,12 @@ const createStaff = async (req, res) => {
 const updateStaff = async (req, res) => {
   const staff = await User.findById(req.params.id);
   if (!staff || staff.role !== 'staff') return res.status(404).json({ message: 'Staff not found' });
-  const { name, email, phone, designation, isActive, password } = req.body;
+  const { name, email, phone, designation, isActive, password, joinDate } = req.body;
   staff.name = name || staff.name;
   staff.email = email || staff.email;
   staff.phone = phone || staff.phone;
   staff.designation = designation || staff.designation;
+  if (joinDate !== undefined) staff.joinDate = joinDate ? new Date(joinDate) : staff.joinDate;
   if (isActive !== undefined) staff.isActive = isActive;
   if (password) staff.password = password;
   await staff.save();

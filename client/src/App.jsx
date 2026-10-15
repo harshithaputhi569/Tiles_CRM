@@ -11,12 +11,17 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import StaffManagement from './pages/admin/StaffManagement';
 import FeedbackManagement from './pages/admin/FeedbackManagement';
 import ComplaintManagement from './pages/admin/ComplaintManagement';
+import AllVisits from './pages/admin/AllVisits';
 import Analytics from './pages/admin/Analytics';
 import Reports from './pages/admin/Reports';
 import StaffDashboard from './pages/staff/StaffDashboard';
 import RegisterVisit from './pages/staff/RegisterVisit';
+import MyVisits from './pages/staff/MyVisits';
 import SubmitFeedback from './pages/staff/SubmitFeedback';
 import MyPerformance from './pages/staff/MyPerformance';
+
+// Public page — no auth required
+import CustomerFeedbackForm from './pages/CustomerFeedbackForm';
 
 function AppLayout({ children }) {
   return (
@@ -53,15 +58,28 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Navigate to="/login" replace />} />
 
+          {/* Public — Customer Feedback Form (no login required) */}
+          <Route path="/feedback/:token" element={<CustomerFeedbackForm />} />
+
           {/* Admin Routes */}
           <Route path="/admin/dashboard" element={
             <ProtectedRoute role="admin">
               <AppLayout><AdminDashboard /></AppLayout>
             </ProtectedRoute>
           } />
+          <Route path="/admin/analytics" element={
+            <ProtectedRoute role="admin">
+              <AppLayout><Analytics /></AppLayout>
+            </ProtectedRoute>
+          } />
           <Route path="/admin/staff" element={
             <ProtectedRoute role="admin">
               <AppLayout><StaffManagement /></AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/admin/visits" element={
+            <ProtectedRoute role="admin">
+              <AppLayout><AllVisits /></AppLayout>
             </ProtectedRoute>
           } />
           <Route path="/admin/feedback" element={
@@ -72,11 +90,6 @@ export default function App() {
           <Route path="/admin/complaints" element={
             <ProtectedRoute role="admin">
               <AppLayout><ComplaintManagement /></AppLayout>
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/analytics" element={
-            <ProtectedRoute role="admin">
-              <AppLayout><Analytics /></AppLayout>
             </ProtectedRoute>
           } />
           <Route path="/admin/reports" element={
@@ -94,6 +107,11 @@ export default function App() {
           <Route path="/staff/visit" element={
             <ProtectedRoute role="staff">
               <AppLayout><RegisterVisit /></AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/staff/my-visits" element={
+            <ProtectedRoute role="staff">
+              <AppLayout><MyVisits /></AppLayout>
             </ProtectedRoute>
           } />
           <Route path="/staff/feedback" element={

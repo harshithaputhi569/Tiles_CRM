@@ -5,7 +5,24 @@ import { MdAdd, MdEdit, MdDelete, MdPersonOff, MdCheckCircle, MdSearch, MdPeople
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 
-const emptyForm = { name: '', email: '', password: '', phone: '', designation: '' };
+const emptyForm = { name: '', email: '', password: '', phone: '', designation: '', joinDate: '' };
+
+const formatDateForInput = (dateVal) => {
+  if (!dateVal) return '';
+  try {
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return '';
+    return d.toISOString().split('T')[0];
+  } catch {
+    return '';
+  }
+};
+
+const formatDisplayDate = (val) => {
+  if (!val) return '—';
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-IN');
+};
 
 const DESIGNATIONS = [
   'Sales Executive', 'Senior Sales Executive',
@@ -68,11 +85,23 @@ export default function StaffManagement() {
   useEffect(() => { fetchStaff(); }, []);
 
   const openAdd = () => {
-    setForm(emptyForm); setEditMode(false); setSelectedId(null); setShowModal(true);
+    setForm({ ...emptyForm, joinDate: new Date().toISOString().split('T')[0] });
+    setEditMode(false);
+    setSelectedId(null);
+    setShowModal(true);
   };
   const openEdit = (s) => {
-    setForm({ name: s.name, email: s.email, password: '', phone: s.phone || '', designation: s.designation || '' });
-    setEditMode(true); setSelectedId(s._id); setShowModal(true);
+    setForm({
+      name: s.name,
+      email: s.email,
+      password: '',
+      phone: s.phone || '',
+      designation: s.designation || '',
+      joinDate: formatDateForInput(s.joinDate || s.createdAt),
+    });
+    setEditMode(true);
+    setSelectedId(s._id);
+    setShowModal(true);
   };
 
   const handleSubmit = async (e) => {
@@ -295,7 +324,7 @@ export default function StaffManagement() {
 
                         {/* Joined */}
                         <td style={cell({ background: bg, fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 })}>
-                          {new Date(s.joinDate || s.createdAt).toLocaleDateString('en-IN')}
+                          {formatDisplayDate(s.joinDate || s.createdAt)}
                         </td>
 
                         {/* Actions */}
@@ -404,11 +433,16 @@ export default function StaffManagement() {
                       {DESIGNATIONS.map(d => <option key={d} value={d}>{d}</option>)}
                     </select>
                   </div>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">{editMode ? 'New Password (leave blank to keep)' : 'Password *'}</label>
-                  <input className="form-control" type="password" placeholder="••••••••"
-                    value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
+                  <div className="form-group">
+                    <label className="form-label">Joined Date</label>
+                    <input className="form-control" type="date"
+                      value={form.joinDate} onChange={e => setForm({ ...form, joinDate: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">{editMode ? 'New Password (leave blank to keep)' : 'Password *'}</label>
+                    <input className="form-control" type="password" placeholder="••••••••"
+                      value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} />
+                  </div>
                 </div>
               </div>
               <div className="modal-footer">

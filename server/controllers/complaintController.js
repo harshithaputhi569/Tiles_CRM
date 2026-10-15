@@ -2,12 +2,26 @@ const Complaint = require('../models/Complaint');
 
 // @route GET /api/complaints
 const getComplaints = async (req, res) => {
-  const { status, category, staff } = req.query;
+  const { status, category, staff, startDate, endDate } = req.query;
   const filter = {};
   if (status) filter.status = status;
   if (category) filter.category = category;
   if (staff) filter.staff = staff;
   if (req.user.role === 'staff') filter.staff = req.user._id;
+
+  if (startDate || endDate) {
+    filter.createdAt = {};
+    if (startDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      filter.createdAt.$gte = start;
+    }
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      filter.createdAt.$lte = end;
+    }
+  }
 
   const complaints = await Complaint.find(filter)
     .populate('customer', 'name mobile')

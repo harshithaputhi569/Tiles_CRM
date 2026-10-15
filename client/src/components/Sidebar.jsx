@@ -4,13 +4,16 @@ import { useSidebar } from '../context/SidebarContext';
 import {
   MdDashboard, MdPeople, MdFeedback, MdWarning, MdBarChart,
   MdFileDownload, MdPersonAdd, MdStar, MdLogout,
-  MdStorefront, MdClose, MdMenu,
+  MdStorefront, MdClose, MdMenu, MdList,
 } from 'react-icons/md';
 
 const adminNav = [
   { label: 'MAIN', items: [
     { to: '/admin/dashboard', icon: <MdDashboard />, label: 'Dashboard' },
     { to: '/admin/analytics', icon: <MdBarChart />,  label: 'Analytics' },
+  ]},
+  { label: 'VISITS', items: [
+    { to: '/admin/visits',     icon: <MdList />,       label: 'All Visits' },
   ]},
   { label: 'MANAGEMENT', items: [
     { to: '/admin/staff',      icon: <MdPeople />,      label: 'Staff' },
@@ -27,9 +30,12 @@ const staffNav = [
     { to: '/staff/dashboard', icon: <MdDashboard />, label: 'Dashboard' },
     { to: '/staff/performance', icon: <MdStar />, label: 'Performance' },
   ]},
-  { label: 'ACTIONS', items: [
-    { to: '/staff/visit', icon: <MdPersonAdd />, label: 'Register' },
-    { to: '/staff/feedback', icon: <MdFeedback />, label: 'Feedback' },
+  { label: 'VISITS', items: [
+    { to: '/staff/visit',     icon: <MdPersonAdd />, label: 'Register Visit' },
+    { to: '/staff/my-visits', icon: <MdList />,     label: 'My Visits' },
+  ]},
+  { label: 'FEEDBACK', items: [
+    { to: '/staff/feedback', icon: <MdFeedback />, label: 'Submit Feedback' },
   ]},
 ];
 
@@ -37,15 +43,16 @@ const staffNav = [
 const adminBottomNav = [
   { to: '/admin/dashboard',   icon: <MdDashboard />,    label: 'Home' },
   { to: '/admin/analytics',   icon: <MdBarChart />,     label: 'Analytics' },
-  { to: '/admin/staff',       icon: <MdPeople />,       label: 'Staff' },
-  { to: '/admin/feedback',    icon: <MdFeedback />,     label: 'Feedback' },
+  { to: '/admin/visits',      icon: <MdList />,         label: 'Visits' },
   { to: '/admin/complaints',  icon: <MdWarning />,      label: 'Complaints' },
+  { to: '/admin/feedback',    icon: <MdFeedback />,     label: 'Feedback' },
 ];
 
 const staffBottomNav = [
   { to: '/staff/dashboard',    icon: <MdDashboard />,   label: 'Home' },
-  { to: '/staff/performance',  icon: <MdStar />,        label: 'Performance' },
+  { to: '/staff/performance',  icon: <MdStar />,        label: 'Perf' },
   { to: '/staff/visit',        icon: <MdPersonAdd />,   label: 'Register' },
+  { to: '/staff/my-visits',    icon: <MdList />,        label: 'My Visits' },
   { to: '/staff/feedback',     icon: <MdFeedback />,    label: 'Feedback' },
 ];
 

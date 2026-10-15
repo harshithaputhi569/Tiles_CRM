@@ -30,7 +30,7 @@ const getFeedbacks = async (req, res) => {
   res.json({ feedbacks, total, pages: Math.ceil(total / limit) });
 };
 
-// @route POST /api/feedback
+// @route POST /api/feedback  (authenticated staff)
 const createFeedback = async (req, res) => {
   const { visitId, ratings, recommendationScore, comments, suggestions, hasComplaint, complaintCategory, complaintDescription } = req.body;
 
@@ -64,4 +64,63 @@ const createFeedback = async (req, res) => {
   res.status(201).json(feedback);
 };
 
-module.exports = { getFeedbacks, createFeedback };
+// @route POST /api/feedback/public/:token  (PUBLIC — no auth, customer-facing)
+// Customer submits feedback via their unique visit feedback link
+const createPublicFeedback = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { ratings, recommendationScore, comments, suggestions, hasComplaint, complaintCategory, complaintDescription } = req.body;
+
+    const visit = await Visit.findOne({ feedbackToken: token })
+      .populate('customer', 'name mobile')
+      .populate('staff', 'name designation');
+
+    if (!visit) return res.status(404).json({ message: 'Invalid or expired feedback link.' });
+    if (visit.feedbackSubmitted) return res.status(409).json({ message: 'Feedback already submitted for this visit.' });
+    if (visit.feedbackTokenExpiry && new Date() > visit.feedbackTokenExpiry) {
+      return res.status(410).json({ message: 'This feedback link has expired.' });
+    }
+
+    // Validate ratings
+    const requiredRatings = ['behaviour', 'helpfulness', 'productKnowledge', 'tileCollection', 'pricingExplanation', 'overallExperience'];
+    for (const r of requiredRatings) {
+      if (!ratings || !ratings[r] || ratings[r] < 1 || ratings[r] > 5) {
+        return res.status(400).json({ message: `Invalid rating for: ${r}` });
+      }
+    }
+    if (!recommendationScore || recommendationScore < 1 || recommendationScore > 10) {
+      return res.status(400).json({ message: 'Recommendation score must be between 1 and 10.' });
+    }
+
+    const feedback = await Feedback.create({
+      visit: visit._id,
+      customer: visit.customer._id,
+      staff: visit.staff._id,
+      ratings,
+      recommendationScore,
+      comments: comments || '',
+      suggestions: suggestions || '',
+      hasComplaint: hasComplaint || false,
+    });
+
+    visit.feedbackSubmitted = true;
+    await visit.save();
+
+    if (hasComplaint && complaintDescription) {
+      await Complaint.create({
+        feedback: feedback._id,
+        customer: visit.customer._id,
+        staff: visit.staff._id,
+        category: complaintCategory || 'Other',
+        description: complaintDescription,
+      });
+    }
+
+    res.status(201).json({ message: 'Thank you! Your feedback has been submitted.' });
+  } catch (err) {
+    console.error('Public feedback error:', err);
+    res.status(500).json({ message: 'Failed to submit feedback. Please try again.' });
+  }
+};
+
+module.exports = { getFeedbacks, createFeedback, createPublicFeedback };

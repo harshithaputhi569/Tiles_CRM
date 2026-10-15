@@ -17,9 +17,9 @@ const buildFilter = ({ startDate, endDate, staff, hasComplaint }) => {
 // Helper: fetch feedbacks with populated refs
 const fetchFeedbacks = (filter) =>
   Feedback.find(filter)
-    .populate('customer', 'name mobile customerType')
+    .populate('customer', 'name mobile customerType source')
     .populate('staff', 'name')
-    .populate({ path: 'visit', select: 'purpose visitDate' })
+    .populate({ path: 'visit', select: 'purpose visitDate purchaseStatus nonPurchaseReason source' })
     .sort({ createdAt: -1 });
 
 // Helper: map feedback doc to a flat row
@@ -27,6 +27,9 @@ const toRow = (f) => ({
   customerName: f.customer?.name || '',
   mobile: f.customer?.mobile || '',
   customerType: f.customer?.customerType || '',
+  source: f.visit?.source || f.customer?.source || 'Walk-in / Signboard',
+  purchaseStatus: f.visit?.purchaseStatus || 'Purchased',
+  nonPurchaseReason: f.visit?.nonPurchaseReason || '',
   visitDate: f.visit?.visitDate ? new Date(f.visit.visitDate).toLocaleDateString('en-IN') : '',
   purpose: f.visit?.purpose || '',
   staffName: f.staff?.name || '',
@@ -59,23 +62,26 @@ const exportFeedbackExcel = async (req, res) => {
   });
 
   sheet.columns = [
-    { header: 'Customer Name',      key: 'customerName',    width: 22 },
-    { header: 'Mobile',             key: 'mobile',          width: 15 },
-    { header: 'Customer Type',      key: 'customerType',    width: 18 },
-    { header: 'Visit Date',         key: 'visitDate',       width: 14 },
-    { header: 'Visit Purpose',      key: 'purpose',         width: 20 },
-    { header: 'Staff Name',         key: 'staffName',       width: 20 },
-    { header: 'Behaviour',          key: 'behaviour',       width: 12 },
-    { header: 'Helpfulness',        key: 'helpfulness',     width: 13 },
-    { header: 'Product Knowledge',  key: 'productKnowledge',width: 18 },
-    { header: 'Tile Collection',    key: 'tileCollection',  width: 16 },
-    { header: 'Pricing Expl.',      key: 'pricing',         width: 14 },
-    { header: 'Ovr. Experience',    key: 'overall',         width: 16 },
-    { header: 'Recommend Score',    key: 'recommendation',  width: 16 },
-    { header: 'Overall Rating',     key: 'overallRating',   width: 14 },
-    { header: 'Complaint',          key: 'complaint',       width: 12 },
-    { header: 'Comments',           key: 'comments',        width: 35 },
-    { header: 'Suggestions',        key: 'suggestions',     width: 35 },
+    { header: 'Customer Name',      key: 'customerName',      width: 22 },
+    { header: 'Mobile',             key: 'mobile',            width: 15 },
+    { header: 'Customer Type',      key: 'customerType',      width: 18 },
+    { header: 'Lead Source',        key: 'source',            width: 24 },
+    { header: 'Purchase Status',    key: 'purchaseStatus',    width: 16 },
+    { header: 'Non-Purchase Reason',key: 'nonPurchaseReason', width: 28 },
+    { header: 'Visit Date',         key: 'visitDate',         width: 14 },
+    { header: 'Visit Purpose',      key: 'purpose',           width: 20 },
+    { header: 'Staff Name',         key: 'staffName',         width: 20 },
+    { header: 'Behaviour',          key: 'behaviour',         width: 12 },
+    { header: 'Helpfulness',        key: 'helpfulness',       width: 13 },
+    { header: 'Product Knowledge',  key: 'productKnowledge',  width: 18 },
+    { header: 'Tile Collection',    key: 'tileCollection',    width: 16 },
+    { header: 'Pricing Expl.',      key: 'pricing',           width: 14 },
+    { header: 'Ovr. Experience',    key: 'overall',           width: 16 },
+    { header: 'Recommend Score',    key: 'recommendation',    width: 16 },
+    { header: 'Overall Rating',     key: 'overallRating',     width: 14 },
+    { header: 'Complaint',          key: 'complaint',         width: 12 },
+    { header: 'Comments',           key: 'comments',          width: 35 },
+    { header: 'Suggestions',        key: 'suggestions',       width: 35 },
   ];
 
   // Style header row
