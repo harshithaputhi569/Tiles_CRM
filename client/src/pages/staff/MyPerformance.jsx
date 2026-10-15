@@ -158,9 +158,15 @@ export default function MyPerformance() {
                   </div>
                   <div>
                     <div style={{ fontSize: 20, fontWeight: 800, color: '#059669' }}>
-                      {purchaseData?.purchasedCount ?? 0}
+                      {purchaseData?.convertedCustomersCount ?? purchaseData?.purchasedCount ?? 0}
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Purchased</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Converted Customers</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 20, fontWeight: 800, color: '#047857' }}>
+                      ₹{Number(purchaseData?.totalBillingValue || 0).toLocaleString('en-IN')}
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Total Billing</div>
                   </div>
                   <div>
                     <div style={{ fontSize: 20, fontWeight: 800, color: '#dc2626' }}>

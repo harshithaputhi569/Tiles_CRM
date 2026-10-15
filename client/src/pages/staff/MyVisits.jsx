@@ -149,20 +149,28 @@ export default function MyVisits() {
       <div className="page-content">
 
         {/* Summary Stats */}
-        <div className="stats-grid" style={{ marginBottom: 20 }}>
-          {[
-            { label: 'Total Visits', value: total, icon: '👥', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)' },
-            { label: 'Purchased', value: visits.filter(v => v.purchaseStatus === 'Purchased').length, icon: '✅', color: '#059669', bg: 'rgba(16,185,129,0.12)' },
-            { label: 'Not Purchased', value: visits.filter(v => v.purchaseStatus === 'Not Purchased').length, icon: '❌', color: '#dc2626', bg: 'rgba(239,68,68,0.12)' },
-            { label: 'Feedback Sent', value: visits.filter(v => v.feedbackSubmitted).length, icon: '💬', color: '#0891b2', bg: 'rgba(6,182,212,0.12)' },
-          ].map(s => (
-            <div key={s.label} className="stat-card">
-              <div className="stat-icon" style={{ background: s.bg, color: s.color }}>{s.icon}</div>
-              <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
-              <div className="stat-label">{s.label}</div>
+        {(() => {
+          const purchasedVisits = visits.filter(v => v.purchaseStatus === 'Purchased');
+          const convertedCustomerSet = new Set(purchasedVisits.map(v => v.customer?._id || v.customer).filter(Boolean));
+          const convertedCount = convertedCustomerSet.size || purchasedVisits.length;
+
+          return (
+            <div className="stats-grid" style={{ marginBottom: 20 }}>
+              {[
+                { label: 'Total Visits', value: total, icon: '👥', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)' },
+                { label: 'Converted Customers', value: convertedCount, icon: '🛍️', color: '#059669', bg: 'rgba(16,185,129,0.12)' },
+                { label: 'Not Purchased', value: visits.filter(v => v.purchaseStatus === 'Not Purchased').length, icon: '❌', color: '#dc2626', bg: 'rgba(239,68,68,0.12)' },
+                { label: 'Feedback Sent', value: visits.filter(v => v.feedbackSubmitted).length, icon: '💬', color: '#0891b2', bg: 'rgba(6,182,212,0.12)' },
+              ].map(s => (
+                <div key={s.label} className="stat-card">
+                  <div className="stat-icon" style={{ background: s.bg, color: s.color }}>{s.icon}</div>
+                  <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
+                  <div className="stat-label">{s.label}</div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          );
+        })()}
 
         {/* Filters */}
         <div className="card fade-in" style={{ marginBottom: 20, padding: '16px 20px' }}>

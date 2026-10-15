@@ -77,7 +77,7 @@ export default function AdminDashboard() {
             iconBg="rgba(124,58,237,0.15)" iconColor="#a78bfa" />
           <StatCard icon={<MdPeople />} label="Total Visits" value={metrics?.totalVisits}
             iconBg="rgba(6,182,212,0.15)" iconColor="#22d3ee" />
-          <StatCard icon={<MdShoppingBag />} label="Purchased" value={metrics?.purchasedVisits ?? 0}
+          <StatCard icon={<MdShoppingBag />} label="Converted Customers" value={metrics?.convertedCustomersCount ?? metrics?.purchasedVisits ?? 0}
             iconBg="rgba(16,185,129,0.15)" iconColor="#059669" />
           <StatCard icon={<MdCancel />} label="Not Purchased" value={metrics?.notPurchasedVisits ?? 0}
             iconBg="rgba(239,68,68,0.15)" iconColor="#dc2626" />
@@ -108,7 +108,8 @@ export default function AdminDashboard() {
           <span style={{ fontSize: 16 }}>{metrics?.totalCustomers === metrics?.totalVisits ? '✅' : 'ℹ️'}</span>
           <span style={{ color: 'var(--text-secondary)' }}>
             <strong style={{ color: 'var(--text-primary)' }}>{metrics?.totalCustomers}</strong> unique customer{metrics?.totalCustomers !== 1 ? 's' : ''} made{' '}
-            <strong style={{ color: 'var(--text-primary)' }}>{metrics?.totalVisits}</strong> visit{metrics?.totalVisits !== 1 ? 's' : ''}.
+            <strong style={{ color: 'var(--text-primary)' }}>{metrics?.totalVisits}</strong> visit{metrics?.totalVisits !== 1 ? 's' : ''} &bull;{' '}
+            <strong style={{ color: '#059669' }}>{metrics?.convertedCustomersCount ?? metrics?.purchasedVisits ?? 0} converted customer{metrics?.convertedCustomersCount !== 1 ? 's' : ''}</strong> ({metrics?.conversionRate ?? 0}% conversion rate).
             {metrics?.totalVisits > metrics?.totalCustomers
               ? ` ${metrics.totalVisits - metrics.totalCustomers} visit(s) are repeat showroom visits from existing customers.`
               : ' Every customer is a first-time visitor.'}

@@ -19,6 +19,7 @@ const getDashboardMetrics = async (req, res) => {
     notPurchasedVisits,
   ] = await Promise.all([
     Visit.distinct('customer'), // unique customers who physically visited
+    Visit.distinct('customer', { purchaseStatus: 'Purchased' }), // unique converted customers who bought
     Visit.countDocuments(),
     Feedback.countDocuments(),
     Complaint.countDocuments(),
@@ -37,6 +38,7 @@ const getDashboardMetrics = async (req, res) => {
   const repeatCustomersCount = repeatCustAgg.length;
 
   const totalCustomers = visitedCustomerIds.length;
+  const convertedCustomersCount = convertedCustomerIds.length;
 
   const allFeedback = await Feedback.find().select('overallRating');
   const avgRating =
@@ -52,6 +54,7 @@ const getDashboardMetrics = async (req, res) => {
 
   res.json({
     totalCustomers,
+    convertedCustomersCount,
     totalVisits,
     purchasedVisits,
     notPurchasedVisits,
@@ -240,7 +243,7 @@ const getPurchaseAnalytics = async (req, res) => {
       matchFilter.staff = new mongoose.Types.ObjectId(staff);
     }
 
-    const [totalVisits, purchasedCount, notPurchasedCount, billingAgg] = await Promise.all([
+    const [totalVisits, purchasedCount, notPurchasedCount, billingAgg, convertedCustomerIds] = await Promise.all([
       Visit.countDocuments(matchFilter),
       Visit.countDocuments({ ...matchFilter, purchaseStatus: 'Purchased' }),
       Visit.countDocuments({ ...matchFilter, purchaseStatus: 'Not Purchased' }),
@@ -248,9 +251,11 @@ const getPurchaseAnalytics = async (req, res) => {
         { $match: matchFilter },
         { $group: { _id: null, totalBilling: { $sum: '$totalBillingValue' } } },
       ]),
+      Visit.distinct('customer', { ...matchFilter, purchaseStatus: 'Purchased' }),
     ]);
 
     const totalBillingValue = billingAgg.length > 0 ? (billingAgg[0].totalBilling || 0) : 0;
+    const convertedCustomersCount = convertedCustomerIds.length;
     const conversionRate = totalVisits > 0 ? parseFloat(((purchasedCount / totalVisits) * 100).toFixed(1)) : 0;
 
 
@@ -389,6 +394,7 @@ const getPurchaseAnalytics = async (req, res) => {
     res.json({
       totalVisits,
       purchasedCount,
+      convertedCustomersCount,
       notPurchasedCount,
       conversionRate,
       totalBillingValue,

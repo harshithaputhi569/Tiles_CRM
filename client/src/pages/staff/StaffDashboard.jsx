@@ -148,7 +148,7 @@ export default function StaffDashboard() {
           <div className="card-body">
             <div className="stats-grid" style={{ marginBottom: 20 }}>
               <StatCard icon={<MdPeople />} label="Visits Handled" value={purchaseData?.totalVisits ?? 0} iconBg="rgba(124,58,237,0.12)" iconColor="#7c3aed" />
-              <StatCard icon={<MdShoppingBag />} label="Purchased" value={purchaseData?.purchasedCount ?? 0} iconBg="rgba(16,185,129,0.12)" iconColor="#059669" />
+              <StatCard icon={<MdShoppingBag />} label="Converted Customers" value={purchaseData?.convertedCustomersCount ?? purchaseData?.purchasedCount ?? 0} iconBg="rgba(16,185,129,0.12)" iconColor="#059669" />
               <StatCard icon={<MdReceipt />} label="Total Billing Value" value={purchaseData?.totalBillingValue > 0 ? `₹${Number(purchaseData.totalBillingValue).toLocaleString('en-IN')}` : '₹0'} iconBg="rgba(16,185,129,0.18)" iconColor="#047857" />
               <StatCard icon={<MdCancel />} label="Not Purchased" value={purchaseData?.notPurchasedCount ?? 0} iconBg="rgba(239,68,68,0.12)" iconColor="#dc2626" />
               <StatCard icon={<MdTrendingUp />} label="My Conversion Rate" value={`${purchaseData?.conversionRate ?? 0}%`} iconBg="rgba(6,182,212,0.12)" iconColor="#0891b2" />

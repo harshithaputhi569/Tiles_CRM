@@ -722,21 +722,34 @@ export default function Analytics() {
                   </div>
                 </div>
 
-                {/* Purchased */}
+                {/* Converted Customers */}
                 <div className="stat-card" style={{ borderColor: 'rgba(16,185,129,0.25)' }}>
                   <div className="stat-icon" style={{ background: 'rgba(16,185,129,0.12)' }}>
                     <MdShoppingBag style={{ color: '#059669', fontSize: 24 }} />
                   </div>
                   <div className="stat-info">
                     <div className="stat-value" style={{ color: '#059669' }}>
-                      {purchaseData?.purchasedCount ?? 0}
+                      {purchaseData?.convertedCustomersCount ?? purchaseData?.purchasedCount ?? 0}
                     </div>
                     <div className="stat-label">
-                      Purchased Customers{' '}
+                      Converted Customers{' '}
                       <span style={{ fontWeight: 700, color: '#059669' }}>
                         ({purchaseData?.totalVisits > 0 ? ((purchaseData.purchasedCount / purchaseData.totalVisits) * 100).toFixed(0) : 0}%)
                       </span>
                     </div>
+                  </div>
+                </div>
+
+                {/* Total Billing */}
+                <div className="stat-card" style={{ borderColor: 'rgba(16,185,129,0.25)' }}>
+                  <div className="stat-icon" style={{ background: 'rgba(16,185,129,0.15)' }}>
+                    <span style={{ fontSize: 20 }}>💰</span>
+                  </div>
+                  <div className="stat-info">
+                    <div className="stat-value" style={{ color: '#047857' }}>
+                      ₹{Number(purchaseData?.totalBillingValue || 0).toLocaleString('en-IN')}
+                    </div>
+                    <div className="stat-label">Total Billing Value</div>
                   </div>
                 </div>
 

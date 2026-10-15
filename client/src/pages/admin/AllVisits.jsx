@@ -203,7 +203,9 @@ export default function AllVisits() {
   };
 
   const totalPages = Math.ceil(total / LIMIT);
-  const purchased = visits.filter(v => v.purchaseStatus === 'Purchased').length;
+  const purchasedVisits = visits.filter(v => v.purchaseStatus === 'Purchased');
+  const convertedCustomerSet = new Set(purchasedVisits.map(v => v.customer?._id || v.customer).filter(Boolean));
+  const convertedCount = convertedCustomerSet.size || purchasedVisits.length;
   const notPurchased = visits.filter(v => v.purchaseStatus === 'Not Purchased').length;
   const interested = visits.filter(v => v.purchaseStatus === 'Interested').length;
   const feedbackPending = visits.filter(v => !v.feedbackSubmitted).length;
@@ -217,11 +219,11 @@ export default function AllVisits() {
         {/* Summary Cards */}
         <div className="stats-grid" style={{ marginBottom: 20 }}>
           {[
-            { label: 'Total Visits',    value: total,         icon: '👥', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)' },
-            { label: 'Total Billing',   value: `₹${totalBilling.toLocaleString('en-IN')}`, icon: '💰', color: '#047857', bg: 'rgba(16,185,129,0.15)' },
-            { label: 'Purchased',       value: purchased,     icon: '✅', color: '#059669', bg: 'rgba(16,185,129,0.12)' },
-            { label: 'Not Purchased',   value: notPurchased,  icon: '❌', color: '#dc2626', bg: 'rgba(239,68,68,0.12)' },
-            { label: 'Feedback Pending',value: feedbackPending, icon: '💬', color: '#0891b2', bg: 'rgba(6,182,212,0.12)' },
+            { label: 'Total Visits',        value: total,         icon: '👥', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)' },
+            { label: 'Total Billing',       value: `₹${totalBilling.toLocaleString('en-IN')}`, icon: '💰', color: '#047857', bg: 'rgba(16,185,129,0.15)' },
+            { label: 'Converted Customers', value: convertedCount, icon: '🛍️', color: '#059669', bg: 'rgba(16,185,129,0.12)' },
+            { label: 'Not Purchased',       value: notPurchased,  icon: '❌', color: '#dc2626', bg: 'rgba(239,68,68,0.12)' },
+            { label: 'Feedback Pending',    value: feedbackPending, icon: '💬', color: '#0891b2', bg: 'rgba(6,182,212,0.12)' },
           ].map(s => (
             <div key={s.label} className="stat-card">
               <div className="stat-icon" style={{ background: s.bg, color: s.color }}>{s.icon}</div>
