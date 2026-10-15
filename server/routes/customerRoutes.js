@@ -14,12 +14,12 @@ const { protect } = require('../middleware/auth');
 // Public route — customer accesses their feedback form via unique token
 router.get('/visits/feedback-form/:token', getVisitByFeedbackToken);
 
-router.use(protect);
-router.get('/customers', getCustomers);
-router.get('/customers/no-visit', getCustomersWithNoVisit);
-router.get('/customers/:id/history', getCustomerHistory);
-router.post('/customers', createCustomer);
-router.get('/visits', getVisits);
-router.post('/visits', createVisit);
+// Protected routes
+router.get('/customers', protect, getCustomers);
+router.get('/customers/no-visit', protect, getCustomersWithNoVisit);
+router.get('/customers/:id/history', protect, getCustomerHistory);
+router.post('/customers', protect, createCustomer);
+router.get('/visits', protect, getVisits);
+router.post('/visits', protect, createVisit);
 
 module.exports = router;

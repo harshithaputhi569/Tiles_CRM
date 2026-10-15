@@ -1,6 +1,8 @@
 const Feedback = require('../models/Feedback');
 const Visit = require('../models/Visit');
 const Complaint = require('../models/Complaint');
+const Notification = require('../models/Notification');
+const mongoose = require('mongoose');
 
 // @route GET /api/feedback
 const getFeedbacks = async (req, res) => {
@@ -71,7 +73,13 @@ const createPublicFeedback = async (req, res) => {
     const { token } = req.params;
     const { ratings, recommendationScore, comments, suggestions, hasComplaint, complaintCategory, complaintDescription } = req.body;
 
-    const visit = await Visit.findOne({ feedbackToken: token })
+    const isObjectId = mongoose.Types.ObjectId.isValid(token);
+    const visit = await Visit.findOne({
+      $or: [
+        { feedbackToken: token },
+        ...(isObjectId ? [{ _id: token }] : []),
+      ],
+    })
       .populate('customer', 'name mobile')
       .populate('staff', 'name designation');
 
@@ -114,6 +122,52 @@ const createPublicFeedback = async (req, res) => {
         category: complaintCategory || 'Other',
         description: complaintDescription,
       });
+    }
+
+    // Auto-dispatch notifications to Staff and Admin
+    const customerName = visit.customer?.name || 'Customer';
+    const staffName = visit.staff?.name || 'Staff Member';
+    const ratingValues = Object.values(ratings);
+    const avgRating = parseFloat((ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length).toFixed(1));
+
+    try {
+      // 1. Notification for the staff member
+      await Notification.create({
+        recipient: visit.staff._id,
+        role: 'staff',
+        title: hasComplaint ? '⚠️ Customer Feedback & Complaint Received' : '⭐ New Customer Feedback Received',
+        message: `${customerName} rated their visit (${avgRating}★).${hasComplaint ? ` Note: A complaint was registered under "${complaintCategory}".` : ' Great work!' }`,
+        type: hasComplaint ? 'complaint' : 'feedback',
+        referenceId: feedback._id,
+        metadata: {
+          customerName,
+          staffName,
+          rating: avgRating,
+          hasComplaint: !!hasComplaint,
+          complaintCategory: complaintCategory || '',
+        },
+        link: '/staff/performance',
+      });
+
+      // 2. Notification for Admin Dashboard
+      await Notification.create({
+        recipient: null,
+        role: 'admin',
+        title: hasComplaint ? '🚨 New Customer Complaint Raised' : '⭐ Customer Feedback Received',
+        message: `${customerName} submitted ${avgRating}★ feedback for ${staffName}.${hasComplaint ? ` Complaint: ${complaintCategory}.` : ''}`,
+        type: hasComplaint ? 'complaint' : 'feedback',
+        referenceId: feedback._id,
+        metadata: {
+          customerName,
+          staffName,
+          rating: avgRating,
+          hasComplaint: !!hasComplaint,
+          complaintCategory: complaintCategory || '',
+        },
+        link: hasComplaint ? '/complaints' : '/feedback',
+      });
+    } catch (notifErr) {
+      console.error('Notification creation error (non-fatal):', notifErr);
     }
 
     res.status(201).json({ message: 'Thank you! Your feedback has been submitted.' });

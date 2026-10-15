@@ -10,6 +10,7 @@ const feedbackRoutes  = require('./routes/feedbackRoutes');
 const complaintRoutes = require('./routes/complaintRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const reportRoutes    = require('./routes/reportRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 connectDB();
 
@@ -27,13 +28,14 @@ app.use(express.json());
 app.get('/api/health', (req, res) => res.json({ status: 'TileShow CRM API running ✅' }));
 
 // Routes
-app.use('/api/auth',      authRoutes);
-app.use('/api/staff',     staffRoutes);
-app.use('/api',           customerRoutes);
-app.use('/api/feedback',  feedbackRoutes);
-app.use('/api/complaints',complaintRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/reports',   reportRoutes);
+app.use('/api/auth',          authRoutes);
+app.use('/api/staff',         staffRoutes);
+app.use('/api',               customerRoutes);
+app.use('/api/feedback',      feedbackRoutes);
+app.use('/api/complaints',    complaintRoutes);
+app.use('/api/analytics',     analyticsRoutes);
+app.use('/api/reports',       reportRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 
 
