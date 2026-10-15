@@ -99,6 +99,16 @@ export const NotificationProvider = ({ children }) => {
     }
   };
 
+  const deleteNotification = async (id) => {
+    try {
+      await api.delete(`/notifications/${id}`);
+      setNotifications((prev) => prev.filter((n) => n._id !== id));
+      toast.success('Notification removed');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <NotificationContext.Provider
       value={{
@@ -106,6 +116,7 @@ export const NotificationProvider = ({ children }) => {
         unreadCount,
         markAsRead,
         markAllAsRead,
+        deleteNotification,
         refresh: () => fetchNotifications(false),
       }}
     >

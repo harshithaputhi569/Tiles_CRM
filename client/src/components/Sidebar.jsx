@@ -1,63 +1,67 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSidebar } from '../context/SidebarContext';
+import { useNotifications } from '../context/NotificationContext';
 import {
   MdDashboard, MdPeople, MdFeedback, MdWarning, MdBarChart,
   MdFileDownload, MdPersonAdd, MdStar, MdLogout,
-  MdStorefront, MdClose, MdMenu, MdList,
+  MdStorefront, MdClose, MdMenu, MdList, MdNotifications,
 } from 'react-icons/md';
 
 const adminNav = [
   { label: 'MAIN', items: [
-    { to: '/admin/dashboard', icon: <MdDashboard />, label: 'Dashboard' },
-    { to: '/admin/analytics', icon: <MdBarChart />,  label: 'Analytics' },
+    { to: '/admin/dashboard',     icon: <MdDashboard />,     label: 'Dashboard' },
+    { to: '/admin/notifications', icon: <MdNotifications />, label: 'Notifications', hasBadge: true },
+    { to: '/admin/analytics',     icon: <MdBarChart />,      label: 'Analytics' },
   ]},
   { label: 'VISITS', items: [
-    { to: '/admin/visits',     icon: <MdList />,       label: 'All Visits' },
+    { to: '/admin/visits',        icon: <MdList />,          label: 'All Visits' },
   ]},
   { label: 'MANAGEMENT', items: [
-    { to: '/admin/staff',      icon: <MdPeople />,      label: 'Staff' },
-    { to: '/admin/feedback',   icon: <MdFeedback />,    label: 'Feedback' },
-    { to: '/admin/complaints', icon: <MdWarning />,     label: 'Complaints' },
+    { to: '/admin/staff',         icon: <MdPeople />,        label: 'Staff' },
+    { to: '/admin/feedback',      icon: <MdFeedback />,      label: 'Feedback' },
+    { to: '/admin/complaints',    icon: <MdWarning />,       label: 'Complaints' },
   ]},
   { label: 'REPORTS', items: [
-    { to: '/admin/reports',    icon: <MdFileDownload />, label: 'Reports' },
+    { to: '/admin/reports',       icon: <MdFileDownload />,  label: 'Reports' },
   ]},
 ];
 
 const staffNav = [
   { label: 'MAIN', items: [
-    { to: '/staff/dashboard', icon: <MdDashboard />, label: 'Dashboard' },
-    { to: '/staff/performance', icon: <MdStar />, label: 'Performance' },
+    { to: '/staff/dashboard',     icon: <MdDashboard />,     label: 'Dashboard' },
+    { to: '/staff/notifications', icon: <MdNotifications />, label: 'Notifications', hasBadge: true },
+    { to: '/staff/performance',   icon: <MdStar />,          label: 'Performance' },
   ]},
   { label: 'VISITS', items: [
-    { to: '/staff/visit',     icon: <MdPersonAdd />, label: 'Register Visit' },
-    { to: '/staff/my-visits', icon: <MdList />,     label: 'My Visits' },
+    { to: '/staff/visit',         icon: <MdPersonAdd />,     label: 'Register Visit' },
+    { to: '/staff/my-visits',     icon: <MdList />,          label: 'My Visits' },
   ]},
   { label: 'FEEDBACK', items: [
-    { to: '/staff/feedback', icon: <MdFeedback />, label: 'Submit Feedback' },
+    { to: '/staff/feedback',      icon: <MdFeedback />,      label: 'Submit Feedback' },
   ]},
 ];
 
 // Flat list for the bottom nav bar (mobile) — max 5 items
 const adminBottomNav = [
-  { to: '/admin/dashboard',   icon: <MdDashboard />,    label: 'Home' },
-  { to: '/admin/analytics',   icon: <MdBarChart />,     label: 'Analytics' },
-  { to: '/admin/visits',      icon: <MdList />,         label: 'Visits' },
-  { to: '/admin/complaints',  icon: <MdWarning />,      label: 'Complaints' },
-  { to: '/admin/feedback',    icon: <MdFeedback />,     label: 'Feedback' },
+  { to: '/admin/dashboard',     icon: <MdDashboard />,     label: 'Home' },
+  { to: '/admin/notifications', icon: <MdNotifications />, label: 'Alerts',   hasBadge: true },
+  { to: '/admin/visits',        icon: <MdList />,          label: 'Visits' },
+  { to: '/admin/feedback',      icon: <MdFeedback />,      label: 'Feedback' },
+  { to: '/admin/complaints',    icon: <MdWarning />,       label: 'Complaints' },
 ];
 
 const staffBottomNav = [
-  { to: '/staff/dashboard',    icon: <MdDashboard />,   label: 'Home' },
-  { to: '/staff/performance',  icon: <MdStar />,        label: 'Perf' },
-  { to: '/staff/visit',        icon: <MdPersonAdd />,   label: 'Register' },
-  { to: '/staff/my-visits',    icon: <MdList />,        label: 'My Visits' },
-  { to: '/staff/feedback',     icon: <MdFeedback />,    label: 'Feedback' },
+  { to: '/staff/dashboard',     icon: <MdDashboard />,     label: 'Home' },
+  { to: '/staff/notifications', icon: <MdNotifications />, label: 'Alerts',   hasBadge: true },
+  { to: '/staff/visit',         icon: <MdPersonAdd />,     label: 'Register' },
+  { to: '/staff/my-visits',     icon: <MdList />,          label: 'Visits' },
+  { to: '/staff/performance',   icon: <MdStar />,          label: 'Perf' },
 ];
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
+  const { unreadCount } = useNotifications();
   const navigate = useNavigate();
   const { isOpen, open, close } = useSidebar();
   const navItems = user?.role === 'admin' ? adminNav : staffNav;
@@ -121,7 +125,24 @@ export default function Sidebar() {
                   onClick={handleNavClick}
                 >
                   <span className="nav-icon">{item.icon}</span>
-                  {item.label}
+                  <span style={{ flex: 1 }}>{item.label}</span>
+                  {item.hasBadge && unreadCount > 0 && (
+                    <span
+                      style={{
+                        background: '#ef4444',
+                        color: 'white',
+                        fontSize: 10,
+                        fontWeight: 700,
+                        padding: '1px 7px',
+                        borderRadius: 12,
+                        minWidth: 18,
+                        textAlign: 'center',
+                        boxShadow: '0 2px 6px rgba(239,68,68,0.4)',
+                      }}
+                    >
+                      {unreadCount}
+                    </span>
+                  )}
                 </NavLink>
               ))}
             </div>
@@ -144,7 +165,28 @@ export default function Sidebar() {
             className={({ isActive }) => `bottom-nav-item${isActive ? ' active' : ''}`}
             onClick={close}
           >
-            <span className="bottom-nav-icon">{item.icon}</span>
+            <div style={{ position: 'relative', display: 'inline-flex' }}>
+              <span className="bottom-nav-icon">{item.icon}</span>
+              {item.hasBadge && unreadCount > 0 && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: -4,
+                    right: -8,
+                    background: '#ef4444',
+                    color: 'white',
+                    fontSize: 9,
+                    fontWeight: 700,
+                    padding: '1px 5px',
+                    borderRadius: 10,
+                    minWidth: 14,
+                    textAlign: 'center',
+                  }}
+                >
+                  {unreadCount}
+                </span>
+              )}
+            </div>
             <span className="bottom-nav-label">{item.label}</span>
           </NavLink>
         ))}

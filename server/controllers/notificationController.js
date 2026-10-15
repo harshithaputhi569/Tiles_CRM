@@ -16,7 +16,7 @@ const getNotifications = async (req, res) => {
 
     const notifications = await Notification.find(query)
       .sort({ createdAt: -1 })
-      .limit(30);
+      .limit(100);
 
     // Compute unread count for current user
     const unreadCount = notifications.filter((n) => {
@@ -80,8 +80,22 @@ const markAllNotificationsAsRead = async (req, res) => {
   }
 };
 
+// @route DELETE /api/notifications/:id
+const deleteNotification = async (req, res) => {
+  try {
+    const notif = await Notification.findById(req.params.id);
+    if (!notif) return res.status(404).json({ message: 'Notification not found' });
+
+    await notif.deleteOne();
+    res.json({ message: 'Notification deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to delete notification' });
+  }
+};
+
 module.exports = {
   getNotifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,
+  deleteNotification,
 };

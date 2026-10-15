@@ -36,13 +36,15 @@ const getFeedbacks = async (req, res) => {
 const createFeedback = async (req, res) => {
   const { visitId, ratings, recommendationScore, comments, suggestions, hasComplaint, complaintCategory, complaintDescription } = req.body;
 
-  const visit = await Visit.findById(visitId);
+  const visit = await Visit.findById(visitId)
+    .populate('customer', 'name mobile')
+    .populate('staff', 'name');
   if (!visit) return res.status(404).json({ message: 'Visit not found' });
 
   const feedback = await Feedback.create({
     visit: visitId,
-    customer: visit.customer,
-    staff: visit.staff,
+    customer: visit.customer._id || visit.customer,
+    staff: visit.staff._id || visit.staff,
     ratings,
     recommendationScore,
     comments,
@@ -56,11 +58,58 @@ const createFeedback = async (req, res) => {
   if (hasComplaint && complaintDescription) {
     await Complaint.create({
       feedback: feedback._id,
-      customer: visit.customer,
-      staff: visit.staff,
+      customer: visit.customer._id || visit.customer,
+      staff: visit.staff._id || visit.staff,
       category: complaintCategory || 'Other',
       description: complaintDescription,
     });
+  }
+
+  // Dispatch notifications to staff and admin
+  try {
+    const customerName = visit.customer?.name || 'Customer';
+    const customerMobile = visit.customer?.mobile || '';
+    const staffName = visit.staff?.name || 'Staff Member';
+    const ratingValues = Object.values(ratings || {});
+    const avgRating = ratingValues.length > 0 ? parseFloat((ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length).toFixed(1)) : 0;
+    const notifMetadata = {
+      customerName,
+      customerMobile,
+      staffName,
+      rating: avgRating,
+      ratings,
+      recommendationScore,
+      comments: comments || '',
+      suggestions: suggestions || '',
+      hasComplaint: !!hasComplaint,
+      complaintCategory: complaintCategory || '',
+      complaintDescription: complaintDescription || '',
+      visitDate: visit.visitDate || new Date(),
+    };
+
+    await Notification.create({
+      recipient: visit.staff._id || visit.staff,
+      role: 'staff',
+      title: hasComplaint ? '⚠️ Customer Feedback & Complaint Logged' : '⭐ New Customer Feedback Logged',
+      message: `${customerName} rated their visit (${avgRating}★).${hasComplaint ? ` Note: A complaint was registered under "${complaintCategory}".` : ''}`,
+      type: hasComplaint ? 'complaint' : 'feedback',
+      referenceId: feedback._id,
+      metadata: notifMetadata,
+      link: '/staff/notifications',
+    });
+
+    await Notification.create({
+      recipient: null,
+      role: 'admin',
+      title: hasComplaint ? '🚨 New Customer Complaint Raised' : '⭐ Customer Feedback Received',
+      message: `${customerName} submitted ${avgRating}★ feedback for ${staffName}.${hasComplaint ? ` Complaint: ${complaintCategory}.` : ''}`,
+      type: hasComplaint ? 'complaint' : 'feedback',
+      referenceId: feedback._id,
+      metadata: notifMetadata,
+      link: '/admin/notifications',
+    });
+  } catch (err) {
+    console.error('Notification dispatch error (non-fatal):', err);
   }
 
   res.status(201).json(feedback);
@@ -126,9 +175,26 @@ const createPublicFeedback = async (req, res) => {
 
     // Auto-dispatch notifications to Staff and Admin
     const customerName = visit.customer?.name || 'Customer';
+    const customerMobile = visit.customer?.mobile || '';
     const staffName = visit.staff?.name || 'Staff Member';
     const ratingValues = Object.values(ratings);
     const avgRating = parseFloat((ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length).toFixed(1));
+    const visitDate = visit.visitDate || visit.createdAt || new Date();
+
+    const notifMetadata = {
+      customerName,
+      customerMobile,
+      staffName,
+      rating: avgRating,
+      ratings,
+      recommendationScore,
+      comments: comments || '',
+      suggestions: suggestions || '',
+      hasComplaint: !!hasComplaint,
+      complaintCategory: complaintCategory || '',
+      complaintDescription: complaintDescription || '',
+      visitDate,
+    };
 
     try {
       // 1. Notification for the staff member
@@ -139,17 +205,11 @@ const createPublicFeedback = async (req, res) => {
         message: `${customerName} rated their visit (${avgRating}★).${hasComplaint ? ` Note: A complaint was registered under "${complaintCategory}".` : ' Great work!' }`,
         type: hasComplaint ? 'complaint' : 'feedback',
         referenceId: feedback._id,
-        metadata: {
-          customerName,
-          staffName,
-          rating: avgRating,
-          hasComplaint: !!hasComplaint,
-          complaintCategory: complaintCategory || '',
-        },
-        link: '/staff/performance',
+        metadata: notifMetadata,
+        link: '/staff/notifications',
       });
 
-      // 2. Notification for Admin Dashboard
+      // 2. Notification for Admin
       await Notification.create({
         recipient: null,
         role: 'admin',
@@ -157,14 +217,8 @@ const createPublicFeedback = async (req, res) => {
         message: `${customerName} submitted ${avgRating}★ feedback for ${staffName}.${hasComplaint ? ` Complaint: ${complaintCategory}.` : ''}`,
         type: hasComplaint ? 'complaint' : 'feedback',
         referenceId: feedback._id,
-        metadata: {
-          customerName,
-          staffName,
-          rating: avgRating,
-          hasComplaint: !!hasComplaint,
-          complaintCategory: complaintCategory || '',
-        },
-        link: hasComplaint ? '/complaints' : '/feedback',
+        metadata: notifMetadata,
+        link: '/admin/notifications',
       });
     } catch (notifErr) {
       console.error('Notification creation error (non-fatal):', notifErr);

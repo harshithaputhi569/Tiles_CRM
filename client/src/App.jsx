@@ -15,6 +15,7 @@ import ComplaintManagement from './pages/admin/ComplaintManagement';
 import AllVisits from './pages/admin/AllVisits';
 import Analytics from './pages/admin/Analytics';
 import Reports from './pages/admin/Reports';
+import NotificationsPage from './pages/NotificationsPage';
 import StaffDashboard from './pages/staff/StaffDashboard';
 import RegisterVisit from './pages/staff/RegisterVisit';
 import MyVisits from './pages/staff/MyVisits';
@@ -69,6 +70,11 @@ export default function App() {
               <AppLayout><AdminDashboard /></AppLayout>
             </ProtectedRoute>
           } />
+          <Route path="/admin/notifications" element={
+            <ProtectedRoute role="admin">
+              <AppLayout><NotificationsPage /></AppLayout>
+            </ProtectedRoute>
+          } />
           <Route path="/admin/analytics" element={
             <ProtectedRoute role="admin">
               <AppLayout><Analytics /></AppLayout>
@@ -104,6 +110,11 @@ export default function App() {
           <Route path="/staff/dashboard" element={
             <ProtectedRoute role="staff">
               <AppLayout><StaffDashboard /></AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/staff/notifications" element={
+            <ProtectedRoute role="staff">
+              <AppLayout><NotificationsPage /></AppLayout>
             </ProtectedRoute>
           } />
           <Route path="/staff/visit" element={
