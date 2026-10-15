@@ -11,7 +11,6 @@ import {
 const adminNav = [
   { label: 'MAIN', items: [
     { to: '/admin/dashboard',     icon: <MdDashboard />,     label: 'Dashboard' },
-    { to: '/admin/notifications', icon: <MdNotifications />, label: 'Notifications', hasBadge: true },
     { to: '/admin/analytics',     icon: <MdBarChart />,      label: 'Analytics' },
   ]},
   { label: 'VISITS', items: [
@@ -19,7 +18,7 @@ const adminNav = [
   ]},
   { label: 'MANAGEMENT', items: [
     { to: '/admin/staff',         icon: <MdPeople />,        label: 'Staff' },
-    { to: '/admin/feedback',      icon: <MdFeedback />,      label: 'Feedback' },
+    { to: '/admin/feedback',      icon: <MdFeedback />,      label: 'Feedback',   hasBadge: true },
     { to: '/admin/complaints',    icon: <MdWarning />,       label: 'Complaints' },
   ]},
   { label: 'REPORTS', items: [
@@ -30,7 +29,6 @@ const adminNav = [
 const staffNav = [
   { label: 'MAIN', items: [
     { to: '/staff/dashboard',     icon: <MdDashboard />,     label: 'Dashboard' },
-    { to: '/staff/notifications', icon: <MdNotifications />, label: 'Notifications', hasBadge: true },
     { to: '/staff/performance',   icon: <MdStar />,          label: 'Performance' },
   ]},
   { label: 'VISITS', items: [
@@ -38,24 +36,24 @@ const staffNav = [
     { to: '/staff/my-visits',     icon: <MdList />,          label: 'My Visits' },
   ]},
   { label: 'FEEDBACK', items: [
-    { to: '/staff/feedback',      icon: <MdFeedback />,      label: 'Submit Feedback' },
+    { to: '/staff/feedback',      icon: <MdFeedback />,      label: 'Customer Feedback', hasBadge: true },
   ]},
 ];
 
 // Flat list for the bottom nav bar (mobile) — max 5 items
 const adminBottomNav = [
   { to: '/admin/dashboard',     icon: <MdDashboard />,     label: 'Home' },
-  { to: '/admin/notifications', icon: <MdNotifications />, label: 'Alerts',   hasBadge: true },
   { to: '/admin/visits',        icon: <MdList />,          label: 'Visits' },
-  { to: '/admin/feedback',      icon: <MdFeedback />,      label: 'Feedback' },
+  { to: '/admin/feedback',      icon: <MdFeedback />,      label: 'Feedback', hasBadge: true },
   { to: '/admin/complaints',    icon: <MdWarning />,       label: 'Complaints' },
+  { to: '/admin/analytics',     icon: <MdBarChart />,      label: 'Analytics' },
 ];
 
 const staffBottomNav = [
   { to: '/staff/dashboard',     icon: <MdDashboard />,     label: 'Home' },
-  { to: '/staff/notifications', icon: <MdNotifications />, label: 'Alerts',   hasBadge: true },
   { to: '/staff/visit',         icon: <MdPersonAdd />,     label: 'Register' },
   { to: '/staff/my-visits',     icon: <MdList />,          label: 'Visits' },
+  { to: '/staff/feedback',      icon: <MdFeedback />,      label: 'Feedback', hasBadge: true },
   { to: '/staff/performance',   icon: <MdStar />,          label: 'Perf' },
 ];
 

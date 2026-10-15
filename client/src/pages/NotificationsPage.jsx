@@ -101,11 +101,11 @@ export default function NotificationsPage() {
   return (
     <>
       <Topbar
-        title="Notifications & Customer Activity"
+        title="Customer Feedback"
         subtitle={
           user?.role === 'admin'
-            ? 'Unified live feed of all customer-submitted feedback, complaints & alerts'
-            : 'Live feed of customer feedback and complaints for your visits'
+            ? 'Unified live feed of all customer-submitted feedback, complaints & reviews'
+            : 'Live feed of customer-submitted ratings, reviews and complaints for your visits'
         }
       />
 
@@ -114,11 +114,11 @@ export default function NotificationsPage() {
         <div className="stats-grid" style={{ marginBottom: 24 }}>
           <div className="stat-card">
             <div className="stat-icon" style={{ background: 'rgba(124,58,237,0.12)', color: '#7c3aed' }}>
-              <MdNotifications />
+              <MdFeedback />
             </div>
             <div>
               <div className="stat-value">{totalCount}</div>
-              <div className="stat-label">Total Notifications</div>
+              <div className="stat-label">Total Feedback</div>
             </div>
           </div>
 
@@ -242,10 +242,21 @@ export default function NotificationsPage() {
               </button>
             )}
 
+            {user?.role === 'staff' && (
+              <Link
+                to="/staff/feedback-manual"
+                className="btn btn-sm btn-outline"
+                style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                title="Log feedback manually if completed offline"
+              >
+                <MdPersonAdd /> + Manual Entry
+              </Link>
+            )}
+
             <button
               className="btn btn-sm btn-ghost"
               onClick={refresh}
-              title="Refresh notifications"
+              title="Refresh feedback"
               style={{ padding: '6px 10px' }}
             >
               <MdRefresh style={{ fontSize: 18 }} />

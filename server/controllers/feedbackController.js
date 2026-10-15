@@ -95,7 +95,7 @@ const createFeedback = async (req, res) => {
       type: hasComplaint ? 'complaint' : 'feedback',
       referenceId: feedback._id,
       metadata: notifMetadata,
-      link: '/staff/notifications',
+      link: '/staff/feedback',
     });
 
     await Notification.create({
@@ -206,7 +206,7 @@ const createPublicFeedback = async (req, res) => {
         type: hasComplaint ? 'complaint' : 'feedback',
         referenceId: feedback._id,
         metadata: notifMetadata,
-        link: '/staff/notifications',
+        link: '/staff/feedback',
       });
 
       // 2. Notification for Admin

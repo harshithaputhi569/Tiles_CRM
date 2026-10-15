@@ -114,7 +114,7 @@ export default function App() {
           } />
           <Route path="/staff/notifications" element={
             <ProtectedRoute role="staff">
-              <AppLayout><NotificationsPage /></AppLayout>
+              <Navigate to="/staff/feedback" replace />
             </ProtectedRoute>
           } />
           <Route path="/staff/visit" element={
@@ -128,6 +128,11 @@ export default function App() {
             </ProtectedRoute>
           } />
           <Route path="/staff/feedback" element={
+            <ProtectedRoute role="staff">
+              <AppLayout><NotificationsPage /></AppLayout>
+            </ProtectedRoute>
+          } />
+          <Route path="/staff/feedback-manual" element={
             <ProtectedRoute role="staff">
               <AppLayout><SubmitFeedback /></AppLayout>
             </ProtectedRoute>
