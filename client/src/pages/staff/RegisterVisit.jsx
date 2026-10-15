@@ -68,6 +68,20 @@ const REPEAT_VISIT_REASONS = [
   'Other Follow-up',
 ];
 
+const POPULAR_TILE_STOCKS = [
+  'GVT 2x4 (600x1200 mm)',
+  'PGVT Big Slab (800x1600 mm)',
+  'Double Charge 2x2 (600x600 mm)',
+  'Bathroom Wall 300x450 mm',
+  'Wooden Plank 200x1200 mm',
+  'Kitchen Highlighter 300x600 mm',
+  'Moroccan Designer Tiles',
+  'Full Body Parking 16x16',
+  'Subway White Glossy',
+  'Step & Riser 4ft Bullnose',
+  'Exterior Stone Cladding',
+];
+
 const emptyCustomer = {
   name: '',
   mobile: '',
@@ -84,6 +98,9 @@ const emptyVisit = {
   repeatReason: 'Follow-up on Previous Enquiry',
   source: 'Walk-in / Signboard',
   totalBillingValue: '',
+  stockRequested: '',
+  stockAvailable: 'Yes',
+  stockNotes: '',
   notes: '',
 };
 
@@ -643,6 +660,101 @@ export default function RegisterVisit() {
                     </div>
                   </div>
 
+                  {/* Showroom Stock & Demand Enquiry */}
+                  <div
+                    className="form-group fade-in"
+                    style={{
+                      padding: '14px 16px',
+                      background: 'linear-gradient(135deg, rgba(6,182,212,0.06) 0%, rgba(124,58,237,0.04) 100%)',
+                      border: '1.5px solid rgba(6,182,212,0.25)',
+                      borderRadius: 12,
+                      marginTop: 6,
+                      marginBottom: 16,
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
+                      <label style={{ fontSize: 13, fontWeight: 800, color: '#0891b2', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span>📦</span> Tile Stock / Design Inquired by Customer *
+                      </label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>Stock Available in Showroom?</span>
+                        <div style={{ display: 'flex', gap: 4, background: '#ffffff', padding: '2px 4px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.1)' }}>
+                          <button
+                            type="button"
+                            onClick={() => setVisit({ ...visit, stockAvailable: 'Yes' })}
+                            style={{
+                              padding: '3px 10px',
+                              borderRadius: 6,
+                              fontSize: 11,
+                              fontWeight: 800,
+                              cursor: 'pointer',
+                              border: 'none',
+                              background: visit.stockAvailable === 'Yes' ? '#10b981' : 'transparent',
+                              color: visit.stockAvailable === 'Yes' ? '#ffffff' : '#059669',
+                              transition: 'all 0.2s',
+                            }}
+                          >
+                            ✓ Yes (In Stock)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setVisit({
+                              ...visit,
+                              stockAvailable: 'No',
+                              purchaseStatus: visit.purchaseStatus === 'Purchased' ? 'Not Purchased' : visit.purchaseStatus,
+                              nonPurchaseReason: !visit.nonPurchaseReason ? 'Out of Stock / Lead Time' : visit.nonPurchaseReason,
+                            })}
+                            style={{
+                              padding: '3px 10px',
+                              borderRadius: 6,
+                              fontSize: 11,
+                              fontWeight: 800,
+                              cursor: 'pointer',
+                              border: 'none',
+                              background: visit.stockAvailable === 'No' ? '#ef4444' : 'transparent',
+                              color: visit.stockAvailable === 'No' ? '#ffffff' : '#dc2626',
+                              transition: 'all 0.2s',
+                            }}
+                          >
+                            ✗ No (Out of Stock)
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <input
+                      className="form-control"
+                      placeholder="e.g. GVT 2x4 Statuario, Wooden Plank 200x1200, Moroccan Wall..."
+                      value={visit.stockRequested}
+                      onChange={(e) => setVisit({ ...visit, stockRequested: e.target.value })}
+                      style={{ background: '#ffffff', fontWeight: 600, fontSize: 13, marginBottom: 8 }}
+                    />
+
+                    {/* Quick selectable popular tile categories */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {POPULAR_TILE_STOCKS.map((stk) => (
+                        <button
+                          key={stk}
+                          type="button"
+                          onClick={() => setVisit({ ...visit, stockRequested: stk })}
+                          style={{
+                            padding: '3px 9px',
+                            borderRadius: 14,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            border: visit.stockRequested === stk ? '1.5px solid #0891b2' : '1px solid rgba(0,0,0,0.08)',
+                            background: visit.stockRequested === stk ? 'rgba(6,182,212,0.15)' : '#ffffff',
+                            color: visit.stockRequested === stk ? '#0891b2' : 'var(--text-secondary)',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s',
+                          }}
+                        >
+                          {stk}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* Purchase Status Switcher — 3 options */}
                   <div className="form-group" style={{ marginTop: 8 }}>
                     <label className="form-label" style={{ fontWeight: 700 }}>
@@ -834,6 +946,18 @@ export default function RegisterVisit() {
                 {createdVisit.repeatReason && (
                   <div style={{ padding: '8px 16px', borderRadius: 20, background: 'rgba(245,158,11,0.12)', color: '#b45309', fontWeight: 700, fontSize: 13, border: '1px solid rgba(245,158,11,0.3)' }}>
                     🔁 {createdVisit.repeatReason}
+                  </div>
+                )}
+                {createdVisit.stockRequested && (
+                  <div style={{
+                    padding: '8px 16px', borderRadius: 20,
+                    background: createdVisit.stockAvailable === 'Yes' ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+                    color: createdVisit.stockAvailable === 'Yes' ? '#047857' : '#dc2626',
+                    fontWeight: 700, fontSize: 13,
+                    border: createdVisit.stockAvailable === 'Yes' ? '1px solid rgba(16,185,129,0.35)' : '1px solid rgba(239,68,68,0.35)',
+                    display: 'flex', alignItems: 'center', gap: 6,
+                  }}>
+                    📦 {createdVisit.stockRequested} ({createdVisit.stockAvailable === 'Yes' ? '✓ In Stock' : '✗ Out of Stock'})
                   </div>
                 )}
                 <div style={{ padding: '8px 16px', borderRadius: 20, background: 'rgba(124,58,237,0.1)', color: '#6d28d9', fontWeight: 700, fontSize: 13, border: '1px solid rgba(124,58,237,0.25)' }}>

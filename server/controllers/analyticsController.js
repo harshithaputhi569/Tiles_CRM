@@ -604,6 +604,150 @@ const getVisitorTrend = async (req, res) => {
   }
 };
 
+// @route GET /api/analytics/stock-trend  [admin & staff]
+const getStockTrendAnalytics = async (req, res) => {
+  try {
+    const { startDate, endDate, days, staff } = req.query;
+    const matchFilter = buildVisitDateFilter(startDate, endDate, days);
+
+    // If staff, scope to their visits
+    if (req.user.role === 'staff') {
+      matchFilter.staff = req.user._id;
+    } else if (staff && staff !== 'all') {
+      matchFilter.staff = new mongoose.Types.ObjectId(staff);
+    }
+
+    // 1. Overall Stock Inquiries & Availability Counts
+    const [totalInquiries, availableCount, outOfStockCount] = await Promise.all([
+      Visit.countDocuments({
+        ...matchFilter,
+        $or: [
+          { stockRequested: { $exists: true, $nin: ['', null] } },
+          { stockAvailable: { $in: ['Yes', 'No'] } },
+        ],
+      }),
+      Visit.countDocuments({
+        ...matchFilter,
+        stockAvailable: 'Yes',
+      }),
+      Visit.countDocuments({
+        ...matchFilter,
+        stockAvailable: 'No',
+      }),
+    ]);
+
+    const availabilityRate = totalInquiries > 0 ? parseFloat(((availableCount / totalInquiries) * 100).toFixed(1)) : 0;
+    const outOfStockRate = totalInquiries > 0 ? parseFloat(((outOfStockCount / totalInquiries) * 100).toFixed(1)) : 0;
+
+    // 2. 7-Day / Daily Trend (Stock Available [Yes] vs Out of Stock [No])
+    const trendAgg = await Visit.aggregate([
+      {
+        $match: {
+          ...matchFilter,
+          stockAvailable: { $in: ['Yes', 'No'] },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            dateStr: {
+              $dateToString: {
+                format: '%Y-%m-%d',
+                date: { $ifNull: ['$visitDate', '$createdAt'] },
+              },
+            },
+            status: '$stockAvailable',
+          },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    // Build day map for the last 7 days (or requested days)
+    const daysCount = parseInt(days) || 7;
+    const dayMap = {};
+    for (let i = daysCount - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const label = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      dayMap[ds] = { date: ds, label, available: 0, outOfStock: 0, total: 0 };
+    }
+
+    trendAgg.forEach((item) => {
+      const ds = item._id.dateStr;
+      if (!dayMap[ds]) {
+        const d = new Date(ds);
+        dayMap[ds] = {
+          date: ds,
+          label: d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+          available: 0,
+          outOfStock: 0,
+          total: 0,
+        };
+      }
+      if (item._id.status === 'Yes') {
+        dayMap[ds].available += item.count;
+      } else if (item._id.status === 'No') {
+        dayMap[ds].outOfStock += item.count;
+      }
+      dayMap[ds].total += item.count;
+    });
+
+    const dailyTrend = Object.values(dayMap).sort((a, b) => a.date.localeCompare(b.date));
+
+    // 3. Which Stock Customer Asked More (Ranking of Requested Stocks)
+    const stockRankingAgg = await Visit.aggregate([
+      {
+        $match: {
+          ...matchFilter,
+          stockRequested: { $exists: true, $nin: ['', null] },
+        },
+      },
+      {
+        $group: {
+          _id: '$stockRequested',
+          totalAsked: { $sum: 1 },
+          availableCount: {
+            $sum: { $cond: [{ $eq: ['$stockAvailable', 'Yes'] }, 1, 0] },
+          },
+          outOfStockCount: {
+            $sum: { $cond: [{ $eq: ['$stockAvailable', 'No'] }, 1, 0] },
+          },
+        },
+      },
+      { $sort: { totalAsked: -1 } },
+      { $limit: 15 },
+    ]);
+
+    const totalStockAskedSum = stockRankingAgg.reduce((s, r) => s + r.totalAsked, 0);
+
+    const mostAskedStocks = stockRankingAgg.map((r, index) => ({
+      rank: index + 1,
+      stockName: r._id,
+      totalAsked: r.totalAsked,
+      availableCount: r.availableCount,
+      outOfStockCount: r.outOfStockCount,
+      demandPercentage: totalStockAskedSum > 0 ? parseFloat(((r.totalAsked / totalStockAskedSum) * 100).toFixed(1)) : 0,
+      availabilityRate: r.totalAsked > 0 ? parseFloat(((r.availableCount / r.totalAsked) * 100).toFixed(1)) : 0,
+      isShortage: r.outOfStockCount > 0,
+    }));
+
+    res.json({
+      totalInquiries,
+      availableCount,
+      outOfStockCount,
+      availabilityRate,
+      outOfStockRate,
+      dailyTrend,
+      mostAskedStocks,
+    });
+  } catch (err) {
+    console.error('getStockTrendAnalytics error:', err);
+    res.status(500).json({ message: 'Failed to fetch stock trend analytics' });
+  }
+};
+
 module.exports = {
   getDashboardMetrics,
   getFeedbackTrend,
@@ -613,4 +757,5 @@ module.exports = {
   getPurchaseAnalytics,
   getRepeatVisitorsAnalytics,
   getVisitorTrend,
+  getStockTrendAnalytics,
 };

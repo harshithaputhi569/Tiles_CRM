@@ -9,12 +9,14 @@ const {
   getPurchaseAnalytics,
   getRepeatVisitorsAnalytics,
   getVisitorTrend,
+  getStockTrendAnalytics,
 } = require('../controllers/analyticsController');
 const { protect, adminOnly } = require('../middleware/auth');
 
 // Accessible to both staff and admin
 router.get('/purchase-conversion', protect, getPurchaseAnalytics);
 router.get('/repeat-visitors', protect, getRepeatVisitorsAnalytics);
+router.get('/stock-trend', protect, getStockTrendAnalytics);
 
 // Admin-only analytics routes
 router.get('/dashboard', protect, adminOnly, getDashboardMetrics);

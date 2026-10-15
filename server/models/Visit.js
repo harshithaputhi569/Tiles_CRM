@@ -35,6 +35,20 @@ const visitSchema = new mongoose.Schema(
       type: String,
       default: 'Walk-in / Signboard',
     },
+    stockRequested: {
+      type: String,
+      default: '',
+      trim: true,
+    },
+    stockAvailable: {
+      type: String,
+      enum: ['Yes', 'No', 'Not Checked'],
+      default: 'Yes',
+    },
+    stockNotes: {
+      type: String,
+      default: '',
+    },
     notes: { type: String, default: '' },
     feedbackSubmitted: { type: Boolean, default: false },
     // Unique token for the customer feedback/complaint form link

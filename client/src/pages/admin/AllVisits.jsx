@@ -362,7 +362,14 @@ export default function AllVisits() {
                           {new Date(v.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                         </div>
                       </td>
-                      <td style={{ fontSize: 12 }}>{v.purpose}</td>
+                      <td style={{ fontSize: 12 }}>
+                        <div>{v.purpose}</div>
+                        {v.stockRequested && (
+                          <div style={{ fontSize: 11, color: v.stockAvailable === 'Yes' ? '#047857' : '#dc2626', fontWeight: 600, marginTop: 2 }}>
+                            📦 {v.stockRequested} ({v.stockAvailable === 'Yes' ? '✓ In Stock' : '✗ Out'})
+                          </div>
+                        )}
+                      </td>
                       <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>{v.source}</td>
                       <td>
                         {v.totalBillingValue > 0 ? (
@@ -512,6 +519,7 @@ export default function AllVisits() {
                   { label: 'Registered At', value: new Date(selected.createdAt).toLocaleTimeString('en-IN') },
                   { label: 'Visit Number', value: `#${selected.visitNumber || 1}${selected.isRepeatVisit ? ' (Repeat)' : ' (First)'}` },
                   { label: 'Purpose', value: selected.purpose },
+                  { label: 'Stock Inquired', value: selected.stockRequested ? `${selected.stockRequested} (${selected.stockAvailable === 'Yes' ? '✓ In Stock' : '✗ Out of Stock'})` : '—' },
                   { label: 'Lead Source', value: selected.source },
                   { label: 'Purchase Status', value: <StatusChip status={selected.purchaseStatus} /> },
                 ].map(({ label, value }) => (

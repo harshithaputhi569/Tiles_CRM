@@ -6,7 +6,10 @@ import {
   MdPeople, MdFeedback, MdStar, MdTrendingUp,
   MdShoppingBag, MdCancel, MdList, MdReceipt
 } from 'react-icons/md';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  AreaChart, Area, BarChart, Bar, XAxis, YAxis,
+  CartesianGrid, Tooltip, ResponsiveContainer, Legend
+} from 'recharts';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 
@@ -33,6 +36,7 @@ export default function StaffDashboard() {
   const [feedbacks, setFeedbacks] = useState([]);
   const [purchaseData, setPurchaseData] = useState(null);
   const [repeatData, setRepeatData] = useState(null);
+  const [stockData, setStockData] = useState(null);
   const [recentVisits, setRecentVisits] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activePreset, setActivePreset] = useState('30d');
@@ -68,16 +72,18 @@ export default function StaffDashboard() {
       if (endDate) params.push(`endDate=${endDate}`);
       const qs = params.length > 0 ? `?${params.join('&')}` : '';
 
-      const [fbRes, purRes, repRes, visRes] = await Promise.all([
+      const [fbRes, purRes, repRes, visRes, stockRes] = await Promise.all([
         api.get('/feedback'),
         api.get(`/analytics/purchase-conversion${qs}`),
         api.get('/analytics/repeat-visitors'),
         api.get('/visits?limit=5'),
+        api.get(`/analytics/stock-trend${qs}`),
       ]);
       setFeedbacks(fbRes.data.feedbacks || []);
       setPurchaseData(purRes.data);
       setRepeatData(repRes.data);
       setRecentVisits(visRes.data.visits || []);
+      setStockData(stockRes.data);
     } catch (err) {
       console.error(err);
     } finally {
@@ -324,24 +330,152 @@ export default function StaffDashboard() {
 
         {/* Chart + Recent Feedback */}
         <div className="analytics-grid">
-          <div className="card fade-in">
-            <div className="card-header"><span className="card-title">📈 My Feedback Trend (7 Days)</span></div>
-            <div className="card-body chart-container">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={trend}>
-                  <defs>
-                    <linearGradient id="staffGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#7c3aed" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#7c3aed" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                  <XAxis dataKey="label" tick={{ fill: '#606080', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: '#606080', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Area type="monotone" dataKey="count" name="Feedback" stroke="#7c3aed" fill="url(#staffGrad)" strokeWidth={2} dot={{ fill: '#7c3aed', r: 4 }} />
-                </AreaChart>
-              </ResponsiveContainer>
+          {/* Section: Stock Availability & In-Demand Tiles Trend */}
+          <div className="card fade-in" style={{ display: 'flex', flexDirection: 'column' }}>
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+              <div>
+                <span className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  📦 Stock Availability & Demand Trend (7 Days)
+                </span>
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                  Daily customer stock requests: In Stock (Yes) vs Out of Stock (No)
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <span style={{
+                  padding: '3px 10px',
+                  borderRadius: 20,
+                  fontSize: 11,
+                  fontWeight: 800,
+                  background: 'rgba(16,185,129,0.12)',
+                  color: '#059669',
+                  border: '1px solid rgba(16,185,129,0.3)',
+                }}>
+                  ✓ {stockData?.availabilityRate ?? 0}% Available
+                </span>
+                {stockData?.outOfStockCount > 0 && (
+                  <span style={{
+                    padding: '3px 10px',
+                    borderRadius: 20,
+                    fontSize: 11,
+                    fontWeight: 800,
+                    background: 'rgba(239,68,68,0.12)',
+                    color: '#dc2626',
+                    border: '1px solid rgba(239,68,68,0.3)',
+                  }}>
+                    ✗ {stockData.outOfStockCount} Out of Stock
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="card-body">
+              {/* Daily Trend Chart: Yes (Available) vs No (Out of Stock) */}
+              <div style={{ height: 210, width: '100%', marginBottom: 16 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stockData?.dailyTrend || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
+                    <XAxis dataKey="label" tick={{ fill: '#606080', fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: '#606080', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend wrapperStyle={{ fontSize: 12, paddingTop: 6 }} />
+                    <Bar dataKey="available" name="Yes (Stock Available)" fill="#10b981" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="outOfStock" name="No (Stock Not Available)" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* WHICH STOCK CUSTOMER ASKED MORE (Top In-Demand Tiles) */}
+              <div style={{
+                borderTop: '1px solid var(--border-glass)',
+                paddingTop: 14,
+                marginTop: 4,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <div style={{ fontWeight: 800, fontSize: 13, color: '#7c3aed', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>🔥</span> Which Stock Customers Asked More (Top Demand)
+                  </div>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    Ranked by customer requests
+                  </span>
+                </div>
+
+                {(!stockData?.mostAskedStocks || stockData.mostAskedStocks.length === 0) ? (
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '16px 0' }}>
+                    No stock inquiries logged yet. Record tile designs asked by customers during visits.
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {stockData.mostAskedStocks.slice(0, 5).map((stk) => (
+                      <div
+                        key={stk.stockName}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '8px 12px',
+                          background: stk.isShortage ? 'rgba(239,68,68,0.04)' : '#f8fafc',
+                          borderRadius: 8,
+                          border: stk.isShortage ? '1px solid rgba(239,68,68,0.2)' : '1px solid rgba(0,0,0,0.05)',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{
+                            width: 22, height: 22, borderRadius: '50%',
+                            background: stk.rank === 1 ? '#7c3aed' : stk.rank === 2 ? '#0891b2' : '#64748b',
+                            color: '#ffffff', fontSize: 11, fontWeight: 800,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}>
+                            {stk.rank}
+                          </span>
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--text-primary)' }}>
+                              {stk.stockName}
+                            </div>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                              {stk.totalAsked} customer request{stk.totalAsked !== 1 ? 's' : ''} ({stk.demandPercentage}% of inquiries)
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, textAlign: 'right' }}>
+                          <div style={{ fontSize: 11 }}>
+                            <span style={{ color: '#059669', fontWeight: 700 }}>✓ {stk.availableCount} In Stock</span>
+                            {stk.outOfStockCount > 0 && (
+                              <span style={{ color: '#dc2626', fontWeight: 700, marginLeft: 8 }}>
+                                ✗ {stk.outOfStockCount} Out
+                              </span>
+                            )}
+                          </div>
+                          {stk.outOfStockCount > 0 ? (
+                            <span style={{
+                              padding: '2px 8px',
+                              borderRadius: 10,
+                              fontSize: 10,
+                              fontWeight: 800,
+                              background: 'rgba(239,68,68,0.12)',
+                              color: '#dc2626',
+                            }}>
+                              Stock Shortage
+                            </span>
+                          ) : (
+                            <span style={{
+                              padding: '2px 8px',
+                              borderRadius: 10,
+                              fontSize: 10,
+                              fontWeight: 800,
+                              background: 'rgba(16,185,129,0.12)',
+                              color: '#059669',
+                            }}>
+                              Available
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

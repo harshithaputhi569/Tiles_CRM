@@ -232,7 +232,7 @@ const getVisitByFeedbackToken = async (req, res) => {
 // Allows staff or admin to instantly enter/update totalBillingValue, purchase outcome, and notes
 const updateVisit = async (req, res) => {
   try {
-    const { totalBillingValue, purchaseStatus, nonPurchaseReason, notes, purpose } = req.body;
+    const { totalBillingValue, purchaseStatus, nonPurchaseReason, notes, purpose, stockRequested, stockAvailable, stockNotes } = req.body;
     const visit = await Visit.findById(req.params.id);
     if (!visit) return res.status(404).json({ message: 'Visit not found' });
 
@@ -245,6 +245,15 @@ const updateVisit = async (req, res) => {
     }
     if (nonPurchaseReason !== undefined) {
       visit.nonPurchaseReason = nonPurchaseReason;
+    }
+    if (stockRequested !== undefined) {
+      visit.stockRequested = stockRequested;
+    }
+    if (stockAvailable !== undefined) {
+      visit.stockAvailable = stockAvailable;
+    }
+    if (stockNotes !== undefined) {
+      visit.stockNotes = stockNotes;
     }
     if (notes !== undefined) {
       visit.notes = notes;
