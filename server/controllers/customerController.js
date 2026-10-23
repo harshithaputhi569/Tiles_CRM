@@ -1,5 +1,6 @@
 const Customer = require('../models/Customer');
 const Visit = require('../models/Visit');
+const Notification = require('../models/Notification');
 const crypto = require('crypto');
 const mongoose = require('mongoose');
 
@@ -191,6 +192,88 @@ const createVisit = async (req, res) => {
   const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
   const feedbackLink = `${clientUrl}/feedback/${feedbackToken}`;
 
+  // Automatically dispatch live customer notifications to Admin and Attending Staff
+  try {
+    const custName = customerExists.name || 'Customer';
+    const custMobile = customerExists.mobile || '';
+    const custType = customerExists.customerType || 'New Customer';
+    const custAddress = customerExists.address || '';
+    const staffName = req.user.name || 'Staff Member';
+    const purpose = visit.purpose || 'Showroom Visit';
+    const pStatus = visit.purchaseStatus || 'Purchased';
+    const billing = Number(visit.totalBillingValue) || 0;
+    const stockReq = visit.stockRequested || '';
+    const stockAvail = visit.stockAvailable || 'Yes';
+    const stockNote = visit.stockNotes || '';
+    const leadSrc = visit.source || customerExists.source || 'Walk-in / Signboard';
+    const visitNotes = visit.notes || '';
+
+    const visitMetadata = {
+      customerName: custName,
+      customerMobile: custMobile,
+      customerType: custType,
+      address: custAddress,
+      staffName,
+      staffId: req.user._id,
+      visitId: visit._id,
+      visitPurpose: purpose,
+      purchaseStatus: pStatus,
+      totalBillingValue: billing,
+      nonPurchaseReason: visit.nonPurchaseReason || '',
+      isRepeatVisit,
+      visitNumber,
+      repeatReason: visit.repeatReason || '',
+      stockRequested: stockReq,
+      stockAvailable: stockAvail,
+      stockNotes: stockNote,
+      source: leadSrc,
+      notes: visitNotes,
+      feedbackToken,
+      feedbackLink,
+      visitDate: visit.visitDate || new Date(),
+    };
+
+    // 1. Live Notification to Admin (New customer or repeat customer visit sent by staff)
+    const adminTitle = isRepeatVisit
+      ? `🔁 Repeat Customer Visit (#${visitNumber}): ${custName}`
+      : `👤 Live Customer Visit: ${custName}`;
+    const adminMsg = `${staffName} logged customer ${custName} (${custMobile}) • ${purpose} • Status: ${pStatus}${
+      pStatus === 'Purchased' && billing > 0 ? ` (₹${billing.toLocaleString('en-IN')})` : ''
+    }${stockReq ? ` • Stock: ${stockReq} [${stockAvail}]` : ''}`;
+
+    await Notification.create({
+      recipient: null,
+      role: 'admin',
+      title: adminTitle,
+      message: adminMsg,
+      type: 'visit',
+      referenceId: visit._id,
+      metadata: visitMetadata,
+      link: '/admin/visits',
+    });
+
+    // 2. Live Notification to the Attending Staff
+    const staffTitle = isRepeatVisit
+      ? `🔁 Repeat Visit (#${visitNumber}) Registered: ${custName}`
+      : `✅ Customer Visit Registered: ${custName}`;
+    const staffMsg = `Customer ${custName} (${custMobile}) logged for ${purpose} • Status: ${pStatus}${
+      billing > 0 ? ` (₹${billing.toLocaleString('en-IN')})` : ''
+    }`;
+
+    await Notification.create({
+      recipient: req.user._id,
+      role: 'staff',
+      title: staffTitle,
+      message: staffMsg,
+      type: 'visit',
+      referenceId: visit._id,
+      metadata: visitMetadata,
+      link: '/staff/visits',
+    });
+  } catch (notifErr) {
+    console.error('Customer visit notification dispatch error (non-fatal):', notifErr);
+  }
+
   res.status(201).json({ ...populated.toObject(), feedbackLink });
 };
 
@@ -263,6 +346,27 @@ const updateVisit = async (req, res) => {
     }
 
     await visit.save();
+
+    // Sync metadata to existing visit notification if present
+    try {
+      await Notification.updateMany(
+        { referenceId: visit._id, type: 'visit' },
+        {
+          $set: {
+            'metadata.purchaseStatus': visit.purchaseStatus,
+            'metadata.totalBillingValue': visit.totalBillingValue,
+            'metadata.nonPurchaseReason': visit.nonPurchaseReason,
+            'metadata.stockRequested': visit.stockRequested,
+            'metadata.stockAvailable': visit.stockAvailable,
+            'metadata.stockNotes': visit.stockNotes,
+            'metadata.notes': visit.notes,
+            'metadata.visitPurpose': visit.purpose,
+          },
+        }
+      );
+    } catch (syncErr) {
+      console.error('Failed to sync notification metadata on visit update:', syncErr);
+    }
 
     const populated = await visit.populate([
       { path: 'customer', select: 'name mobile customerType source address' },

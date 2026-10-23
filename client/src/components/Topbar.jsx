@@ -1,8 +1,19 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MdMenu, MdNotifications, MdCheck, MdOpenInNew, MdStar, MdWarning } from 'react-icons/md';
+import {
+  MdMenu,
+  MdNotifications,
+  MdCheck,
+  MdOpenInNew,
+  MdStar,
+  MdWarning,
+  MdPerson,
+  MdPersonAdd,
+  MdAutorenew,
+} from 'react-icons/md';
 import { useSidebar } from '../context/SidebarContext';
 import { useNotifications } from '../context/NotificationContext';
+import { useAuth } from '../context/AuthContext';
 
 const formatTimeAgo = (dateStr) => {
   if (!dateStr) return '';
@@ -19,12 +30,18 @@ const formatTimeAgo = (dateStr) => {
 export default function Topbar({ title, subtitle }) {
   const { open } = useSidebar();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  // Filter out any dummy / generated test notifications
+  const liveNotifications = notifications.filter(
+    (n) => (n.metadata?.customerName || '').toLowerCase() !== 'rajesh nair'
+  );
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -46,7 +63,31 @@ export default function Topbar({ title, subtitle }) {
     setShowDropdown(false);
     if (notif.link) {
       navigate(notif.link);
+    } else if (notif.type === 'visit') {
+      navigate(user?.role === 'admin' ? '/admin/visits' : '/staff/my-visits');
     }
+  };
+
+  const getNotifStyle = (n) => {
+    if (n.type === 'complaint' || n.metadata?.hasComplaint) {
+      return {
+        icon: <MdWarning />,
+        bg: 'rgba(239,68,68,0.12)',
+        color: '#dc2626',
+      };
+    }
+    if (n.type === 'visit') {
+      return {
+        icon: n.metadata?.isRepeatVisit ? <MdAutorenew /> : <MdPersonAdd />,
+        bg: n.metadata?.isRepeatVisit ? 'rgba(124,58,237,0.14)' : 'rgba(6,182,212,0.14)',
+        color: n.metadata?.isRepeatVisit ? '#7c3aed' : '#0891b2',
+      };
+    }
+    return {
+      icon: <MdStar />,
+      bg: 'rgba(245,158,11,0.12)',
+      color: '#d97706',
+    };
   };
 
   return (
@@ -115,8 +156,8 @@ export default function Topbar({ title, subtitle }) {
                 position: 'absolute',
                 top: 48,
                 right: 0,
-                width: 360,
-                maxWidth: '90vw',
+                width: 380,
+                maxWidth: '92vw',
                 background: '#ffffff',
                 border: '1px solid var(--border-glass)',
                 borderRadius: 14,
@@ -139,7 +180,7 @@ export default function Topbar({ title, subtitle }) {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ fontWeight: 800, fontSize: 14, color: 'var(--text-primary)' }}>
-                    Notifications
+                    Live Notifications
                   </span>
                   {unreadCount > 0 && (
                     <span
@@ -179,101 +220,192 @@ export default function Topbar({ title, subtitle }) {
 
               {/* Notification Items List */}
               <div style={{ maxHeight: 380, overflowY: 'auto' }}>
-                {notifications.length === 0 ? (
+                {liveNotifications.length === 0 ? (
                   <div style={{ padding: '36px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
                     <div style={{ fontSize: 32, marginBottom: 8 }}>🔕</div>
                     <div style={{ fontWeight: 600, fontSize: 13 }}>No notifications yet</div>
                     <div style={{ fontSize: 11, marginTop: 4 }}>
-                      You'll be alerted here whenever a customer submits feedback or files a complaint.
+                      Live customer details sent by staff, feedback, and complaints will appear here in real-time.
                     </div>
                   </div>
                 ) : (
-                  notifications.map((n) => (
-                    <div
-                      key={n._id}
-                      onClick={() => handleNotificationClick(n)}
-                      style={{
-                        padding: '12px 16px',
-                        borderBottom: '1px solid var(--border-glass)',
-                        background: n.unread ? 'rgba(124,58,237,0.04)' : '#ffffff',
-                        cursor: 'pointer',
-                        transition: 'background 0.15s',
-                        display: 'flex',
-                        gap: 12,
-                        alignItems: 'flex-start',
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(124,58,237,0.08)')}
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.background = n.unread ? 'rgba(124,58,237,0.04)' : '#ffffff')
-                      }
-                    >
-                      {/* Icon */}
+                  liveNotifications.map((n) => {
+                    const style = getNotifStyle(n);
+                    return (
                       <div
+                        key={n._id}
+                        onClick={() => handleNotificationClick(n)}
                         style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: 8,
-                          flexShrink: 0,
+                          padding: '12px 16px',
+                          borderBottom: '1px solid var(--border-glass)',
+                          background: n.unread ? 'rgba(124,58,237,0.04)' : '#ffffff',
+                          cursor: 'pointer',
+                          transition: 'background 0.15s',
                           display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 16,
-                          background:
-                            n.type === 'complaint'
-                              ? 'rgba(239,68,68,0.12)'
-                              : 'rgba(245,158,11,0.12)',
-                          color: n.type === 'complaint' ? '#dc2626' : '#d97706',
+                          gap: 12,
+                          alignItems: 'flex-start',
                         }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(124,58,237,0.08)')}
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.background = n.unread ? 'rgba(124,58,237,0.04)' : '#ffffff')
+                        }
                       >
-                        {n.type === 'complaint' ? <MdWarning /> : <MdStar />}
-                      </div>
-
-                      {/* Content */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                        {/* Icon */}
                         <div
                           style={{
-                            fontSize: 13,
-                            fontWeight: n.unread ? 800 : 600,
-                            color: 'var(--text-primary)',
-                            marginBottom: 2,
+                            width: 32,
+                            height: 32,
+                            borderRadius: 8,
+                            flexShrink: 0,
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'space-between',
+                            justifyContent: 'center',
+                            fontSize: 16,
+                            background: style.bg,
+                            color: style.color,
                           }}
                         >
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {n.title}
-                          </span>
-                          {n.unread && (
-                            <span
-                              style={{
-                                width: 7,
-                                height: 7,
-                                borderRadius: '50%',
-                                background: 'var(--accent-purple)',
-                                flexShrink: 0,
-                                marginLeft: 6,
-                              }}
-                            />
+                          {style.icon}
+                        </div>
+
+                        {/* Content */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div
+                            style={{
+                              fontSize: 13,
+                              fontWeight: n.unread ? 800 : 600,
+                              color: 'var(--text-primary)',
+                              marginBottom: 2,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                            }}
+                          >
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {n.title}
+                            </span>
+                            {n.unread && (
+                              <span
+                                style={{
+                                  width: 7,
+                                  height: 7,
+                                  borderRadius: '50%',
+                                  background: 'var(--accent-purple)',
+                                  flexShrink: 0,
+                                  marginLeft: 6,
+                                }}
+                              />
+                            )}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: 'var(--text-muted)',
+                              lineHeight: 1.4,
+                              marginBottom: 4,
+                            }}
+                          >
+                            {n.message}
+                          </div>
+
+                          {/* Customer Details Chips for Visits */}
+                          {n.type === 'visit' && (
+                            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 4 }}>
+                              {n.metadata?.customerMobile && (
+                                <span
+                                  style={{
+                                    fontSize: 10,
+                                    background: 'rgba(6,182,212,0.1)',
+                                    color: '#0891b2',
+                                    padding: '1px 6px',
+                                    borderRadius: 4,
+                                    fontWeight: 600,
+                                  }}
+                                >
+                                  📞 {n.metadata.customerMobile}
+                                </span>
+                              )}
+                              {n.metadata?.staffName && (
+                                <span
+                                  style={{
+                                    fontSize: 10,
+                                    background: 'rgba(0,0,0,0.04)',
+                                    color: 'var(--text-secondary)',
+                                    padding: '1px 6px',
+                                    borderRadius: 4,
+                                  }}
+                                >
+                                  Staff: {n.metadata.staffName}
+                                </span>
+                              )}
+                              {n.metadata?.purchaseStatus && (
+                                <span
+                                  style={{
+                                    fontSize: 10,
+                                    background:
+                                      n.metadata.purchaseStatus === 'Purchased'
+                                        ? 'rgba(16,185,129,0.12)'
+                                        : 'rgba(239,68,68,0.08)',
+                                    color:
+                                      n.metadata.purchaseStatus === 'Purchased' ? '#059669' : '#dc2626',
+                                    padding: '1px 6px',
+                                    borderRadius: 4,
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  {n.metadata.purchaseStatus}
+                                  {n.metadata.purchaseStatus === 'Purchased' &&
+                                    n.metadata.totalBillingValue > 0 &&
+                                    ` (₹${Number(n.metadata.totalBillingValue).toLocaleString('en-IN')})`}
+                                </span>
+                              )}
+                            </div>
                           )}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 12,
-                            color: 'var(--text-muted)',
-                            lineHeight: 1.4,
-                            marginBottom: 4,
-                          }}
-                        >
-                          {n.message}
-                        </div>
-                        <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 500 }}>
-                          {formatTimeAgo(n.createdAt)}
+
+                          <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 500 }}>
+                            {formatTimeAgo(n.createdAt)}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
+              </div>
+
+              {/* Dropdown Footer */}
+              <div
+                style={{
+                  padding: '10px 16px',
+                  background: 'rgba(124,58,237,0.03)',
+                  borderTop: '1px solid var(--border-glass)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                  {liveNotifications.length} Live Alert{liveNotifications.length !== 1 ? 's' : ''}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDropdown(false);
+                    navigate(user?.role === 'admin' ? '/admin/notifications' : '/staff/feedback');
+                  }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--accent-purple)',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
+                >
+                  View All Live Details <MdOpenInNew />
+                </button>
               </div>
             </div>
           )}

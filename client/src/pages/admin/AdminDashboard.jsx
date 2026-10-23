@@ -142,8 +142,8 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Live Customer Feedback & Complaint Notifications Feed */}
-        {notifications.length > 0 && (
+        {/* Live Customer Visits & Notifications Feed */}
+        {notifications.filter((n) => (n.metadata?.customerName || '').toLowerCase() !== 'rajesh nair').length > 0 && (
           <div style={{
             background: 'linear-gradient(135deg, rgba(124,58,237,0.06) 0%, rgba(6,182,212,0.04) 100%)',
             border: '1px solid rgba(124,58,237,0.25)',
@@ -153,51 +153,76 @@ export default function AdminDashboard() {
           }} className="fade-in">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 800, fontSize: 14, color: 'var(--accent-purple)' }}>
-                <span style={{ fontSize: 18 }}>🔔</span> Latest Customer Feedback & Complaints
+                <span style={{ fontSize: 18 }}>🔔</span> Live Customer Visits & Notifications
                 {unreadCount > 0 && (
                   <span style={{ background: '#ef4444', color: '#fff', fontSize: 11, fontWeight: 800, padding: '2px 8px', borderRadius: 12 }}>
                     {unreadCount} New
                   </span>
                 )}
               </div>
-              <Link to="/feedback" style={{ fontSize: 12, color: 'var(--accent-purple)', fontWeight: 600, textDecoration: 'none' }}>
-                View All Feedbacks →
+              <Link to="/admin/notifications" style={{ fontSize: 12, color: 'var(--accent-purple)', fontWeight: 600, textDecoration: 'none' }}>
+                View All Notifications →
               </Link>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 10 }}>
-              {notifications.slice(0, 3).map((n) => (
-                <div
-                  key={n._id}
-                  onClick={() => { markAsRead(n._id); navigate(n.link || '/feedback'); }}
-                  style={{
-                    background: '#ffffff',
-                    border: `1px solid ${n.unread ? 'rgba(124,58,237,0.35)' : 'var(--border-glass)'}`,
-                    borderRadius: 10,
-                    padding: '12px 14px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    boxShadow: n.unread ? '0 4px 12px rgba(124,58,237,0.08)' : 'none',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: n.type === 'complaint' ? '#dc2626' : '#d97706', display: 'flex', alignItems: 'center', gap: 4 }}>
-                      {n.type === 'complaint' ? '🚨 Complaint' : '⭐ Feedback'}
-                    </span>
-                    {n.unread && (
-                      <span style={{ fontSize: 10, background: 'rgba(124,58,237,0.1)', color: 'var(--accent-purple)', fontWeight: 700, padding: '1px 6px', borderRadius: 6 }}>
-                        NEW
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 600, marginBottom: 4, lineHeight: 1.4 }}>
-                    {n.message}
-                  </div>
-                  <div style={{ fontSize: 10, color: '#94a3b8' }}>
-                    {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · Click to review
-                  </div>
-                </div>
-              ))}
+              {notifications
+                .filter((n) => (n.metadata?.customerName || '').toLowerCase() !== 'rajesh nair')
+                .slice(0, 3)
+                .map((n) => {
+                  const isVisit = n.type === 'visit';
+                  const isComplaint = n.type === 'complaint' || n.metadata?.hasComplaint;
+                  const labelColor = isComplaint ? '#dc2626' : isVisit ? '#0891b2' : '#d97706';
+                  const labelText = isComplaint
+                    ? '🚨 Complaint'
+                    : isVisit
+                    ? n.metadata?.isRepeatVisit
+                      ? '🔁 Repeat Visit'
+                      : '👤 Customer Visit'
+                    : '⭐ Feedback';
+
+                  return (
+                    <div
+                      key={n._id}
+                      onClick={() => {
+                        markAsRead(n._id);
+                        navigate(n.link || (isVisit ? '/admin/visits' : '/admin/notifications'));
+                      }}
+                      style={{
+                        background: '#ffffff',
+                        border: `1px solid ${n.unread ? 'rgba(124,58,237,0.35)' : 'var(--border-glass)'}`,
+                        borderRadius: 10,
+                        padding: '12px 14px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        boxShadow: n.unread ? '0 4px 12px rgba(124,58,237,0.08)' : 'none',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: labelColor, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          {labelText}
+                        </span>
+                        {n.unread && (
+                          <span style={{ fontSize: 10, background: 'rgba(124,58,237,0.1)', color: 'var(--accent-purple)', fontWeight: 700, padding: '1px 6px', borderRadius: 6 }}>
+                            NEW
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 13, color: 'var(--text-primary)', fontWeight: 700, marginBottom: 2 }}>
+                        {n.title}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 6, lineHeight: 1.4 }}>
+                        {n.message}
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 10, color: '#94a3b8' }}>
+                        <span>{new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        {n.metadata?.customerMobile && (
+                          <span style={{ fontWeight: 600, color: '#0891b2' }}>📞 {n.metadata.customerMobile}</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
           </div>
         )}

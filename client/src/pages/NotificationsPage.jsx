@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Topbar from '../components/Topbar';
 import { useNotifications } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 import {
   MdNotifications,
   MdFeedback,
@@ -14,10 +15,17 @@ import {
   MdStar,
   MdPhone,
   MdPerson,
+  MdPersonAdd,
+  MdAutorenew,
   MdCalendarToday,
   MdFilterList,
   MdSearch,
   MdOutlineRateReview,
+  MdShoppingBag,
+  MdContentCopy,
+  MdOpenInNew,
+  MdLocationOn,
+  MdInventory2,
 } from 'react-icons/md';
 
 const RATING_LABELS = {
@@ -31,10 +39,11 @@ const RATING_LABELS = {
 
 export default function NotificationsPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, refresh } =
     useNotifications();
 
-  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'unread' | 'feedback' | 'complaint'
+  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'visits' | 'unread' | 'feedback' | 'complaint'
   const [search, setSearch] = useState('');
   const [expandedCards, setExpandedCards] = useState({});
 
@@ -42,17 +51,34 @@ export default function NotificationsPage() {
     setExpandedCards((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const copyToClipboard = (text, label = 'Feedback Link') => {
+    if (!text) return toast.error('No link available');
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied to clipboard!`);
+  };
+
+  // Filter out any mock/generated seed notifications (e.g. Rajesh Nair)
+  const realNotifications = useMemo(() => {
+    return notifications.filter(
+      (n) => (n.metadata?.customerName || '').toLowerCase() !== 'rajesh nair'
+    );
+  }, [notifications]);
+
   // Metrics
-  const totalCount = notifications.length;
-  const feedbackCount = notifications.filter((n) => n.type === 'feedback').length;
-  const complaintCount = notifications.filter((n) => n.type === 'complaint' || n.metadata?.hasComplaint).length;
+  const totalCount = realNotifications.length;
+  const visitCount = realNotifications.filter((n) => n.type === 'visit').length;
+  const feedbackCount = realNotifications.filter((n) => n.type === 'feedback').length;
+  const complaintCount = realNotifications.filter(
+    (n) => n.type === 'complaint' || n.metadata?.hasComplaint
+  ).length;
 
   // Filtered list
   const filteredNotifications = useMemo(() => {
-    return notifications.filter((n) => {
+    return realNotifications.filter((n) => {
       // Tab filter
       if (activeTab === 'unread' && !n.unread) return false;
-      if (activeTab === 'feedback' && n.type !== 'feedback' && n.metadata?.hasComplaint) return false;
+      if (activeTab === 'visits' && n.type !== 'visit') return false;
+      if (activeTab === 'feedback' && (n.type !== 'feedback' || n.metadata?.hasComplaint)) return false;
       if (activeTab === 'complaint' && n.type !== 'complaint' && !n.metadata?.hasComplaint) return false;
 
       // Search filter
@@ -63,6 +89,9 @@ export default function NotificationsPage() {
         const mobile = (n.metadata?.customerMobile || '').toLowerCase();
         const comments = (n.metadata?.comments || '').toLowerCase();
         const category = (n.metadata?.complaintCategory || '').toLowerCase();
+        const purpose = (n.metadata?.visitPurpose || '').toLowerCase();
+        const status = (n.metadata?.purchaseStatus || '').toLowerCase();
+        const stock = (n.metadata?.stockRequested || '').toLowerCase();
         const msg = (n.message || '').toLowerCase();
         const title = (n.title || '').toLowerCase();
         if (
@@ -71,6 +100,9 @@ export default function NotificationsPage() {
           !mobile.includes(q) &&
           !comments.includes(q) &&
           !category.includes(q) &&
+          !purpose.includes(q) &&
+          !status.includes(q) &&
+          !stock.includes(q) &&
           !msg.includes(q) &&
           !title.includes(q)
         ) {
@@ -79,7 +111,7 @@ export default function NotificationsPage() {
       }
       return true;
     });
-  }, [notifications, activeTab, search]);
+  }, [realNotifications, activeTab, search]);
 
   const formatTime = (dateStr) => {
     if (!dateStr) return '';
@@ -101,11 +133,11 @@ export default function NotificationsPage() {
   return (
     <>
       <Topbar
-        title="Customer Feedback"
+        title="Live Customer Notifications"
         subtitle={
           user?.role === 'admin'
-            ? 'Unified live feed of all customer-submitted feedback, complaints & reviews'
-            : 'Live feed of customer-submitted ratings, reviews and complaints for your visits'
+            ? 'Unified live feed of customer visits logged by staff, customer feedback & complaints'
+            : 'Live feed of customer visits registered, feedback & ratings for your showroom visits'
         }
       />
 
@@ -114,29 +146,21 @@ export default function NotificationsPage() {
         <div className="stats-grid" style={{ marginBottom: 24 }}>
           <div className="stat-card">
             <div className="stat-icon" style={{ background: 'rgba(124,58,237,0.12)', color: '#7c3aed' }}>
-              <MdFeedback />
+              <MdNotifications />
             </div>
             <div>
               <div className="stat-value">{totalCount}</div>
-              <div className="stat-label">Total Feedback</div>
+              <div className="stat-label">Total Notifications</div>
             </div>
           </div>
 
           <div className="stat-card">
-            <div
-              className="stat-icon"
-              style={{
-                background: unreadCount > 0 ? 'rgba(239,68,68,0.15)' : 'rgba(16,185,129,0.12)',
-                color: unreadCount > 0 ? '#ef4444' : '#10b981',
-              }}
-            >
-              {unreadCount > 0 ? <MdWarning /> : <MdCheckCircle />}
+            <div className="stat-icon" style={{ background: 'rgba(6,182,212,0.12)', color: '#0891b2' }}>
+              <MdPersonAdd />
             </div>
             <div>
-              <div className="stat-value" style={{ color: unreadCount > 0 ? '#ef4444' : 'inherit' }}>
-                {unreadCount}
-              </div>
-              <div className="stat-label">{unreadCount === 0 ? 'All Caught Up' : 'Unread Alerts'}</div>
+              <div className="stat-value" style={{ color: '#0891b2' }}>{visitCount}</div>
+              <div className="stat-label">Live Customer Visits</div>
             </div>
           </div>
 
@@ -146,7 +170,7 @@ export default function NotificationsPage() {
             </div>
             <div>
               <div className="stat-value">{feedbackCount}</div>
-              <div className="stat-label">Feedback Received</div>
+              <div className="stat-label">Customer Feedback</div>
             </div>
           </div>
 
@@ -186,6 +210,17 @@ export default function NotificationsPage() {
               All ({totalCount})
             </button>
             <button
+              onClick={() => setActiveTab('visits')}
+              className={`btn btn-sm ${activeTab === 'visits' ? 'btn-primary' : 'btn-ghost'}`}
+              style={{
+                borderRadius: 20,
+                background: activeTab === 'visits' ? 'var(--accent-purple)' : 'transparent',
+                borderColor: activeTab === 'visits' ? 'var(--accent-purple)' : 'transparent',
+              }}
+            >
+              👤 Customer Visits ({visitCount})
+            </button>
+            <button
               onClick={() => setActiveTab('unread')}
               className={`btn btn-sm ${activeTab === 'unread' ? 'btn-primary' : 'btn-ghost'}`}
               style={{ borderRadius: 20 }}
@@ -223,7 +258,7 @@ export default function NotificationsPage() {
               />
               <input
                 type="text"
-                placeholder="Search customer, staff…"
+                placeholder="Search customer, staff, phone…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="form-control form-control-sm"
@@ -244,19 +279,19 @@ export default function NotificationsPage() {
 
             {user?.role === 'staff' && (
               <Link
-                to="/staff/feedback-manual"
-                className="btn btn-sm btn-outline"
+                to="/staff/visit"
+                className="btn btn-sm btn-primary"
                 style={{ display: 'flex', alignItems: 'center', gap: 6 }}
-                title="Log feedback manually if completed offline"
+                title="Register a new customer visit"
               >
-                <MdPersonAdd /> + Manual Entry
+                <MdPersonAdd /> + Register Visit
               </Link>
             )}
 
             <button
               className="btn btn-sm btn-ghost"
               onClick={refresh}
-              title="Refresh feedback"
+              title="Refresh notifications"
               style={{ padding: '6px 10px' }}
             >
               <MdRefresh style={{ fontSize: 18 }} />
@@ -274,14 +309,17 @@ export default function NotificationsPage() {
             <h3 style={{ margin: '0 0 8px', color: 'var(--text-primary)' }}>No Notifications Found</h3>
             <p style={{ margin: 0, fontSize: 14 }}>
               {activeTab === 'unread'
-                ? "You're all caught up! No unread customer feedback."
-                : 'No customer feedback or complaints match your current filter.'}
+                ? "You're all caught up! No unread customer alerts."
+                : activeTab === 'visits'
+                ? 'No customer visit notifications recorded yet.'
+                : 'No customer notifications match your current filter.'}
             </p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {filteredNotifications.map((notif) => {
               const meta = notif.metadata || {};
+              const isVisit = notif.type === 'visit';
               const isComplaint = notif.type === 'complaint' || meta.hasComplaint;
               const hasBreakdown = meta.ratings && Object.keys(meta.ratings).length > 0;
               const isExpanded = !!expandedCards[notif._id];
@@ -296,13 +334,17 @@ export default function NotificationsPage() {
                     border: notif.unread
                       ? isComplaint
                         ? '1.5px solid rgba(239,68,68,0.45)'
+                        : isVisit
+                        ? '1.5px solid rgba(6,182,212,0.45)'
                         : '1.5px solid rgba(124,58,237,0.4)'
                       : '1px solid var(--border-glass)',
                     background: notif.unread
                       ? isComplaint
                         ? 'linear-gradient(135deg, rgba(239,68,68,0.04) 0%, rgba(255,255,255,0.02) 100%)'
+                        : isVisit
+                        ? 'linear-gradient(135deg, rgba(6,182,212,0.04) 0%, rgba(255,255,255,0.02) 100%)'
                         : 'linear-gradient(135deg, rgba(124,58,237,0.04) 0%, rgba(6,182,212,0.02) 100%)'
-                      : 'var(--card-bg, #ffffff)',
+                    : 'var(--card-bg, #ffffff)',
                     boxShadow: notif.unread
                       ? '0 6px 20px rgba(124,58,237,0.08)'
                       : '0 2px 10px rgba(0,0,0,0.03)',
@@ -333,13 +375,55 @@ export default function NotificationsPage() {
                           borderRadius: 20,
                           background: isComplaint
                             ? 'rgba(239,68,68,0.12)'
+                            : isVisit
+                            ? meta.isRepeatVisit
+                              ? 'rgba(124,58,237,0.12)'
+                              : 'rgba(6,182,212,0.14)'
                             : 'rgba(16,185,129,0.12)',
-                          color: isComplaint ? '#dc2626' : '#059669',
+                          color: isComplaint
+                            ? '#dc2626'
+                            : isVisit
+                            ? meta.isRepeatVisit
+                              ? '#7c3aed'
+                              : '#0891b2'
+                            : '#059669',
                         }}
                       >
-                        {isComplaint ? <MdWarning /> : <MdStar />}
-                        {isComplaint ? 'Customer Complaint' : 'Customer Feedback'}
+                        {isComplaint ? (
+                          <MdWarning />
+                        ) : isVisit ? (
+                          meta.isRepeatVisit ? (
+                            <MdAutorenew />
+                          ) : (
+                            <MdPersonAdd />
+                          )
+                        ) : (
+                          <MdStar />
+                        )}
+                        {isComplaint
+                          ? 'Customer Complaint'
+                          : isVisit
+                          ? meta.isRepeatVisit
+                            ? `Repeat Visit (#${meta.visitNumber || 2})`
+                            : 'Live Customer Visit'
+                          : 'Customer Feedback'}
                       </span>
+
+                      {/* Customer Type Tag */}
+                      {meta.customerType && (
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 600,
+                            padding: '3px 8px',
+                            borderRadius: 12,
+                            background: 'rgba(0,0,0,0.04)',
+                            color: 'var(--text-secondary)',
+                          }}
+                        >
+                          {meta.customerType}
+                        </span>
+                      )}
 
                       {/* Unread Pill */}
                       {notif.unread && (
@@ -408,24 +492,32 @@ export default function NotificationsPage() {
                       fontSize: 13,
                     }}
                   >
+                    {/* Customer Name & Phone */}
                     <div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>
                         Customer
                       </div>
-                      <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
                         <MdPerson style={{ color: 'var(--primary)' }} />
-                        {meta.customerName || 'Valued Customer'}
+                        {meta.customerName || 'Customer'}
                       </div>
                       {meta.customerMobile && (
-                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <div style={{ fontSize: 12, color: '#0891b2', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600 }}>
                           <MdPhone />
                           <a href={`tel:${meta.customerMobile}`} style={{ color: 'inherit', textDecoration: 'none' }}>
                             {meta.customerMobile}
                           </a>
                         </div>
                       )}
+                      {meta.address && (
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <MdLocationOn style={{ fontSize: 12 }} />
+                          {meta.address}
+                        </div>
+                      )}
                     </div>
 
+                    {/* Attending Staff */}
                     <div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>
                         Attending Staff
@@ -433,11 +525,15 @@ export default function NotificationsPage() {
                       <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginTop: 2 }}>
                         {meta.staffName || 'Staff Member'}
                       </div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                        Logged in showroom
+                      </div>
                     </div>
 
+                    {/* Visit Date & Purpose */}
                     <div>
                       <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>
-                        Visit Date
+                        Visit Date & Purpose
                       </div>
                       <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
                         <MdCalendarToday style={{ color: 'var(--text-muted)', fontSize: 12 }} />
@@ -453,9 +549,49 @@ export default function NotificationsPage() {
                               year: 'numeric',
                             })}
                       </div>
+                      {meta.visitPurpose && (
+                        <div style={{ fontSize: 12, color: 'var(--accent-purple)', fontWeight: 600, marginTop: 2 }}>
+                          {meta.visitPurpose}
+                        </div>
+                      )}
                     </div>
 
-                    {meta.rating > 0 && (
+                    {/* Purchase Outcome & Billing Value for Visits */}
+                    {isVisit && (
+                      <div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>
+                          Purchase Outcome
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                          <span
+                            style={{
+                              background:
+                                meta.purchaseStatus === 'Purchased' ? '#10b981' : '#f59e0b',
+                              color: 'white',
+                              fontWeight: 700,
+                              fontSize: 12,
+                              padding: '2px 8px',
+                              borderRadius: 6,
+                            }}
+                          >
+                            {meta.purchaseStatus || 'Purchased'}
+                          </span>
+                        </div>
+                        {meta.purchaseStatus === 'Purchased' && meta.totalBillingValue > 0 && (
+                          <div style={{ fontSize: 13, fontWeight: 800, color: '#059669', marginTop: 4 }}>
+                            ₹{Number(meta.totalBillingValue).toLocaleString('en-IN')}
+                          </div>
+                        )}
+                        {meta.purchaseStatus === 'Not Purchased' && meta.nonPurchaseReason && (
+                          <div style={{ fontSize: 11, color: '#dc2626', marginTop: 2 }}>
+                            {meta.nonPurchaseReason}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Overall Rating for Feedback */}
+                    {!isVisit && meta.rating > 0 && (
                       <div>
                         <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>
                           Overall Rating
@@ -483,7 +619,80 @@ export default function NotificationsPage() {
                     )}
                   </div>
 
-                  {/* Star Rating 6-Category Breakdown (if available) */}
+                  {/* Visit Specific Details Section: Tile Stock & Repeat Reasons */}
+                  {isVisit && (
+                    <div
+                      style={{
+                        padding: '12px 16px',
+                        background: 'rgba(6,182,212,0.04)',
+                        border: '1px solid rgba(6,182,212,0.18)',
+                        borderRadius: 10,
+                        marginBottom: 16,
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                        gap: 12,
+                        fontSize: 13,
+                      }}
+                    >
+                      {/* Tile Stock Requested */}
+                      <div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: '#0891b2', textTransform: 'uppercase', marginBottom: 2 }}>
+                          📦 Tile Stock Requested
+                        </div>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>
+                          {meta.stockRequested || 'Showroom Display Selection'}
+                        </div>
+                        <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 700,
+                              padding: '2px 6px',
+                              borderRadius: 4,
+                              background: meta.stockAvailable === 'Yes' ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+                              color: meta.stockAvailable === 'Yes' ? '#059669' : '#dc2626',
+                            }}
+                          >
+                            {meta.stockAvailable === 'Yes' ? '✅ In Stock' : '❌ Out of Stock'}
+                          </span>
+                          {meta.stockNotes && (
+                            <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                              ({meta.stockNotes})
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Lead Source & Repeat Information */}
+                      <div>
+                        <div style={{ fontSize: 11, fontWeight: 700, color: '#0891b2', textTransform: 'uppercase', marginBottom: 2 }}>
+                          📍 Lead Source & History
+                        </div>
+                        <div style={{ color: 'var(--text-primary)', fontWeight: 600 }}>
+                          Source: {meta.source || 'Walk-in / Signboard'}
+                        </div>
+                        {meta.isRepeatVisit && (
+                          <div style={{ fontSize: 12, color: 'var(--accent-purple)', fontWeight: 600, marginTop: 4 }}>
+                            🔁 Repeat Reason: {meta.repeatReason || 'Follow-up on Previous Enquiry'}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Notes if provided */}
+                      {meta.notes && (
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: '#0891b2', textTransform: 'uppercase', marginBottom: 2 }}>
+                            📝 Staff Notes
+                          </div>
+                          <div style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                            "{meta.notes}"
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Feedback Breakdown (if feedback type) */}
                   {hasBreakdown && (
                     <div style={{ marginBottom: 16 }}>
                       <div
@@ -587,7 +796,7 @@ export default function NotificationsPage() {
                     </div>
                   )}
 
-                  {/* Complaint Section (if customer registered a complaint) */}
+                  {/* Complaint Section */}
                   {isComplaint && (
                     <div
                       style={{
@@ -596,6 +805,7 @@ export default function NotificationsPage() {
                         border: '1.5px solid rgba(239,68,68,0.35)',
                         borderRadius: 10,
                         marginTop: 10,
+                        marginBottom: 10,
                       }}
                     >
                       <div
@@ -629,27 +839,56 @@ export default function NotificationsPage() {
                     </div>
                   )}
 
-                  {/* Direct Link Footer */}
-                  {user?.role === 'admin' && (
-                    <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--border-glass)', display: 'flex', gap: 10 }}>
-                      <Link
-                        to="/admin/feedback"
-                        className="btn btn-xs btn-ghost"
-                        style={{ color: 'var(--primary)', fontSize: 12 }}
-                      >
-                        <MdOutlineRateReview style={{ marginRight: 4 }} /> View in Feedback Management
-                      </Link>
-                      {isComplaint && (
+                  {/* Direct Link Footer / Action Buttons */}
+                  <div
+                    style={{
+                      marginTop: 14,
+                      paddingTop: 12,
+                      borderTop: '1px solid var(--border-glass)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      flexWrap: 'wrap',
+                      gap: 10,
+                    }}
+                  >
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      {isVisit ? (
                         <Link
-                          to="/admin/complaints"
-                          className="btn btn-xs btn-ghost"
-                          style={{ color: '#dc2626', fontSize: 12 }}
+                          to={user?.role === 'admin' ? '/admin/visits' : '/staff/my-visits'}
+                          className="btn btn-xs btn-primary"
+                          style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}
                         >
-                          <MdWarning style={{ marginRight: 4 }} /> View in Complaints
+                          <MdPerson /> View Customer Visit Details →
                         </Link>
+                      ) : (
+                        user?.role === 'admin' && (
+                          <Link
+                            to="/admin/feedback"
+                            className="btn btn-xs btn-ghost"
+                            style={{ color: 'var(--primary)', fontSize: 12 }}
+                          >
+                            <MdOutlineRateReview style={{ marginRight: 4 }} /> View in Feedback Management
+                          </Link>
+                        )
+                      )}
+
+                      {meta.feedbackLink && (
+                        <button
+                          type="button"
+                          className="btn btn-xs btn-outline"
+                          onClick={() => copyToClipboard(meta.feedbackLink, 'Customer Feedback Link')}
+                          style={{ fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                        >
+                          <MdContentCopy /> Copy Feedback Link
+                        </button>
                       )}
                     </div>
-                  )}
+
+                    <span style={{ fontSize: 11, color: '#94a3b8' }}>
+                      Logged at {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
                 </div>
               );
             })}
