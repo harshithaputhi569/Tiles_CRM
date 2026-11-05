@@ -16,8 +16,15 @@ export const NotificationProvider = ({ children }) => {
     if (!user) return;
     try {
       const { data } = await api.get('/notifications');
-      const list = data.notifications || [];
-      const unread = data.unreadCount || 0;
+      // Deduplicate on client to guarantee no duplicate notification renders
+      const seen = new Set();
+      const list = (data.notifications || []).filter((n) => {
+        const key = `${n.referenceId || ''}|${n.title}|${n.recipient || n.role || ''}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      const unread = list.filter(n => n.unread).length;
 
       // Detect new incoming notifications after initial load and show toast alert
       if (initialFetchDone.current) {
@@ -109,6 +116,18 @@ export const NotificationProvider = ({ children }) => {
     }
   };
 
+  const clearAllNotifications = async () => {
+    try {
+      await api.delete('/notifications/clear-all');
+      setNotifications([]);
+      setUnreadCount(0);
+      toast.success('All notifications cleared');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to clear notifications');
+    }
+  };
+
   return (
     <NotificationContext.Provider
       value={{
@@ -117,6 +136,7 @@ export const NotificationProvider = ({ children }) => {
         markAsRead,
         markAllAsRead,
         deleteNotification,
+        clearAllNotifications,
         refresh: () => fetchNotifications(false),
       }}
     >
@@ -133,6 +153,8 @@ export const useNotifications = () => {
       unreadCount: 0,
       markAsRead: () => {},
       markAllAsRead: () => {},
+      deleteNotification: () => {},
+      clearAllNotifications: () => {},
       refresh: () => {},
     };
   }

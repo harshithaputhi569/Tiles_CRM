@@ -21,9 +21,6 @@ const adminNav = [
     { to: '/admin/feedback',      icon: <MdFeedback />,      label: 'Feedback',   hasBadge: true },
     { to: '/admin/complaints',    icon: <MdWarning />,       label: 'Complaints' },
   ]},
-  { label: 'REPORTS', items: [
-    { to: '/admin/reports',       icon: <MdFileDownload />,  label: 'Reports' },
-  ]},
 ];
 
 const staffNav = [

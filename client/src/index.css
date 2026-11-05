@@ -642,6 +642,50 @@ tbody tr:last-child td { border-bottom: none; }
   min-width: 130px; max-width: 200px;
 }
 
+/* ===== CUSTOMER FEEDBACK FILTER CARD & GRID ===== */
+.feedback-filter-card {
+  background: #ffffff;
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: visible !important;
+}
+
+.feedback-filter-grid {
+  display: grid;
+  gap: 14px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.feedback-filter-grid.staff-view {
+  grid-template-columns: minmax(280px, 2.5fr) minmax(130px, 1fr) minmax(130px, 1fr) minmax(160px, 1.2fr);
+}
+
+.feedback-filter-grid.admin-view {
+  grid-template-columns: minmax(240px, 2fr) minmax(120px, 1fr) minmax(120px, 1fr) minmax(150px, 1.2fr) minmax(140px, 1.1fr);
+}
+
+@media (max-width: 1080px) {
+  .feedback-filter-grid.staff-view,
+  .feedback-filter-grid.admin-view {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .feedback-filter-card {
+    padding: 14px 12px;
+  }
+  .feedback-filter-grid.staff-view,
+  .feedback-filter-grid.admin-view {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Date picker wrapper — shows label + input together */
 .date-filter-wrap {
   display: flex;

@@ -5,16 +5,82 @@ import { RadarChart, Radar, PolarGrid, PolarAngleAxis, ResponsiveContainer } fro
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 
+const REASON_CONFIG = {
+  'High Price / Budget Constraint': {
+    icon: '🏷️',
+    bg: 'rgba(239,68,68,0.06)',
+    border: 'rgba(239,68,68,0.2)',
+    barColor: '#ef4444',
+    tip: 'Offer budget collection or volume pricing',
+  },
+  'Just Exploring / Browsing': {
+    icon: '👀',
+    bg: 'rgba(245,158,11,0.06)',
+    border: 'rgba(245,158,11,0.2)',
+    barColor: '#f59e0b',
+    tip: 'Send WhatsApp brochure or sample photos',
+  },
+  'Out of Stock / Lead Time': {
+    icon: '📦',
+    bg: 'rgba(6,182,212,0.06)',
+    border: 'rgba(6,182,212,0.2)',
+    barColor: '#06b6d4',
+    tip: 'Propose similar available designs or check ETA',
+  },
+  'Better Competitor Offer': {
+    icon: '⚖️',
+    bg: 'rgba(168,85,247,0.06)',
+    border: 'rgba(168,85,247,0.2)',
+    barColor: '#a855f7',
+    tip: 'Highlight TileShow warranty, finish & durability',
+  },
+  'Design / Quality Not Matched': {
+    icon: '🎨',
+    bg: 'rgba(236,72,153,0.06)',
+    border: 'rgba(236,72,153,0.2)',
+    barColor: '#ec4899',
+    tip: 'Invite to view new premium slab arrival',
+  },
+};
+
 export default function MyPerformance() {
   const { user } = useAuth();
   const [perf, setPerf] = useState(null);
   const [purchaseData, setPurchaseData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activePreset, setActivePreset] = useState('all');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
+  const getTodayStr = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  const getDaysAgoStr = (numDays) => {
+    const d = new Date();
+    d.setDate(d.getDate() - numDays);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+
+  const applyPreset = (preset) => {
+    setActivePreset(preset);
+    if (preset === 'today') { const t = getTodayStr(); setStartDate(t); setEndDate(t); }
+    else if (preset === '7d') { setStartDate(getDaysAgoStr(7)); setEndDate(getTodayStr()); }
+    else if (preset === '30d') { setStartDate(getDaysAgoStr(30)); setEndDate(getTodayStr()); }
+    else if (preset === 'all') { setStartDate(''); setEndDate(''); }
+  };
 
   useEffect(() => {
+    setLoading(true);
+    const params = [];
+    if (startDate) params.push(`startDate=${startDate}`);
+    if (endDate) params.push(`endDate=${endDate}`);
+    const qs = params.length > 0 ? `?${params.join('&')}` : '';
+
     Promise.all([
-      api.get('/feedback'),
-      api.get('/analytics/purchase-conversion'),
+      api.get(`/feedback${qs}`),
+      api.get(`/analytics/purchase-conversion${qs}`),
     ])
       .then(([fbRes, purRes]) => {
         const feedbacks = fbRes.data.feedbacks || [];
@@ -22,8 +88,17 @@ export default function MyPerformance() {
 
         const count = feedbacks.length;
         if (count === 0) {
-          setPerf({ feedbackCount: 0, visits: purRes.data?.totalVisits || 0 });
-          setLoading(false);
+          setPerf({
+            feedbackCount: 0,
+            visits: purRes.data?.totalVisits || 0,
+            avgRating: '0',
+            avgBehaviour: '0',
+            avgHelpfulness: '0',
+            avgProductKnowledge: '0',
+            satisfactionRate: '0',
+            complaints: 0,
+            performanceScore: '0',
+          });
           return;
         }
 
@@ -52,7 +127,7 @@ export default function MyPerformance() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [startDate, endDate]);
 
   const radarData = perf
     ? [
@@ -95,6 +170,31 @@ export default function MyPerformance() {
           </div>
         ) : (
           <>
+            {/* Period Filter Preset Bar */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+              <div style={{ fontSize: 13, color: 'var(--text-muted)', fontWeight: 600 }}>
+                Performance Period: <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{activePreset === 'all' ? 'All Time (Overall)' : activePreset === '30d' ? 'Last 30 Days' : activePreset === '7d' ? 'Last 7 Days' : 'Today'}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 6, background: '#f1f5f9', padding: '3px 4px', borderRadius: 8 }}>
+                {[
+                  { id: 'today', label: 'Today' },
+                  { id: '7d', label: '7 Days' },
+                  { id: '30d', label: '30 Days' },
+                  { id: 'all', label: 'All Time' },
+                ].map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    className={`btn btn-sm ${activePreset === p.id ? 'btn-primary' : 'btn-ghost'}`}
+                    style={{ padding: '4px 12px', fontSize: 11, borderRadius: 6 }}
+                    onClick={() => applyPreset(p.id)}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Score Header */}
             <div
               style={{
@@ -229,30 +329,102 @@ export default function MyPerformance() {
             {/* Non-Purchase Reasons & Lead Sources for Staff */}
             {purchaseData && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20, marginTop: 24 }}>
-                <div className="card fade-in">
-                  <div className="card-header">
-                    <span className="card-title">❌ Reasons Why My Visitors Didn't Buy</span>
+                <div className="card fade-in" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div>
+                    <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                      <span className="card-title">❌ Reasons Why My Visitors Didn't Buy</span>
+                      {purchaseData.notPurchasedCount > 0 && (
+                        <span style={{
+                          fontSize: 11,
+                          fontWeight: 800,
+                          padding: '3px 10px',
+                          borderRadius: 20,
+                          background: 'rgba(239,68,68,0.1)',
+                          color: '#dc2626',
+                          border: '1px solid rgba(239,68,68,0.25)',
+                        }}>
+                          {purchaseData.notPurchasedCount} Non-Purchased Visitors
+                        </span>
+                      )}
+                    </div>
+                    <div className="card-body">
+                      {(!purchaseData.reasonsBreakdown || purchaseData.reasonsBreakdown.length === 0) ? (
+                        <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '30px 20px' }}>
+                          <div style={{ fontSize: 24, marginBottom: 6 }}>🎉</div>
+                          No non-purchased visitors recorded for this period. Great performance!
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                          {purchaseData.reasonsBreakdown.map((r) => {
+                            const config = REASON_CONFIG[r.reason] || {
+                              icon: '📌',
+                              bg: 'rgba(241,245,249,0.7)',
+                              border: '#e2e8f0',
+                              barColor: '#ef4444',
+                              tip: 'Follow up with customer to understand requirements',
+                            };
+
+                            return (
+                              <div
+                                key={r.reason}
+                                style={{
+                                  padding: '12px 14px',
+                                  background: '#f8fafc',
+                                  borderRadius: 10,
+                                  border: `1px solid ${config.border}`,
+                                }}
+                              >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <span style={{ fontSize: 16 }}>{config.icon}</span>
+                                    <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)' }}>{r.reason}</span>
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <span style={{ fontWeight: 800, fontSize: 12, color: '#dc2626' }}>
+                                      {r.count} {r.count === 1 ? 'visitor' : 'visitors'}
+                                    </span>
+                                    <span style={{
+                                      fontSize: 10,
+                                      fontWeight: 800,
+                                      background: 'rgba(220,38,38,0.1)',
+                                      color: '#dc2626',
+                                      padding: '1px 6px',
+                                      borderRadius: 6,
+                                    }}>
+                                      {r.percentage}%
+                                    </span>
+                                  </div>
+                                </div>
+                                <div style={{ width: '100%', height: 6, background: '#e2e8f0', borderRadius: 3, overflow: 'hidden', marginBottom: 6 }}>
+                                  <div style={{ width: `${r.percentage}%`, height: '100%', background: `linear-gradient(90deg, ${config.barColor}, #dc2626)`, borderRadius: 3 }} />
+                                </div>
+                                <div style={{ fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 5 }}>
+                                  <span style={{ color: '#d97706', fontSize: 12 }}>💡</span>
+                                  <span><strong>Action:</strong> {config.tip}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="card-body">
-                    {(!purchaseData.reasonsBreakdown || purchaseData.reasonsBreakdown.length === 0) ? (
-                      <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 20 }}>
-                        No non-purchased visitors recorded yet.
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        {purchaseData.reasonsBreakdown.map((r) => (
-                          <div key={r.reason} style={{ padding: '8px 12px', background: '#f8fafc', borderRadius: 8 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
-                              <span style={{ fontWeight: 600 }}>{r.reason}</span>
-                              <span style={{ fontWeight: 700, color: '#dc2626' }}>{r.count} ({r.percentage}%)</span>
-                            </div>
-                            <div style={{ width: '100%', height: 4, background: '#e2e8f0', borderRadius: 2 }}>
-                              <div style={{ width: `${r.percentage}%`, height: '100%', background: '#ef4444', borderRadius: 2 }} />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+
+                  {/* Bottom Insight Card */}
+                  <div style={{
+                    margin: '0 16px 16px 16px',
+                    padding: '12px 14px',
+                    borderRadius: 10,
+                    background: 'linear-gradient(135deg, rgba(124,58,237,0.05) 0%, rgba(6,182,212,0.04) 100%)',
+                    border: '1px dashed rgba(124,58,237,0.25)',
+                    fontSize: 12,
+                    color: 'var(--text-secondary)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                  }}>
+                    <span style={{ fontSize: 18 }}>🎯</span>
+                    <span>Reach out to non-purchased customers with alternative designs or special offers to recover potential sales.</span>
                   </div>
                 </div>
 

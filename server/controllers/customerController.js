@@ -138,16 +138,43 @@ const getVisits = async (req, res) => {
       .sort({ visitDate: -1, createdAt: -1 });
   }
 
-  const visits = await query.skip((page - 1) * limit).limit(Number(limit));
-  const total = await Visit.countDocuments(filter);
+  const [visits, total, purchasedCount, notPurchasedCount, convertedCustomers, feedbackSentCount, billingAgg] = await Promise.all([
+    query.skip((page - 1) * limit).limit(Number(limit)),
+    Visit.countDocuments(filter),
+    Visit.countDocuments({ ...filter, purchaseStatus: 'Purchased' }),
+    Visit.countDocuments({ ...filter, purchaseStatus: 'Not Purchased' }),
+    Visit.distinct('customer', { ...filter, purchaseStatus: 'Purchased' }),
+    Visit.countDocuments({ ...filter, feedbackSubmitted: true }),
+    Visit.aggregate([
+      { $match: filter },
+      { $group: { _id: null, totalBilling: { $sum: '$totalBillingValue' } } },
+    ]),
+  ]);
 
-  res.json({ visits, total, pages: Math.ceil(total / limit) });
+  const totalBillingValue = billingAgg.length > 0 ? (billingAgg[0].totalBilling || 0) : 0;
+  const conversionRate = total > 0 ? parseFloat(((purchasedCount / total) * 100).toFixed(1)) : 0;
+  const convertedCustomersCount = convertedCustomers.length;
+
+  res.json({
+    visits,
+    total,
+    pages: Math.ceil(total / limit),
+    stats: {
+      totalVisits: total,
+      purchasedCount,
+      notPurchasedCount,
+      convertedCustomersCount,
+      conversionRate,
+      totalBillingValue,
+      feedbackSentCount,
+    },
+  });
 };
 
 // @route POST /api/visits
 // Creates a visit. Customer must already exist (pass customer ID) or be created first via POST /customers.
 const createVisit = async (req, res) => {
-  const { customer: customerId, source, purchaseStatus, nonPurchaseReason, repeatReason } = req.body;
+  const { customer: customerId, source, purchaseStatus, nonPurchaseReason, repeatReason, specialDayDate, specialDayReason } = req.body;
 
   // Verify the customer exists before logging a visit
   const customerExists = await Customer.findById(customerId);
@@ -181,6 +208,8 @@ const createVisit = async (req, res) => {
     staff: req.user._id,
     feedbackToken,
     feedbackTokenExpiry,
+    specialDayDate: specialDayDate ? new Date(specialDayDate) : null,
+    specialDayReason: specialDayReason || '',
   });
 
   const populated = await visit.populate([
@@ -188,8 +217,8 @@ const createVisit = async (req, res) => {
     { path: 'staff', select: 'name designation' },
   ]);
 
-  // Build the feedback link (client URL)
-  const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+  // Build the feedback link (client URL) - use 127.0.0.1 so WhatsApp detects it as a clickable URL with dots
+  const clientUrl = process.env.CLIENT_URL || 'http://127.0.0.1:5173';
   const feedbackLink = `${clientUrl}/feedback/${feedbackToken}`;
 
   // Automatically dispatch live customer notifications to Admin and Attending Staff
@@ -241,7 +270,7 @@ const createVisit = async (req, res) => {
       pStatus === 'Purchased' && billing > 0 ? ` (₹${billing.toLocaleString('en-IN')})` : ''
     }${stockReq ? ` • Stock: ${stockReq} [${stockAvail}]` : ''}`;
 
-    await Notification.create({
+    await Notification.createIfNotExists({
       recipient: null,
       role: 'admin',
       title: adminTitle,
@@ -260,7 +289,7 @@ const createVisit = async (req, res) => {
       billing > 0 ? ` (₹${billing.toLocaleString('en-IN')})` : ''
     }`;
 
-    await Notification.create({
+    await Notification.createIfNotExists({
       recipient: req.user._id,
       role: 'staff',
       title: staffTitle,
@@ -268,8 +297,58 @@ const createVisit = async (req, res) => {
       type: 'visit',
       referenceId: visit._id,
       metadata: visitMetadata,
-      link: '/staff/visits',
+      link: '/staff/my-visits',
     });
+
+    // 3. If a Special Day Date was provided, also add it to visitMetadata and
+    //    create exactly ONE special day notification for both admin & staff.
+    if (visit.specialDayDate && visit.specialDayReason) {
+      const now = new Date();
+      const sd = new Date(visit.specialDayDate);
+      const isToday =
+        sd.getFullYear() === now.getFullYear() &&
+        sd.getMonth() === now.getMonth() &&
+        sd.getDate() === now.getDate();
+
+      const sdFormatted = sd.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      const sdMeta = { ...visitMetadata, specialDayDate: visit.specialDayDate, specialDayReason: visit.specialDayReason };
+
+      const sdTitle = isToday
+        ? `🎉 Today is a Special Day! – ${custName}`
+        : `🎉 Special Day Scheduled: ${custName}`;
+
+      const sdAdminMsg = isToday
+        ? `${custName} (${custMobile}) has a special occasion today: "${visit.specialDayReason}" (Registered by ${staffName})`
+        : `${custName}'s special occasion "${visit.specialDayReason}" is on ${sdFormatted}. Registered by ${staffName}.`;
+
+      const sdStaffMsg = isToday
+        ? `${custName} (${custMobile}) has a special occasion today: "${visit.specialDayReason}". Wish them! 🎉`
+        : `You marked ${sdFormatted} as a special day for ${custName}: "${visit.specialDayReason}". You'll be reminded on the day!`;
+
+      // Notify admin (deduplicated)
+      await Notification.createIfNotExists({
+        recipient: null,
+        role: 'admin',
+        title: sdTitle,
+        message: sdAdminMsg,
+        type: 'general',
+        referenceId: visit._id,
+        metadata: sdMeta,
+        link: '/admin/visits',
+      });
+
+      // Notify the attending staff (deduplicated)
+      await Notification.createIfNotExists({
+        recipient: req.user._id,
+        role: 'staff',
+        title: sdTitle,
+        message: sdStaffMsg,
+        type: 'general',
+        referenceId: visit._id,
+        metadata: sdMeta,
+        link: '/staff/my-visits',
+      });
+    }
   } catch (notifErr) {
     console.error('Customer visit notification dispatch error (non-fatal):', notifErr);
   }

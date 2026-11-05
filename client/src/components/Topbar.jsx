@@ -10,6 +10,8 @@ import {
   MdPerson,
   MdPersonAdd,
   MdAutorenew,
+  MdDeleteSweep,
+  MdClose,
 } from 'react-icons/md';
 import { useSidebar } from '../context/SidebarContext';
 import { useNotifications } from '../context/NotificationContext';
@@ -31,7 +33,14 @@ export default function Topbar({ title, subtitle }) {
   const { open } = useSidebar();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    clearAllNotifications,
+    deleteNotification,
+  } = useNotifications();
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -61,10 +70,34 @@ export default function Topbar({ title, subtitle }) {
       markAsRead(notif._id);
     }
     setShowDropdown(false);
-    if (notif.link) {
-      navigate(notif.link);
-    } else if (notif.type === 'visit') {
-      navigate(user?.role === 'admin' ? '/admin/visits' : '/staff/my-visits');
+
+    const isAdmin = user?.role === 'admin';
+    let targetLink = notif.link || '';
+
+    // Fix legacy link
+    if (targetLink === '/staff/visits') {
+      targetLink = '/staff/my-visits';
+    }
+
+    if (targetLink) {
+      navigate(targetLink);
+      return;
+    }
+
+    // Smart fallback routing based on notification type and title
+    if (notif.type === 'visit') {
+      navigate(isAdmin ? '/admin/visits' : '/staff/my-visits');
+    } else if (notif.type === 'feedback') {
+      navigate(isAdmin ? '/admin/feedback' : '/staff/feedback');
+    } else if (notif.type === 'complaint') {
+      navigate(isAdmin ? '/admin/complaints' : '/staff/feedback');
+    } else {
+      // Special Day / general
+      if (notif.title?.includes('Special Day') || notif.metadata?.visitId) {
+        navigate(isAdmin ? '/admin/visits' : '/staff/my-visits');
+      } else {
+        navigate(isAdmin ? '/admin/dashboard' : '/staff/dashboard');
+      }
     }
   };
 
@@ -197,25 +230,53 @@ export default function Topbar({ title, subtitle }) {
                     </span>
                   )}
                 </div>
-                {unreadCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={markAllAsRead}
-                    style={{
-                      border: 'none',
-                      background: 'transparent',
-                      color: 'var(--accent-purple)',
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 4,
-                    }}
-                  >
-                    <MdCheck /> Mark all read
-                  </button>
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  {unreadCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={markAllAsRead}
+                      style={{
+                        border: 'none',
+                        background: 'transparent',
+                        color: 'var(--accent-purple)',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                      }}
+                      title="Mark all notifications as read"
+                    >
+                      <MdCheck /> Mark all read
+                    </button>
+                  )}
+                  {liveNotifications.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm('Are you sure you want to clear all notifications?')) {
+                          clearAllNotifications();
+                        }
+                      }}
+                      style={{
+                        border: 'none',
+                        background: 'transparent',
+                        color: '#ef4444',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                      }}
+                      title="Clear all notifications"
+                    >
+                      <MdDeleteSweep style={{ fontSize: 16 }} /> Clear all
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Notification Items List */}
@@ -279,23 +340,50 @@ export default function Topbar({ title, subtitle }) {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'space-between',
+                              gap: 6,
                             }}
                           >
-                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
                               {n.title}
                             </span>
-                            {n.unread && (
-                              <span
-                                style={{
-                                  width: 7,
-                                  height: 7,
-                                  borderRadius: '50%',
-                                  background: 'var(--accent-purple)',
-                                  flexShrink: 0,
-                                  marginLeft: 6,
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                              {n.unread && (
+                                <span
+                                  style={{
+                                    width: 7,
+                                    height: 7,
+                                    borderRadius: '50%',
+                                    background: 'var(--accent-purple)',
+                                  }}
+                                  title="Unread"
+                                />
+                              )}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteNotification(n._id);
                                 }}
-                              />
-                            )}
+                                style={{
+                                  border: 'none',
+                                  background: 'transparent',
+                                  color: 'var(--text-muted)',
+                                  padding: '2px 4px',
+                                  cursor: 'pointer',
+                                  borderRadius: 4,
+                                  fontSize: 13,
+                                  opacity: 0.5,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                                onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+                                onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.5')}
+                                title="Dismiss notification"
+                              >
+                                <MdClose />
+                              </button>
+                            </div>
                           </div>
                           <div
                             style={{
@@ -390,7 +478,7 @@ export default function Topbar({ title, subtitle }) {
                   type="button"
                   onClick={() => {
                     setShowDropdown(false);
-                    navigate(user?.role === 'admin' ? '/admin/notifications' : '/staff/feedback');
+                    navigate(user?.role === 'admin' ? '/admin/notifications' : '/staff/notifications');
                   }}
                   style={{
                     background: 'transparent',

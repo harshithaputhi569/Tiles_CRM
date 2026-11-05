@@ -50,6 +50,8 @@ const visitSchema = new mongoose.Schema(
       default: '',
     },
     notes: { type: String, default: '' },
+    specialDayDate: { type: Date, default: null },
+    specialDayReason: { type: String, default: '' },
     feedbackSubmitted: { type: Boolean, default: false },
     // Unique token for the customer feedback/complaint form link
     feedbackToken: {

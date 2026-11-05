@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+﻿import { useState, useRef } from 'react';
 import Topbar from '../../components/Topbar';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
@@ -13,6 +13,10 @@ import {
   MdContentCopy,
   MdOpenInNew,
   MdPhoneIphone,
+  MdCelebration,
+  MdContentPaste,
+  MdLanguage,
+  MdSettings,
 } from 'react-icons/md';
 
 const CUSTOMER_TYPES = [
@@ -117,7 +121,33 @@ export default function RegisterVisit() {
   const [createdVisit, setCreatedVisit] = useState(null);
   const [saving, setSaving] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [specialDayDate, setSpecialDayDate] = useState('');
+  const [specialDayReason, setSpecialDayReason] = useState('');
+  const [publicDomain, setPublicDomain] = useState(() => {
+    return localStorage.getItem('tileshow_public_domain') || '';
+  });
+  const [showDomainConfig, setShowDomainConfig] = useState(false);
+  const [domainInput, setDomainInput] = useState(() => {
+    return localStorage.getItem('tileshow_public_domain') || '';
+  });
   const debounceRef = useRef(null);
+
+  const handleSaveDomain = (e) => {
+    e?.preventDefault?.();
+    let cleaned = domainInput.trim().replace(/\/+$/, '');
+    if (cleaned && !/^https?:\/\//i.test(cleaned)) {
+      cleaned = `https://${cleaned}`;
+    }
+    setPublicDomain(cleaned);
+    if (cleaned) {
+      localStorage.setItem('tileshow_public_domain', cleaned);
+      toast.success('Live domain saved! WhatsApp links will now use this public address.');
+    } else {
+      localStorage.removeItem('tileshow_public_domain');
+      toast('Domain cleared. Using default app origin.', { icon: 'ℹ️' });
+    }
+    setShowDomainConfig(false);
+  };
 
   const handleMobileChange = (val) => {
     setMobile(val);
@@ -211,6 +241,8 @@ export default function RegisterVisit() {
         customer: custId,
         source: visit.source || customer.source,
         ...visit,
+        specialDayDate: specialDayDate || undefined,
+        specialDayReason: specialDayReason || undefined,
       });
 
       const customerInfo = (vis.customer && typeof vis.customer === 'object' && vis.customer.name)
@@ -218,7 +250,14 @@ export default function RegisterVisit() {
         : (existingCustomer || customer);
 
       const tokenOrId = vis.feedbackToken || vis._id;
-      const feedbackLink = vis.feedbackLink || `${window.location.origin}/feedback/${tokenOrId}`;
+      let baseOrigin = (publicDomain || localStorage.getItem('tileshow_public_domain') || '').trim();
+      if (!baseOrigin) {
+        baseOrigin = window.location.origin;
+      } else if (!/^https?:\/\//i.test(baseOrigin)) {
+        baseOrigin = `https://${baseOrigin}`;
+      }
+      baseOrigin = baseOrigin.replace(/\/+$/, '');
+      const feedbackLink = `${baseOrigin}/feedback/${tokenOrId}`;
 
       setCreatedVisit({
         ...vis,
@@ -244,6 +283,8 @@ export default function RegisterVisit() {
     setCustomer(emptyCustomer);
     setVisit(emptyVisit);
     setCreatedVisit(null);
+    setSpecialDayDate('');
+    setSpecialDayReason('');
   };
 
   return (
@@ -887,6 +928,82 @@ export default function RegisterVisit() {
                       onChange={(e) => setVisit({ ...visit, notes: e.target.value })}
                     />
                   </div>
+
+                  {/* ── Special Occasion / Special Day Section ── */}
+                  <div
+                    className="form-group fade-in"
+                    style={{
+                      marginTop: 20,
+                      padding: '16px 18px',
+                      background: 'linear-gradient(135deg, rgba(124,58,237,0.07) 0%, rgba(245,158,11,0.06) 100%)',
+                      border: '1.5px solid rgba(124,58,237,0.22)',
+                      borderRadius: 12,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                      <span style={{ fontSize: 20 }}>🎉</span>
+                      <div>
+                        <div style={{ fontWeight: 800, fontSize: 13, color: 'var(--accent-purple)' }}>
+                          Special Occasion / Important Date <span style={{ fontWeight: 400, color: 'var(--text-muted)', fontSize: 12 }}>(Optional)</span>
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
+                          Add a customer's birthday, anniversary, housewarming, etc. Both you and the admin will get a popup notification on that day.
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                      <div>
+                        <label className="form-label" style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent-purple)' }}>
+                          Special Day Date
+                        </label>
+                        <input
+                          type="date"
+                          className="form-control"
+                          value={specialDayDate}
+                          onChange={(e) => setSpecialDayDate(e.target.value)}
+                          style={{ background: '#ffffff', fontWeight: 600 }}
+                        />
+                      </div>
+                      <div>
+                        <label className="form-label" style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent-purple)' }}>
+                          Why is it Special?
+                        </label>
+                        <input
+                          className="form-control"
+                          placeholder="e.g. Birthday, Anniversary, Housewarming…"
+                          value={specialDayReason}
+                          onChange={(e) => setSpecialDayReason(e.target.value)}
+                          style={{ background: '#ffffff' }}
+                        />
+                      </div>
+                    </div>
+
+                    {specialDayDate && specialDayReason && (
+                      <div
+                        style={{
+                          marginTop: 10,
+                          padding: '8px 12px',
+                          borderRadius: 8,
+                          background: 'rgba(124,58,237,0.08)',
+                          border: '1px solid rgba(124,58,237,0.2)',
+                          fontSize: 12,
+                          color: '#7c3aed',
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6,
+                        }}
+                      >
+                        <span>🔔</span>
+                        Reminder scheduled for{' '}
+                        <strong>
+                          {new Date(specialDayDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </strong>
+                        — "{specialDayReason}"
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="modal-footer">
@@ -963,6 +1080,20 @@ export default function RegisterVisit() {
                 <div style={{ padding: '8px 16px', borderRadius: 20, background: 'rgba(124,58,237,0.1)', color: '#6d28d9', fontWeight: 700, fontSize: 13, border: '1px solid rgba(124,58,237,0.25)' }}>
                   📣 {createdVisit.source || 'Walk-in / Signboard'}
                 </div>
+                {/* Special Day badge on success screen */}
+                {(createdVisit.specialDayDate || specialDayDate) && (createdVisit.specialDayReason || specialDayReason) && (
+                  <div style={{
+                    padding: '8px 16px', borderRadius: 20,
+                    background: 'linear-gradient(135deg, rgba(124,58,237,0.12), rgba(245,158,11,0.10))',
+                    color: '#7c3aed', fontWeight: 700, fontSize: 13,
+                    border: '1.5px solid rgba(124,58,237,0.3)',
+                    display: 'flex', alignItems: 'center', gap: 6,
+                  }}>
+                    🎉 Special Day:{' '}
+                    {new Date(createdVisit.specialDayDate || specialDayDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    {' '}— {createdVisit.specialDayReason || specialDayReason}
+                  </div>
+                )}
               </div>
 
               {/* Always display Customer Feedback & Complaint Link with WhatsApp, Copy, and Live Form Preview */}
@@ -974,11 +1105,44 @@ export default function RegisterVisit() {
                 const rawMobile = cust?.mobile || mobile || '';
                 const cleanDigits = rawMobile.replace(/\D/g, '');
                 const phoneForWhatsApp = cleanDigits.length === 10 ? `91${cleanDigits}` : cleanDigits;
-                const link = createdVisit.feedbackLink || `${window.location.origin}/feedback/${createdVisit.feedbackToken || createdVisit._id}`;
 
-                const messageText = `Dear ${custName}, thank you for visiting TileShow!\n\nWe value your feedback. Please click the link below to share your experience or register any complaint:\n${link}\n\nYour response helps us serve you better. 🙏`;
+                // Build live feedback URL - prefer public domain so WhatsApp activates & underlines the link
+                let baseOrigin = (publicDomain || localStorage.getItem('tileshow_public_domain') || '').trim();
+                if (!baseOrigin) {
+                  baseOrigin = window.location.origin;
+                } else if (!/^https?:\/\//i.test(baseOrigin)) {
+                  baseOrigin = `https://${baseOrigin}`;
+                }
+                baseOrigin = baseOrigin.replace(/\/+$/, '');
 
-                const waUrl = `https://wa.me/${phoneForWhatsApp}?text=${encodeURIComponent(messageText)}`;
+                const token = createdVisit.feedbackToken || createdVisit._id;
+                const link = `${baseOrigin}/feedback/${token}`;
+                const isLocalHost = /localhost|127\.0\.0\.1/i.test(link);
+
+                // Formatted message with native emojis
+                const whatsappLines = [
+                  `Dear *${custName}*, 🙏`,
+                  ``,
+                  `Thank you for visiting *TileShow Tiles*! ✨`,
+                  `We hope you had a wonderful experience at our showroom.`,
+                  ``,
+                  `📝 *Share Your Feedback & Complaint*`,
+                  `Please tap the link below to rate your visit and share your feedback or complaint:`,
+                  ``,
+                  link,
+                  ``,
+                  `Your response helps us serve you better. ⭐`,
+                  ``,
+                  `_(If the link is not clickable, please reply 'Hi' or save this contact to activate it)_`,
+                  ``,
+                  `— *Team TileShow*`,
+                ];
+
+                const messageText = whatsappLines.join('\n');
+
+                // Using web.whatsapp.com for web/desktop preserves 100% of UTF-8 characters without Windows ANSI corruption
+                const waWebUrl = `https://web.whatsapp.com/send?phone=${phoneForWhatsApp}&text=${encodeURIComponent(messageText)}`;
+                const waAppUrl = `https://api.whatsapp.com/send?phone=${phoneForWhatsApp}&text=${encodeURIComponent(messageText)}`;
 
                 return (
                   <div style={{
@@ -1011,9 +1175,105 @@ export default function RegisterVisit() {
                       )}
                     </div>
 
-                    <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.5 }}>
-                      Send this unique, secure complaint & feedback form link to the customer via WhatsApp or copy the link below. The customer can rate their showroom experience and submit any complaints without logging in.
+                    <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 14, lineHeight: 1.5 }}>
+                      Send this unique complaint & feedback form link to the customer via WhatsApp or copy the link below. The customer can rate their showroom experience and submit any complaints without logging in.
                     </div>
+
+                    {/* Notice & Domain Configuration */}
+                    {isLocalHost ? (
+                      <div style={{
+                        background: 'rgba(245,158,11,0.08)',
+                        border: '1.5px solid rgba(245,158,11,0.3)',
+                        borderRadius: 10,
+                        padding: '10px 14px',
+                        marginBottom: 14,
+                        fontSize: 12,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 10,
+                        flexWrap: 'wrap',
+                      }}>
+                        <div style={{ color: '#92400e', lineHeight: 1.4, flex: 1, minWidth: 260 }}>
+                          <strong>💡 Why is the link plain text?</strong> WhatsApp's security engine only underlines and activates links that have a real domain (like <code>.com</code> or <code>.vercel.app</code>). Localhost/127.0.0.1 is blocked by WhatsApp.
+                        </div>
+                        <button
+                          type="button"
+                          className="btn btn-sm"
+                          style={{ background: '#f59e0b', color: '#ffffff', fontWeight: 700, border: 'none', padding: '6px 12px', borderRadius: 8, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                          onClick={() => {
+                            setDomainInput(publicDomain || '');
+                            setShowDomainConfig(!showDomainConfig);
+                          }}
+                        >
+                          <MdLanguage /> Set Live Domain for Underline
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{
+                        background: 'rgba(16,185,129,0.08)',
+                        border: '1px solid rgba(16,185,129,0.3)',
+                        borderRadius: 8,
+                        padding: '8px 12px',
+                        marginBottom: 14,
+                        fontSize: 12,
+                        color: '#047857',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 8,
+                        flexWrap: 'wrap',
+                      }}>
+                        <span>✅ Using Public Domain: <strong>{publicDomain}</strong> (WhatsApp will underline & activate this link)</span>
+                        <button
+                          type="button"
+                          style={{ background: 'transparent', border: 'none', color: '#047857', textDecoration: 'underline', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}
+                          onClick={() => {
+                            setDomainInput(publicDomain || '');
+                            setShowDomainConfig(!showDomainConfig);
+                          }}
+                        >
+                          Change Domain
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Inline Domain Editor Form */}
+                    {showDomainConfig && (
+                      <form
+                        onSubmit={handleSaveDomain}
+                        style={{
+                          background: '#ffffff',
+                          border: '1.5px solid var(--accent-purple)',
+                          borderRadius: 10,
+                          padding: '12px 14px',
+                          marginBottom: 14,
+                          boxShadow: '0 4px 14px rgba(124,58,237,0.1)',
+                        }}
+                      >
+                        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent-purple)', marginBottom: 4 }}>
+                          🌐 Enter your Deployed / Live Web Address (e.g. https://tileshow.vercel.app):
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 8 }}>
+                          WhatsApp requires a live domain or public address to underline the link and make it clickable on mobile devices.
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                          <input
+                            className="form-control"
+                            placeholder="https://tileshow.vercel.app"
+                            value={domainInput}
+                            onChange={(e) => setDomainInput(e.target.value)}
+                            style={{ flex: 1, minWidth: 220, fontSize: 13 }}
+                          />
+                          <button type="submit" className="btn btn-primary btn-sm" style={{ height: 36, padding: '0 16px' }}>
+                            Save Domain
+                          </button>
+                          <button type="button" className="btn btn-ghost btn-sm" style={{ height: 36 }} onClick={() => setShowDomainConfig(false)}>
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    )}
 
                     {/* Link display & copy */}
                     <div style={{
@@ -1026,20 +1286,25 @@ export default function RegisterVisit() {
                       padding: '8px 12px',
                       marginBottom: 16,
                     }}>
-                      <input
-                        type="text"
-                        readOnly
-                        value={link}
+                      <a
+                        href={link}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         style={{
                           flex: 1,
-                          border: 'none',
-                          background: 'transparent',
                           fontSize: 12,
                           fontFamily: 'monospace',
-                          color: 'var(--text-primary)',
-                          outline: 'none',
+                          color: '#2563eb',
+                          textDecoration: 'underline',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          cursor: 'pointer',
                         }}
-                      />
+                        title="Click to open feedback form in browser"
+                      >
+                        {link}
+                      </a>
                       <button
                         type="button"
                         className="btn btn-ghost btn-sm"
@@ -1053,10 +1318,10 @@ export default function RegisterVisit() {
                       </button>
                     </div>
 
-                    {/* Action Buttons: WhatsApp, Live Preview, Open in New Tab */}
+                    {/* Action Buttons: WhatsApp Web, Copy Full Text, Live Preview, Open */}
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
                       <a
-                        href={waUrl}
+                        href={waWebUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="btn btn-primary"
@@ -1071,6 +1336,7 @@ export default function RegisterVisit() {
                           padding: '10px 18px',
                           boxShadow: '0 4px 14px rgba(37,211,102,0.3)',
                         }}
+                        title="Opens WhatsApp Web directly with full color emojis"
                       >
                         <MdWhatsapp style={{ fontSize: 18 }} /> Send via WhatsApp
                       </a>
@@ -1081,14 +1347,34 @@ export default function RegisterVisit() {
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
-                          gap: 8,
-                          fontSize: 14,
+                          gap: 6,
+                          fontSize: 13,
                           fontWeight: 700,
-                          padding: '10px 18px',
+                          padding: '10px 14px',
+                        }}
+                        onClick={() => {
+                          navigator.clipboard.writeText(messageText);
+                          toast.success('WhatsApp text copied with emojis! Just paste (Ctrl+V) into WhatsApp.', { icon: '📋' });
+                        }}
+                        title="Copy pre-formatted message with all emojis to paste into WhatsApp Desktop or Web"
+                      >
+                        <MdContentPaste style={{ fontSize: 16 }} /> Copy WhatsApp Message
+                      </button>
+
+                      <button
+                        type="button"
+                        className="btn btn-ghost"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          fontSize: 13,
+                          fontWeight: 600,
+                          padding: '10px 14px',
                         }}
                         onClick={() => setShowPreviewModal(true)}
                       >
-                        <MdVisibility style={{ fontSize: 18 }} /> Live Form Preview
+                        <MdVisibility style={{ fontSize: 16 }} /> Live Form Preview
                       </button>
 
                       <a

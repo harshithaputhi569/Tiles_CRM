@@ -18,6 +18,9 @@ const feedbackSchema = new mongoose.Schema(
     suggestions: { type: String, default: '' },
     hasComplaint: { type: Boolean, default: false },
     overallRating: { type: Number }, // calculated average
+    isRead: { type: Boolean, default: false },
+    isPinned: { type: Boolean, default: false },
+    pinnedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

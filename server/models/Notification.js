@@ -39,6 +39,8 @@ const notificationSchema = new mongoose.Schema(
       complaintCategory: { type: String, default: '' },
       complaintDescription: { type: String, default: '' },
       visitDate: { type: Date, default: null },
+      specialDayDate: { type: Date, default: null },
+      specialDayReason: { type: String, default: '' },
     },
     link: { type: String, default: '' },
     isRead: { type: Boolean, default: false },
@@ -46,5 +48,28 @@ const notificationSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Prevent duplicate notifications within a given time window (default 24h)
+notificationSchema.statics.createIfNotExists = async function (data, windowMs = 24 * 60 * 60 * 1000) {
+  const query = {
+    title: data.title,
+    role: data.role || 'all',
+  };
+  if (data.recipient) query.recipient = data.recipient;
+  else query.recipient = null;
+
+  if (data.referenceId) query.referenceId = data.referenceId;
+
+  if (windowMs) {
+    const since = new Date(Date.now() - windowMs);
+    query.createdAt = { $gte: since };
+  }
+
+  const existing = await this.findOne(query);
+  if (existing) {
+    return existing; // Already sent, do not duplicate!
+  }
+  return this.create(data);
+};
 
 module.exports = mongoose.model('Notification', notificationSchema);

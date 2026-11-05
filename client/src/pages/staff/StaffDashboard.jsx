@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import api from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
+import toast from 'react-hot-toast';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload?.length) {
@@ -31,6 +32,44 @@ const PURCHASE_COLORS = {
   Interested:     { bg: 'rgba(245,158,11,0.12)',  color: '#b45309' },
 };
 
+const REASON_CONFIG = {
+  'High Price / Budget Constraint': {
+    icon: '🏷️',
+    bg: 'rgba(239,68,68,0.06)',
+    border: 'rgba(239,68,68,0.2)',
+    barColor: '#ef4444',
+    tip: 'Offer budget collection or volume pricing',
+  },
+  'Just Exploring / Browsing': {
+    icon: '👀',
+    bg: 'rgba(245,158,11,0.06)',
+    border: 'rgba(245,158,11,0.2)',
+    barColor: '#f59e0b',
+    tip: 'Send WhatsApp brochure or sample photos',
+  },
+  'Out of Stock / Lead Time': {
+    icon: '📦',
+    bg: 'rgba(6,182,212,0.06)',
+    border: 'rgba(6,182,212,0.2)',
+    barColor: '#06b6d4',
+    tip: 'Propose similar available designs or check ETA',
+  },
+  'Better Competitor Offer': {
+    icon: '⚖️',
+    bg: 'rgba(168,85,247,0.06)',
+    border: 'rgba(168,85,247,0.2)',
+    barColor: '#a855f7',
+    tip: 'Highlight TileShow warranty, finish & durability',
+  },
+  'Design / Quality Not Matched': {
+    icon: '🎨',
+    bg: 'rgba(236,72,153,0.06)',
+    border: 'rgba(236,72,153,0.2)',
+    barColor: '#ec4899',
+    tip: 'Invite to view new premium slab arrival',
+  },
+};
+
 export default function StaffDashboard() {
   const { user } = useAuth();
   const [feedbacks, setFeedbacks] = useState([]);
@@ -39,7 +78,7 @@ export default function StaffDashboard() {
   const [stockData, setStockData] = useState(null);
   const [recentVisits, setRecentVisits] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activePreset, setActivePreset] = useState('30d');
+  const [activePreset, setActivePreset] = useState('all');
   const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
 
   const getTodayStr = () => {
@@ -53,8 +92,8 @@ export default function StaffDashboard() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   };
 
-  const [startDate, setStartDate] = useState(() => getDaysAgoStr(30));
-  const [endDate, setEndDate] = useState(() => getTodayStr());
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const applyPreset = (preset) => {
     setActivePreset(preset);
@@ -73,7 +112,7 @@ export default function StaffDashboard() {
       const qs = params.length > 0 ? `?${params.join('&')}` : '';
 
       const [fbRes, purRes, repRes, visRes, stockRes] = await Promise.all([
-        api.get('/feedback'),
+        api.get(`/feedback${qs}`),
         api.get(`/analytics/purchase-conversion${qs}`),
         api.get('/analytics/repeat-visitors'),
         api.get('/visits?limit=5'),
@@ -99,6 +138,18 @@ export default function StaffDashboard() {
   const complaints = feedbacks.filter(f => f.hasComplaint).length;
   const todayStr = new Date().toDateString();
   const todayFeedback = feedbacks.filter(f => new Date(f.createdAt).toDateString() === todayStr).length;
+  const unreadFeedbacks = feedbacks.filter(f => !f.isRead);
+
+  const markFeedbackRead = async (id, e) => {
+    if (e) e.stopPropagation();
+    try {
+      await api.patch(`/feedback/${id}/read`, { isRead: true });
+      setFeedbacks(prev => prev.map(f => (f._id === id ? { ...f, isRead: true } : f)));
+      toast.success('✓ Marked feedback as read');
+    } catch {
+      toast.error('Failed to update feedback status');
+    }
+  };
 
   const trend = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(); d.setDate(d.getDate() - (6 - i));
@@ -160,45 +211,248 @@ export default function StaffDashboard() {
               <StatCard icon={<MdTrendingUp />} label="My Conversion Rate" value={`${purchaseData?.conversionRate ?? 0}%`} iconBg="rgba(6,182,212,0.12)" iconColor="#0891b2" />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
-              <div style={{ background: '#f8fafc', padding: 16, borderRadius: 10, border: '1px solid rgba(0,0,0,0.06)' }}>
-                <div style={{ fontWeight: 700, fontSize: 13, color: '#dc2626', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>❌ Why My Visitors Didn't Purchase</div>
-                {(!purchaseData?.reasonsBreakdown || purchaseData.reasonsBreakdown.length === 0) ? (
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0' }}>No non-purchased visitors for this period.</div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {purchaseData.reasonsBreakdown.map(r => (
-                      <div key={r.reason}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 3 }}>
-                          <span style={{ fontWeight: 600 }}>{r.reason}</span>
-                          <span style={{ fontWeight: 700, color: '#dc2626' }}>{r.count} ({r.percentage}%)</span>
-                        </div>
-                        <div style={{ width: '100%', height: 5, background: '#e2e8f0', borderRadius: 3, overflow: 'hidden' }}>
-                          <div style={{ width: `${r.percentage}%`, height: '100%', background: '#ef4444', borderRadius: 3 }} />
-                        </div>
-                      </div>
-                    ))}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
+              {/* Left Column: Why My Visitors Didn't Purchase */}
+              <div style={{
+                background: '#ffffff',
+                padding: '20px 22px',
+                borderRadius: 14,
+                border: '1px solid rgba(220,38,38,0.18)',
+                boxShadow: '0 2px 10px rgba(220,38,38,0.04)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                gap: 16,
+              }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 8 }}>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: '#dc2626', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 18 }}>❌</span> Why My Visitors Didn't Purchase
+                    </div>
+                    {purchaseData?.notPurchasedCount > 0 && (
+                      <span style={{
+                        fontSize: 11,
+                        fontWeight: 800,
+                        padding: '3px 10px',
+                        borderRadius: 20,
+                        background: 'rgba(239,68,68,0.1)',
+                        color: '#dc2626',
+                        border: '1px solid rgba(239,68,68,0.25)',
+                      }}>
+                        {purchaseData.notPurchasedCount} Non-Purchased Visitors
+                      </span>
+                    )}
                   </div>
-                )}
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 14 }}>
+                    Customer drop-off reasons with conversion recovery tips & follow-up suggestions
+                  </div>
+
+                  {(!purchaseData?.reasonsBreakdown || purchaseData.reasonsBreakdown.length === 0) ? (
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '30px 0' }}>
+                      <div style={{ fontSize: 24, marginBottom: 6 }}>🎉</div>
+                      No non-purchased visitors recorded for this period. Great showroom conversion!
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {purchaseData.reasonsBreakdown.map((r) => {
+                        const config = REASON_CONFIG[r.reason] || {
+                          icon: '📌',
+                          bg: 'rgba(241,245,249,0.7)',
+                          border: '#e2e8f0',
+                          barColor: '#ef4444',
+                          tip: 'Follow up with customer to understand requirements',
+                        };
+
+                        return (
+                          <div
+                            key={r.reason}
+                            style={{
+                              background: '#f8fafc',
+                              border: `1px solid ${config.border}`,
+                              borderRadius: 10,
+                              padding: '12px 14px',
+                            }}
+                          >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <span style={{ fontSize: 16 }}>{config.icon}</span>
+                                <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)' }}>{r.reason}</span>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <span style={{ fontSize: 12, fontWeight: 800, color: '#dc2626' }}>
+                                  {r.count} {r.count === 1 ? 'visitor' : 'visitors'}
+                                </span>
+                                <span style={{
+                                  fontSize: 10,
+                                  fontWeight: 800,
+                                  background: 'rgba(220,38,38,0.1)',
+                                  color: '#dc2626',
+                                  padding: '1px 6px',
+                                  borderRadius: 6,
+                                }}>
+                                  {r.percentage}%
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Progress Bar */}
+                            <div style={{ width: '100%', height: 6, background: '#e2e8f0', borderRadius: 3, overflow: 'hidden', marginBottom: 8 }}>
+                              <div
+                                style={{
+                                  width: `${r.percentage}%`,
+                                  height: '100%',
+                                  background: `linear-gradient(90deg, ${config.barColor}, #dc2626)`,
+                                  borderRadius: 3,
+                                  transition: 'width 0.5s ease',
+                                }}
+                              />
+                            </div>
+
+                            {/* Actionable Suggestion */}
+                            <div style={{ fontSize: 11, color: '#64748b', display: 'flex', alignItems: 'center', gap: 5 }}>
+                              <span style={{ color: '#d97706', fontSize: 12 }}>💡</span>
+                              <span><strong>Action:</strong> {config.tip}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer Action Box */}
+                <div style={{
+                  background: 'linear-gradient(135deg, rgba(124,58,237,0.05) 0%, rgba(6,182,212,0.04) 100%)',
+                  border: '1px dashed rgba(124,58,237,0.25)',
+                  borderRadius: 10,
+                  padding: '12px 14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: 10,
+                  marginTop: 6,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 18 }}>🎯</span>
+                    <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                      Re-engage interested visitors with a friendly WhatsApp follow-up or updated stock alert.
+                    </span>
+                  </div>
+                  <Link
+                    to="/staff/my-visits?purchaseStatus=Not+Purchased"
+                    className="btn btn-xs btn-outline"
+                    style={{
+                      fontSize: 11,
+                      padding: '4px 10px',
+                      borderRadius: 6,
+                      textDecoration: 'none',
+                      whiteSpace: 'nowrap',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    View in My Visits →
+                  </Link>
+                </div>
               </div>
 
-              <div style={{ background: '#f8fafc', padding: 16, borderRadius: 10, border: '1px solid rgba(0,0,0,0.06)' }}>
-                <div style={{ fontWeight: 700, fontSize: 13, color: '#7c3aed', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>📣 How My Visitors Found Us</div>
-                {(!purchaseData?.sourcesBreakdown || purchaseData.sourcesBreakdown.length === 0) ? (
-                  <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0' }}>No source data recorded for this period.</div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {purchaseData.sourcesBreakdown.map(s => (
-                      <div key={s.source} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px', background: '#fff', borderRadius: 6, border: '1px solid rgba(0,0,0,0.04)' }}>
-                        <span style={{ fontSize: 12, fontWeight: 600 }}>{s.source}</span>
-                        <div style={{ textAlign: 'right' }}>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: '#059669' }}>{s.purchased} bought</span>
-                          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}> / {s.count} total</span>
-                        </div>
-                      </div>
-                    ))}
+              {/* Right Column: How My Visitors Found Us */}
+              <div style={{
+                background: '#ffffff',
+                padding: '20px 22px',
+                borderRadius: 14,
+                border: '1px solid rgba(124,58,237,0.18)',
+                boxShadow: '0 2px 10px rgba(124,58,237,0.04)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                gap: 16,
+              }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 8 }}>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: '#7c3aed', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 18 }}>📣</span> How My Visitors Found Us
+                    </div>
+                    {purchaseData?.sourcesBreakdown?.length > 0 && (
+                      <span style={{
+                        fontSize: 11,
+                        fontWeight: 800,
+                        padding: '3px 10px',
+                        borderRadius: 20,
+                        background: 'rgba(124,58,237,0.1)',
+                        color: '#7c3aed',
+                        border: '1px solid rgba(124,58,237,0.25)',
+                      }}>
+                        {purchaseData.sourcesBreakdown.length} Lead Sources
+                      </span>
+                    )}
                   </div>
-                )}
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 14 }}>
+                    Customer acquisition channels and which sources convert into actual tile purchases
+                  </div>
+
+                  {(!purchaseData?.sourcesBreakdown || purchaseData.sourcesBreakdown.length === 0) ? (
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '30px 0' }}>
+                      No referral source data recorded for this period.
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {purchaseData.sourcesBreakdown.map((s) => (
+                        <div
+                          key={s.source}
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            padding: '10px 14px',
+                            background: '#f8fafc',
+                            borderRadius: 10,
+                            border: '1px solid rgba(0,0,0,0.05)',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontSize: 15 }}>
+                              {s.source.includes('Walk') ? '🚶' : s.source.includes('Friend') ? '👥' : s.source.includes('Architect') ? '📐' : s.source.includes('Social') ? '📱' : s.source.includes('Builder') ? '🏗️' : '🔍'}
+                            </span>
+                            <div>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{s.source}</div>
+                              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{s.percentage}% of total showroom traffic</div>
+                            </div>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: 12, fontWeight: 800, color: '#059669' }}>
+                              {s.purchased} bought <span style={{ fontSize: 11, fontWeight: 500, color: '#64748b' }}>({s.conversionRate}%)</span>
+                            </div>
+                            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{s.count} total visitors</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer Insight Box */}
+                <div style={{
+                  background: 'linear-gradient(135deg, rgba(16,185,129,0.05) 0%, rgba(124,58,237,0.04) 100%)',
+                  border: '1px dashed rgba(16,185,129,0.25)',
+                  borderRadius: 10,
+                  padding: '12px 14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: 10,
+                  marginTop: 6,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 18 }}>💡</span>
+                    <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+                      Friends & Family and Architect referrals have the highest conversion success rate.
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -335,7 +589,7 @@ export default function StaffDashboard() {
             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
               <div>
                 <span className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  📦 Stock Availability & Demand Trend (7 Days)
+                  📦 Stock Availability & Demand Trend ({activePreset === 'all' ? 'All Time' : activePreset === '30d' ? 'Last 30 Days' : activePreset === '7d' ? 'Last 7 Days' : 'Today'})
                 </span>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
                   Daily customer stock requests: In Stock (Yes) vs Out of Stock (No)
@@ -351,7 +605,7 @@ export default function StaffDashboard() {
                   color: '#059669',
                   border: '1px solid rgba(16,185,129,0.3)',
                 }}>
-                  ✓ {stockData?.availabilityRate ?? 0}% Available
+                  ✓ {stockData?.availableCount ?? 0} In Stock ({stockData?.availabilityRate ?? 0}%)
                 </span>
                 {stockData?.outOfStockCount > 0 && (
                   <span style={{
@@ -371,19 +625,25 @@ export default function StaffDashboard() {
 
             <div className="card-body">
               {/* Daily Trend Chart: Yes (Available) vs No (Out of Stock) */}
-              <div style={{ height: 210, width: '100%', marginBottom: 16 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={stockData?.dailyTrend || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
-                    <XAxis dataKey="label" tick={{ fill: '#606080', fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: '#606080', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend wrapperStyle={{ fontSize: 12, paddingTop: 6 }} />
-                    <Bar dataKey="available" name="Yes (Stock Available)" fill="#10b981" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="outOfStock" name="No (Stock Not Available)" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              {(!stockData?.dailyTrend || stockData.dailyTrend.length === 0) ? (
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '36px 0' }}>
+                  No stock inquiries recorded for this period.
+                </div>
+              ) : (
+                <div style={{ height: 210, width: '100%', marginBottom: 16 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={stockData.dailyTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
+                      <XAxis dataKey="label" tick={{ fill: '#606080', fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: '#606080', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ fontSize: 12, paddingTop: 6 }} />
+                      <Bar dataKey="available" name="Yes (Stock Available)" fill="#10b981" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="outOfStock" name="No (Stock Not Available)" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
 
               {/* WHICH STOCK CUSTOMER ASKED MORE (Top In-Demand Tiles) */}
               <div style={{
@@ -480,30 +740,114 @@ export default function StaffDashboard() {
           </div>
 
           <div className="card fade-in">
-            <div className="card-header"><span className="card-title">📋 Recent Feedback</span></div>
-            {loading ? <LoadingSpinner /> : feedbacks.length === 0 ? (
-              <EmptyState icon="💬" message="No feedback yet" sub="Start by registering a customer visit" />
+            <div
+              className="card-header"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 8,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span className="card-title">📩 Unread Customer Feedback</span>
+                {unreadFeedbacks.length > 0 && (
+                  <span
+                    style={{
+                      background: '#ef4444',
+                      color: '#ffffff',
+                      fontSize: 11,
+                      fontWeight: 800,
+                      padding: '2px 8px',
+                      borderRadius: 12,
+                    }}
+                  >
+                    {unreadFeedbacks.length} New
+                  </span>
+                )}
+              </div>
+              <Link
+                to="/staff/feedback"
+                className="btn btn-xs btn-outline"
+                style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none' }}
+              >
+                Open Feedback Module →
+              </Link>
+            </div>
+
+            {loading ? (
+              <LoadingSpinner />
+            ) : unreadFeedbacks.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '36px 16px', color: 'var(--text-muted)' }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>✨</div>
+                <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
+                  All Caught Up!
+                </div>
+                <div style={{ fontSize: 13, marginBottom: 12 }}>
+                  Only unread feedbacks appear on the dashboard. All historical feedbacks are organized in your Feedback Module.
+                </div>
+                <Link to="/staff/feedback" className="btn btn-sm btn-ghost" style={{ textDecoration: 'none' }}>
+                  Open Customer Feedback Module ({feedbacks.length} total) →
+                </Link>
+              </div>
             ) : (
               <div className="table-wrapper">
                 <table>
                   <thead>
-                    <tr><th>Customer</th><th>Rating</th><th>Complaint</th><th>Date</th></tr>
+                    <tr>
+                      <th>Customer</th>
+                      <th>Rating</th>
+                      <th>Comments</th>
+                      <th>Date</th>
+                      <th style={{ textAlign: 'right' }}>Action</th>
+                    </tr>
                   </thead>
                   <tbody>
-                    {feedbacks.slice(0, 8).map(f => (
+                    {unreadFeedbacks.map((f) => (
                       <tr key={f._id}>
                         <td>
-                          <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 13 }}>{f.customer?.name}</div>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{f.customer?.customerType}</div>
+                          <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 13 }}>
+                            {f.customer?.name}
+                          </div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                            {f.customer?.mobile ? `📞 ${f.customer.mobile} · ` : ''}
+                            {f.customer?.customerType || 'Customer'}
+                          </div>
                         </td>
-                        <td><RatingBadge rating={f.overallRating} /></td>
                         <td>
-                          {f.hasComplaint
-                            ? <span className="badge badge-red">⚠ Yes</span>
-                            : <span className="badge badge-green">✓ No</span>}
+                          <RatingBadge rating={f.overallRating} />
                         </td>
-                        <td style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                          {new Date(f.createdAt).toLocaleDateString('en-IN')}
+                        <td style={{ maxWidth: 220 }}>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              color: 'var(--text-secondary)',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              fontStyle: f.comments ? 'italic' : 'normal',
+                            }}
+                            title={f.comments || f.suggestions || 'No comment'}
+                          >
+                            {f.comments ? `"${f.comments}"` : f.suggestions ? `💡 ${f.suggestions}` : '—'}
+                          </div>
+                        </td>
+                        <td style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                          {new Date(f.createdAt).toLocaleDateString('en-IN', {
+                            day: 'numeric',
+                            month: 'short',
+                          })}
+                        </td>
+                        <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                          <button
+                            className="btn btn-xs btn-outline"
+                            onClick={(e) => markFeedbackRead(f._id, e)}
+                            style={{ fontSize: 11, padding: '3px 8px' }}
+                            title="Mark as read and clear from dashboard"
+                          >
+                            ✓ Mark Read
+                          </button>
                         </td>
                       </tr>
                     ))}

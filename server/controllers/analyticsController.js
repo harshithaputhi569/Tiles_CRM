@@ -9,6 +9,7 @@ const Complaint = require('../models/Complaint');
 const getDashboardMetrics = async (req, res) => {
   const [
     visitedCustomerIds,
+    convertedCustomerIds,
     totalVisits,
     totalFeedback,
     totalComplaints,
@@ -663,15 +664,33 @@ const getStockTrendAnalytics = async (req, res) => {
       },
     ]);
 
-    // Build day map for the last 7 days (or requested days)
-    const daysCount = parseInt(days) || 7;
+    // 2. Trend (Stock Available [Yes] vs Out of Stock [No])
     const dayMap = {};
-    for (let i = daysCount - 1; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      const label = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-      dayMap[ds] = { date: ds, label, available: 0, outOfStock: 0, total: 0 };
+
+    // If bounded date window requested (days or startDate/endDate), build continuous daily slots
+    if (days || startDate || endDate) {
+      let start, end;
+      if (startDate && endDate) {
+        start = new Date(startDate);
+        end = new Date(endDate);
+      } else {
+        const dCount = parseInt(days) || 7;
+        end = new Date();
+        start = new Date();
+        start.setDate(end.getDate() - (dCount - 1));
+      }
+
+      const cur = new Date(start);
+      cur.setHours(0, 0, 0, 0);
+      const endLimit = new Date(end);
+      endLimit.setHours(23, 59, 59, 999);
+
+      while (cur <= endLimit) {
+        const ds = `${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}-${String(cur.getDate()).padStart(2, '0')}`;
+        const label = cur.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+        dayMap[ds] = { date: ds, label, available: 0, outOfStock: 0, total: 0 };
+        cur.setDate(cur.getDate() + 1);
+      }
     }
 
     trendAgg.forEach((item) => {

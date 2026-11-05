@@ -26,6 +26,7 @@ import {
   MdOpenInNew,
   MdLocationOn,
   MdInventory2,
+  MdDeleteSweep,
 } from 'react-icons/md';
 
 const RATING_LABELS = {
@@ -40,8 +41,15 @@ const RATING_LABELS = {
 export default function NotificationsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification, refresh } =
-    useNotifications();
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    clearAllNotifications,
+    refresh,
+  } = useNotifications();
 
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'visits' | 'unread' | 'feedback' | 'complaint'
   const [search, setSearch] = useState('');
@@ -274,6 +282,21 @@ export default function NotificationsPage() {
                 style={{ display: 'flex', alignItems: 'center', gap: 6 }}
               >
                 <MdDoneAll /> Mark all as read
+              </button>
+            )}
+
+            {realNotifications.length > 0 && (
+              <button
+                className="btn btn-sm btn-ghost"
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to clear all notifications?')) {
+                    clearAllNotifications();
+                  }
+                }}
+                title="Clear all notifications"
+                style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#ef4444' }}
+              >
+                <MdDeleteSweep style={{ fontSize: 18 }} /> Clear all
               </button>
             )}
 
@@ -862,15 +885,13 @@ export default function NotificationsPage() {
                           <MdPerson /> View Customer Visit Details →
                         </Link>
                       ) : (
-                        user?.role === 'admin' && (
-                          <Link
-                            to="/admin/feedback"
-                            className="btn btn-xs btn-ghost"
-                            style={{ color: 'var(--primary)', fontSize: 12 }}
-                          >
-                            <MdOutlineRateReview style={{ marginRight: 4 }} /> View in Feedback Management
-                          </Link>
-                        )
+                        <Link
+                          to={user?.role === 'admin' ? '/admin/feedback' : '/staff/feedback'}
+                          className="btn btn-xs btn-primary"
+                          style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                        >
+                          <MdOutlineRateReview /> View Feedback Details →
+                        </Link>
                       )}
 
                       {meta.feedbackLink && (

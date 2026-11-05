@@ -3,7 +3,7 @@ import Topbar from '../../components/Topbar';
 import { LoadingSpinner, EmptyState, StatusBadge } from '../../components/UI';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
-import { MdSearch, MdRefresh, MdWhatsapp, MdOpenInNew, MdContentCopy, MdFilterList } from 'react-icons/md';
+import { MdSearch, MdRefresh, MdWhatsapp, MdOpenInNew, MdContentCopy, MdFilterList, MdShoppingCart, MdDateRange, MdAccessTime, MdClose } from 'react-icons/md';
 
 const PURCHASE_COLORS = {
   Purchased: { bg: 'rgba(16,185,129,0.12)', color: '#059669', border: 'rgba(16,185,129,0.3)' },
@@ -55,6 +55,7 @@ const getDaysAgoStr = (n) => {
 export default function MyVisits() {
   const [visits, setVisits] = useState([]);
   const [total, setTotal] = useState(0);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
@@ -87,9 +88,9 @@ export default function MyVisits() {
   const [filters, setFilters] = useState({
     search: '',
     purchaseStatus: '',
-    startDate: getDaysAgoStr(30),
-    endDate: getTodayStr(),
-    preset: '30d',
+    startDate: '',
+    endDate: '',
+    preset: 'all',
   });
 
   const fetchVisits = useCallback(async () => {
@@ -106,6 +107,7 @@ export default function MyVisits() {
       const { data } = await api.get(`/visits?${p.toString()}`);
       setVisits(data.visits || []);
       setTotal(data.total || 0);
+      if (data.stats) setStats(data.stats);
     } catch {
       toast.error('Failed to load visits');
     } finally {
@@ -149,82 +151,166 @@ export default function MyVisits() {
       <div className="page-content">
 
         {/* Summary Stats */}
-        {(() => {
-          const purchasedVisits = visits.filter(v => v.purchaseStatus === 'Purchased');
-          const convertedCustomerSet = new Set(purchasedVisits.map(v => v.customer?._id || v.customer).filter(Boolean));
-          const convertedCount = convertedCustomerSet.size || purchasedVisits.length;
-
-          return (
-            <div className="stats-grid" style={{ marginBottom: 20 }}>
-              {[
-                { label: 'Total Visits', value: total, icon: '👥', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)' },
-                { label: 'Converted Customers', value: convertedCount, icon: '🛍️', color: '#059669', bg: 'rgba(16,185,129,0.12)' },
-                { label: 'Not Purchased', value: visits.filter(v => v.purchaseStatus === 'Not Purchased').length, icon: '❌', color: '#dc2626', bg: 'rgba(239,68,68,0.12)' },
-                { label: 'Feedback Sent', value: visits.filter(v => v.feedbackSubmitted).length, icon: '💬', color: '#0891b2', bg: 'rgba(6,182,212,0.12)' },
-              ].map(s => (
-                <div key={s.label} className="stat-card">
-                  <div className="stat-icon" style={{ background: s.bg, color: s.color }}>{s.icon}</div>
-                  <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
-                  <div className="stat-label">{s.label}</div>
-                </div>
-              ))}
+        <div className="stats-grid" style={{ marginBottom: 20 }}>
+          {[
+            { label: 'Total Visits', value: stats?.totalVisits ?? total, icon: '👥', color: '#7c3aed', bg: 'rgba(124,58,237,0.12)' },
+            { label: 'Converted Customers', value: stats?.convertedCustomersCount ?? stats?.purchasedCount ?? 0, icon: '🛍️', color: '#059669', bg: 'rgba(16,185,129,0.12)' },
+            { label: 'Total Billing', value: stats?.totalBillingValue > 0 ? `₹${Number(stats.totalBillingValue).toLocaleString('en-IN')}` : '₹0', icon: '💰', color: '#047857', bg: 'rgba(16,185,129,0.18)' },
+            { label: 'Not Purchased', value: stats?.notPurchasedCount ?? 0, icon: '❌', color: '#dc2626', bg: 'rgba(239,68,68,0.12)' },
+            { label: 'Conversion Rate', value: `${stats?.conversionRate ?? 0}%`, icon: '📈', color: '#0891b2', bg: 'rgba(6,182,212,0.12)' },
+          ].map(s => (
+            <div key={s.label} className="stat-card">
+              <div className="stat-icon" style={{ background: s.bg, color: s.color }}>{s.icon}</div>
+              <div className="stat-value" style={{ color: s.color }}>{s.value}</div>
+              <div className="stat-label">{s.label}</div>
             </div>
-          );
-        })()}
+          ))}
+        </div>
 
         {/* Filters */}
-        <div className="card fade-in" style={{ marginBottom: 20, padding: '16px 20px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
-            <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>Date Range:</span>
-            {[
-              { id: 'today', label: 'Today' },
-              { id: '7d', label: '7 Days' },
-              { id: '30d', label: '30 Days' },
-              { id: 'all', label: 'All Time' },
-            ].map(p => (
-              <button
-                key={p.id}
-                type="button"
-                className={`btn btn-xs ${filters.preset === p.id ? 'btn-primary' : 'btn-ghost'}`}
-                style={{ borderRadius: 20, padding: '4px 12px', fontSize: 12 }}
-                onClick={() => applyPreset(p.id)}
-              >
-                {p.label}
-              </button>
-            ))}
+        <div className="card fade-in" style={{ marginBottom: 20, padding: '20px 22px', borderRadius: 16 }}>
+          {/* Header & Quick Date Row */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 10,
+            flexWrap: 'wrap',
+            marginBottom: 16,
+            padding: '8px 12px',
+            background: 'rgba(124, 58, 237, 0.03)',
+            borderRadius: 10,
+            border: '1px solid rgba(124, 58, 237, 0.07)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 5, marginRight: 4 }}>
+                <MdAccessTime style={{ color: 'var(--accent-purple)', fontSize: 14 }} /> Date Range:
+              </span>
+              {[
+                { id: 'today', label: 'Today' },
+                { id: '7d', label: '7 Days' },
+                { id: '30d', label: '30 Days' },
+                { id: 'all', label: 'All Time' },
+              ].map(p => (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={`btn btn-xs ${filters.preset === p.id ? 'btn-primary' : 'btn-ghost'}`}
+                  style={{
+                    borderRadius: 16,
+                    padding: '4px 14px',
+                    fontSize: 12,
+                    fontWeight: filters.preset === p.id ? 700 : 500,
+                    transition: 'all 0.15s ease'
+                  }}
+                  onClick={() => applyPreset(p.id)}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>
+              Showing <span style={{ fontWeight: 700, color: 'var(--accent-purple)' }}>{visits.length}</span> of <strong>{total}</strong> visits
+            </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: 14,
+            alignItems: 'end'
+          }}>
             {/* Search */}
-            <div className="form-group" style={{ margin: 0, gridColumn: 'span 2' }}>
+            <div className="form-group" style={{ margin: 0 }}>
+              <label
+                className="form-label"
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: 'var(--text-secondary)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  marginBottom: 6,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5
+                }}
+              >
+                <MdSearch style={{ color: 'var(--accent-purple)', fontSize: 13 }} /> Search Customer
+              </label>
               <div style={{ position: 'relative' }}>
-                <MdSearch style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: 18 }} />
+                <MdSearch style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: 16 }} />
                 <input
                   className="form-control"
-                  style={{ paddingLeft: 34, fontSize: 13 }}
-                  placeholder="Search by customer name or phone…"
+                  style={{
+                    height: 40,
+                    paddingLeft: 36,
+                    paddingRight: filters.search ? 32 : 12,
+                    borderRadius: 10,
+                    fontSize: 13,
+                    background: '#ffffff',
+                    border: '1px solid var(--border-glass)'
+                  }}
+                  placeholder="Search name or phone…"
                   value={filters.search}
                   onChange={e => handleFilterChange('search', e.target.value)}
                 />
+                {filters.search && (
+                  <button
+                    type="button"
+                    onClick={() => handleFilterChange('search', '')}
+                    style={{
+                      position: 'absolute',
+                      right: 10,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-muted)',
+                      cursor: 'pointer',
+                      padding: 2,
+                      display: 'flex',
+                      alignItems: 'center'
+                    }}
+                    title="Clear search"
+                  >
+                    <MdClose style={{ fontSize: 14 }} />
+                  </button>
+                )}
               </div>
             </div>
 
             <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label" style={{ fontSize: 11 }}>From Date</label>
-              <input type="date" className="form-control" style={{ fontSize: 13 }}
-                value={filters.startDate} onChange={e => handleFilterChange('startDate', e.target.value)} />
-            </div>
-
-            <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label" style={{ fontSize: 11 }}>To Date</label>
-              <input type="date" className="form-control" style={{ fontSize: 13 }}
-                value={filters.endDate} onChange={e => handleFilterChange('endDate', e.target.value)} />
-            </div>
-
-            <div className="form-group" style={{ margin: 0 }}>
-              <label className="form-label" style={{ fontSize: 11 }}>Purchase Status</label>
-              <select className="form-control" style={{ fontSize: 13 }}
-                value={filters.purchaseStatus} onChange={e => handleFilterChange('purchaseStatus', e.target.value)}>
+              <label
+                className="form-label"
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: 'var(--text-secondary)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  marginBottom: 6,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5
+                }}
+              >
+                <MdShoppingCart style={{ color: 'var(--accent-purple)', fontSize: 13 }} /> Purchase Status
+              </label>
+              <select
+                className="form-control"
+                style={{
+                  height: 40,
+                  padding: '0 12px',
+                  borderRadius: 10,
+                  fontSize: 13,
+                  background: '#ffffff',
+                  border: '1px solid var(--border-glass)'
+                }}
+                value={filters.purchaseStatus}
+                onChange={e => handleFilterChange('purchaseStatus', e.target.value)}
+              >
                 <option value="">All Statuses</option>
                 <option value="Purchased">Purchased</option>
                 <option value="Not Purchased">Not Purchased</option>
@@ -232,10 +318,89 @@ export default function MyVisits() {
               </select>
             </div>
 
-            <div className="form-group" style={{ margin: 0, display: 'flex', alignItems: 'flex-end' }}>
-              <button className="btn btn-ghost btn-sm" style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 5 }}
-                onClick={() => { setFilters({ search: '', purchaseStatus: '', startDate: getDaysAgoStr(30), endDate: getTodayStr(), preset: '30d' }); setPage(1); }}>
-                <MdRefresh /> Reset
+            <div className="form-group" style={{ margin: 0 }}>
+              <label
+                className="form-label"
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: 'var(--text-secondary)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  marginBottom: 6,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5
+                }}
+              >
+                <MdDateRange style={{ color: 'var(--accent-purple)', fontSize: 13 }} /> From Date
+              </label>
+              <input
+                type="date"
+                className="form-control"
+                style={{
+                  height: 40,
+                  padding: '0 12px',
+                  borderRadius: 10,
+                  fontSize: 13,
+                  background: '#ffffff',
+                  border: '1px solid var(--border-glass)'
+                }}
+                value={filters.startDate}
+                onChange={e => handleFilterChange('startDate', e.target.value)}
+              />
+            </div>
+
+            <div className="form-group" style={{ margin: 0 }}>
+              <label
+                className="form-label"
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: 'var(--text-secondary)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  marginBottom: 6,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5
+                }}
+              >
+                <MdDateRange style={{ color: 'var(--accent-purple)', fontSize: 13 }} /> To Date
+              </label>
+              <input
+                type="date"
+                className="form-control"
+                style={{
+                  height: 40,
+                  padding: '0 12px',
+                  borderRadius: 10,
+                  fontSize: 13,
+                  background: '#ffffff',
+                  border: '1px solid var(--border-glass)'
+                }}
+                value={filters.endDate}
+                onChange={e => handleFilterChange('endDate', e.target.value)}
+              />
+            </div>
+
+            <div className="form-group" style={{ margin: 0 }}>
+              <button
+                className="btn btn-ghost btn-sm"
+                style={{
+                  height: 40,
+                  width: '100%',
+                  fontSize: 12,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  borderRadius: 10,
+                  border: '1px solid var(--border-glass)'
+                }}
+                onClick={() => { setFilters({ search: '', purchaseStatus: '', startDate: getDaysAgoStr(30), endDate: getTodayStr(), preset: '30d' }); setPage(1); }}
+              >
+                <MdRefresh style={{ fontSize: 15 }} /> Reset Filters
               </button>
             </div>
           </div>

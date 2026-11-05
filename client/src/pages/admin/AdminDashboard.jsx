@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import api from '../../api/axios';
 import { useNotifications } from '../../context/NotificationContext';
+import toast from 'react-hot-toast';
 
 const COLORS = ['#7c3aed', '#06b6d4', '#ec4899', '#10b981', '#f59e0b'];
 
@@ -41,23 +42,37 @@ export default function AdminDashboard() {
   const [ratingDist, setRatingDist] = useState([]);
   const [staffPerf, setStaffPerf] = useState([]);
   const [complaintCats, setComplaintCats] = useState([]);
+  const [unreadFeedbacks, setUnreadFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const markFeedbackRead = async (id, e) => {
+    if (e) e.stopPropagation();
+    try {
+      await api.patch(`/feedback/${id}/read`, { isRead: true });
+      setUnreadFeedbacks((prev) => prev.filter((f) => f._id !== id));
+      toast.success('✓ Marked feedback as read');
+    } catch {
+      toast.error('Failed to update feedback');
+    }
+  };
 
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [m, t, r, s, c] = await Promise.all([
+        const [m, t, r, s, c, fb] = await Promise.all([
           api.get('/analytics/dashboard'),
           api.get('/analytics/visitor-trend?months=6'),
           api.get('/analytics/rating-distribution'),
           api.get('/analytics/staff-performance'),
           api.get('/analytics/complaint-categories'),
+          api.get('/feedback?unreadOnly=true&limit=6'),
         ]);
         setMetrics(m.data);
         setVisitorTrend(t.data);
         setRatingDist(r.data.map(d => ({ name: `${d._id}★`, value: d.count })));
         setStaffPerf(s.data.slice(0, 5));
         setComplaintCats(c.data);
+        setUnreadFeedbacks(fb.data.feedbacks || []);
       } catch (err) { console.error(err); }
       finally { setLoading(false); }
     };
@@ -84,8 +99,10 @@ export default function AdminDashboard() {
           <StatCard icon={<MdTrendingUp />} label="Conversion Rate"
             value={`${metrics?.conversionRate ?? 0}%`}
             iconBg="rgba(16,185,129,0.15)" iconColor="#34d399" />
-          <StatCard icon={<MdFeedback />} label="Total Feedback" value={metrics?.totalFeedback}
-            iconBg="rgba(16,185,129,0.15)" iconColor="#34d399" />
+          <div onClick={() => navigate('/admin/feedback')} style={{ cursor: 'pointer' }} title="Click to open Customer Feedback Module">
+            <StatCard icon={<MdFeedback />} label="Total Feedback" value={metrics?.totalFeedback}
+              iconBg="rgba(16,185,129,0.15)" iconColor="#34d399" />
+          </div>
           <StatCard icon={<MdStar />} label="Avg. Rating"
             value={<span style={{ fontSize: 22 }}>{metrics?.avgRating} <span style={{ fontSize: 16 }}>/ 5</span></span>}
             iconBg="rgba(245,158,11,0.15)" iconColor="#fbbf24" />
@@ -226,6 +243,132 @@ export default function AdminDashboard() {
             </div>
           </div>
         )}
+
+        {/* Unread Customer Feedback Section (Only unread feedbacks shown on Dashboard) */}
+        <div className="card fade-in" style={{ marginBottom: 20 }}>
+          <div
+            className="card-header"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 8,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span className="card-title">📩 Unread Customer Feedback</span>
+              {unreadFeedbacks.length > 0 && (
+                <span
+                  style={{
+                    background: '#ef4444',
+                    color: '#ffffff',
+                    fontSize: 11,
+                    fontWeight: 800,
+                    padding: '2px 8px',
+                    borderRadius: 12,
+                  }}
+                >
+                  {unreadFeedbacks.length} New
+                </span>
+              )}
+            </div>
+            <Link
+              to="/admin/feedback"
+              className="btn btn-xs btn-outline"
+              style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none' }}
+            >
+              Open Dedicated Feedback Module (All Feedbacks) →
+            </Link>
+          </div>
+
+          {unreadFeedbacks.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '28px 16px', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: 28, marginBottom: 6 }}>✨</div>
+              <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: 2 }}>
+                All Caught Up!
+              </div>
+              <div style={{ fontSize: 13, marginBottom: 10 }}>
+                Only unread feedbacks display on the dashboard. You can view all records, filter by date, search, and pin reviews in the Feedback Module.
+              </div>
+              <Link to="/admin/feedback" className="btn btn-sm btn-ghost" style={{ textDecoration: 'none' }}>
+                Open Feedback Module ({metrics?.totalFeedback || 0} Total Reviews) →
+              </Link>
+            </div>
+          ) : (
+            <div className="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Customer</th>
+                    <th>Attending Staff</th>
+                    <th>Rating</th>
+                    <th>Comment Snippet</th>
+                    <th>Date</th>
+                    <th style={{ textAlign: 'right' }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {unreadFeedbacks.map((f) => (
+                    <tr key={f._id}>
+                      <td>
+                        <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 13 }}>
+                          {f.customer?.name}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                          {f.customer?.mobile ? `📞 ${f.customer.mobile} · ` : ''}
+                          {f.customer?.customerType || 'Customer'}
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 13 }}>
+                          {f.staff?.name}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                          {f.staff?.designation || 'Staff'}
+                        </div>
+                      </td>
+                      <td>
+                        <RatingBadge rating={f.overallRating} />
+                      </td>
+                      <td style={{ maxWidth: 220 }}>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color: 'var(--text-secondary)',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            fontStyle: f.comments ? 'italic' : 'normal',
+                          }}
+                          title={f.comments || f.suggestions || 'No comment'}
+                        >
+                          {f.comments ? `"${f.comments}"` : f.suggestions ? `💡 ${f.suggestions}` : '—'}
+                        </div>
+                      </td>
+                      <td style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                        {new Date(f.createdAt).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                        })}
+                      </td>
+                      <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        <button
+                          className="btn btn-xs btn-outline"
+                          onClick={(e) => markFeedbackRead(f._id, e)}
+                          style={{ fontSize: 11, padding: '3px 8px' }}
+                          title="Mark as read and clear from dashboard"
+                        >
+                          ✓ Mark Read
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
 
         {/* Charts Row 1 */}
         <div className="analytics-grid" style={{ marginBottom: 20 }}>

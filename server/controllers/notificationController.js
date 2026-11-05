@@ -14,9 +14,20 @@ const getNotifications = async (req, res) => {
       ],
     };
 
-    const notifications = await Notification.find(query)
+    const rawNotifications = await Notification.find(query)
       .sort({ createdAt: -1 })
       .limit(100);
+
+    // Guarantee uniqueness: only one notification per (referenceId + title + recipient/role)
+    const seen = new Set();
+    const notifications = [];
+    for (const n of rawNotifications) {
+      const key = `${n.referenceId?.toString() || ''}|${n.title}|${n.recipient?.toString() || n.role}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        notifications.push(n);
+      }
+    }
 
     // Compute unread count for current user
     const unreadCount = notifications.filter((n) => {
@@ -80,6 +91,28 @@ const markAllNotificationsAsRead = async (req, res) => {
   }
 };
 
+// @route DELETE /api/notifications/clear-all
+const clearAllNotifications = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const userRole = req.user.role;
+
+    const query = {
+      $or: [
+        { recipient: userId },
+        { role: userRole },
+        { role: 'all' },
+      ],
+    };
+
+    const result = await Notification.deleteMany(query);
+    res.json({ message: 'All notifications cleared successfully', deletedCount: result.deletedCount });
+  } catch (err) {
+    console.error('Clear all notifications error:', err);
+    res.status(500).json({ message: 'Failed to clear notifications' });
+  }
+};
+
 // @route DELETE /api/notifications/:id
 const deleteNotification = async (req, res) => {
   try {
@@ -98,4 +131,5 @@ module.exports = {
   markNotificationAsRead,
   markAllNotificationsAsRead,
   deleteNotification,
+  clearAllNotifications,
 };
