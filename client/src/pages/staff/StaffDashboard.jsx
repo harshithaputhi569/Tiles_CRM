@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Topbar from '../../components/Topbar';
-import { StatCard, LoadingSpinner, RatingBadge, EmptyState } from '../../components/UI';
+import { StatCard, LoadingSpinner, RatingBadge, EmptyState, StatusBadge } from '../../components/UI';
 import {
   Users, MessageSquare, Star, TrendingUp,
   ShoppingBag, XCircle, ClipboardList, Receipt, AlertTriangle
@@ -77,6 +77,7 @@ export default function StaffDashboard() {
   const [repeatData, setRepeatData] = useState(null);
   const [stockData, setStockData] = useState(null);
   const [recentVisits, setRecentVisits] = useState([]);
+  const [staffComplaints, setStaffComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activePreset, setActivePreset] = useState('all');
   const today = new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -111,18 +112,20 @@ export default function StaffDashboard() {
       if (endDate) params.push(`endDate=${endDate}`);
       const qs = params.length > 0 ? `?${params.join('&')}` : '';
 
-      const [fbRes, purRes, repRes, visRes, stockRes] = await Promise.all([
+      const [fbRes, purRes, repRes, visRes, stockRes, compRes] = await Promise.all([
         api.get(`/feedback${qs}`),
         api.get(`/analytics/purchase-conversion${qs}`),
         api.get('/analytics/repeat-visitors'),
         api.get('/visits?limit=5'),
         api.get(`/analytics/stock-trend${qs}`),
+        api.get('/complaints'),
       ]);
       setFeedbacks(fbRes.data.feedbacks || []);
       setPurchaseData(purRes.data);
       setRepeatData(repRes.data);
       setRecentVisits(visRes.data.visits || []);
       setStockData(stockRes.data);
+      setStaffComplaints(compRes.data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -857,6 +860,101 @@ export default function StaffDashboard() {
             )}
           </div>
         </div>
+
+        {/* Section 5: Customer Complaints (Staff View) */}
+        {staffComplaints.length > 0 && (
+          <div className="card fade-in" style={{ marginTop: 20, border: '1px solid rgba(239,68,68,0.25)' }}>
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#dc2626' }}>
+                  <AlertTriangle size={18} style={{ color: '#dc2626' }} />
+                  <span>⚠️ Customer Complaints Received</span>
+                </span>
+                <span style={{
+                  background: '#ef4444',
+                  color: '#ffffff',
+                  fontSize: 11,
+                  fontWeight: 800,
+                  padding: '2px 8px',
+                  borderRadius: 12,
+                }}>
+                  {staffComplaints.filter((c) => c.status !== 'Resolved').length} Active
+                </span>
+              </div>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                {staffComplaints.length} Total Complaints Logged by Customers
+              </span>
+            </div>
+
+            <div className="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Customer</th>
+                    <th>Category</th>
+                    <th>Complaint Description</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Admin Remarks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {staffComplaints.map((c) => (
+                    <tr key={c._id} style={{ background: c.status === 'Pending' ? 'rgba(239,68,68,0.02)' : 'transparent' }}>
+                      <td>
+                        <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 13 }}>
+                          {c.customer?.name || 'Customer'}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                          {c.customer?.mobile ? `📞 ${c.customer.mobile}` : '—'}
+                        </div>
+                      </td>
+                      <td>
+                        <span
+                          style={{
+                            padding: '3px 10px',
+                            borderRadius: 12,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            background: 'rgba(239,68,68,0.1)',
+                            color: '#dc2626',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {c.category}
+                        </span>
+                      </td>
+                      <td style={{ maxWidth: 300 }}>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color: 'var(--text-secondary)',
+                            fontWeight: 500,
+                            lineHeight: 1.4,
+                          }}
+                        >
+                          "{c.description}"
+                        </div>
+                      </td>
+                      <td>
+                        <StatusBadge status={c.status} />
+                      </td>
+                      <td style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                        {new Date(c.createdAt).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                        })}
+                      </td>
+                      <td style={{ fontSize: 12, color: 'var(--text-muted)', fontStyle: c.adminRemarks ? 'normal' : 'italic' }}>
+                        {c.adminRemarks || 'No remarks yet'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

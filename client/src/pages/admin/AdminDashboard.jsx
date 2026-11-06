@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Topbar from '../../components/Topbar';
-import { StatCard, LoadingSpinner, RatingBadge } from '../../components/UI';
+import { StatCard, LoadingSpinner, RatingBadge, StatusBadge } from '../../components/UI';
 import {
   Users, MessageSquare, AlertTriangle, Star, TrendingUp, CheckCircle,
   UserCheck, ShoppingBag, XCircle
@@ -43,6 +43,7 @@ export default function AdminDashboard() {
   const [staffPerf, setStaffPerf] = useState([]);
   const [complaintCats, setComplaintCats] = useState([]);
   const [unreadFeedbacks, setUnreadFeedbacks] = useState([]);
+  const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const markFeedbackRead = async (id, e) => {
@@ -59,13 +60,14 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [m, t, r, s, c, fb] = await Promise.all([
+        const [m, t, r, s, c, fb, comp] = await Promise.all([
           api.get('/analytics/dashboard'),
           api.get('/analytics/visitor-trend?months=6'),
           api.get('/analytics/rating-distribution'),
           api.get('/analytics/staff-performance'),
           api.get('/analytics/complaint-categories'),
           api.get('/feedback?unreadOnly=true&limit=6'),
+          api.get('/complaints'),
         ]);
         setMetrics(m.data);
         setVisitorTrend(t.data);
@@ -73,6 +75,7 @@ export default function AdminDashboard() {
         setStaffPerf(s.data.slice(0, 5));
         setComplaintCats(c.data);
         setUnreadFeedbacks(fb.data.feedbacks || []);
+        setComplaints(comp.data || []);
       } catch (err) { console.error(err); }
       finally { setLoading(false); }
     };
@@ -361,6 +364,146 @@ export default function AdminDashboard() {
                         >
                           ✓ Mark Read
                         </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Customer Complaints Section */}
+        <div className="card fade-in" style={{ marginBottom: 20, border: '1px solid rgba(239,68,68,0.22)' }}>
+          <div
+            className="card-header"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 8,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#dc2626' }}>
+                <AlertTriangle size={18} style={{ color: '#dc2626' }} />
+                <span>⚠️ Customer Complaints</span>
+              </span>
+              {complaints.filter((c) => c.status !== 'Resolved').length > 0 && (
+                <span
+                  style={{
+                    background: '#ef4444',
+                    color: '#ffffff',
+                    fontSize: 11,
+                    fontWeight: 800,
+                    padding: '2px 8px',
+                    borderRadius: 12,
+                  }}
+                >
+                  {complaints.filter((c) => c.status !== 'Resolved').length} Unresolved
+                </span>
+              )}
+            </div>
+            <Link
+              to="/admin/complaints"
+              className="btn btn-xs btn-outline"
+              style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none' }}
+            >
+              Open Complaints Module ({complaints.length} Total) →
+            </Link>
+          </div>
+
+          {complaints.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '28px 16px', color: 'var(--text-muted)' }}>
+              <div style={{ fontSize: 28, marginBottom: 6 }}>🎉</div>
+              <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: 2 }}>
+                Zero Customer Complaints!
+              </div>
+              <div style={{ fontSize: 13 }}>
+                All showroom visits and customer feedbacks have no pending complaints.
+              </div>
+            </div>
+          ) : (
+            <div className="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Customer</th>
+                    <th>Attending Staff</th>
+                    <th>Category</th>
+                    <th>Complaint Description</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th style={{ textAlign: 'right' }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {complaints.slice(0, 5).map((c) => (
+                    <tr key={c._id} style={{ background: c.status === 'Pending' ? 'rgba(239,68,68,0.02)' : 'transparent' }}>
+                      <td>
+                        <div style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 13 }}>
+                          {c.customer?.name || 'Customer'}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                          {c.customer?.mobile ? `📞 ${c.customer.mobile}` : '—'}
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 13 }}>
+                          {c.staff?.name || 'Staff'}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                          {c.staff?.designation || ''}
+                        </div>
+                      </td>
+                      <td>
+                        <span
+                          style={{
+                            padding: '3px 10px',
+                            borderRadius: 12,
+                            fontSize: 11,
+                            fontWeight: 700,
+                            background: 'rgba(239,68,68,0.1)',
+                            color: '#dc2626',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {c.category}
+                        </span>
+                      </td>
+                      <td style={{ maxWidth: 260 }}>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color: 'var(--text-secondary)',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            fontWeight: 500,
+                          }}
+                          title={c.description}
+                        >
+                          "{c.description}"
+                        </div>
+                      </td>
+                      <td>
+                        <StatusBadge status={c.status} />
+                      </td>
+                      <td style={{ fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                        {new Date(c.createdAt).toLocaleDateString('en-IN', {
+                          day: 'numeric',
+                          month: 'short',
+                        })}
+                      </td>
+                      <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        <Link
+                          to="/admin/complaints"
+                          className="btn btn-xs btn-outline"
+                          style={{ fontSize: 11, padding: '3px 8px', textDecoration: 'none' }}
+                        >
+                          Manage →
+                        </Link>
                       </td>
                     </tr>
                   ))}

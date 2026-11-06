@@ -89,6 +89,24 @@ const getFeedbacks = async (req, res) => {
       .skip((Number(page) - 1) * Number(limit))
       .limit(Number(limit));
 
+    // Attach linked complaint details to feedbacks where hasComplaint is true
+    const feedbackIds = feedbacks.filter((f) => f.hasComplaint).map((f) => f._id);
+    let feedbacksWithComplaints = feedbacks;
+    if (feedbackIds.length > 0) {
+      const complaints = await Complaint.find({ feedback: { $in: feedbackIds } });
+      const compMap = {};
+      complaints.forEach((c) => {
+        if (c.feedback) compMap[c.feedback.toString()] = c;
+      });
+      feedbacksWithComplaints = feedbacks.map((f) => {
+        const obj = f.toObject ? f.toObject() : { ...f };
+        if (obj.hasComplaint && compMap[f._id.toString()]) {
+          obj.complaint = compMap[f._id.toString()];
+        }
+        return obj;
+      });
+    }
+
     const total = await Feedback.countDocuments(filter);
 
     // Contextual counts for tabs / quick badges
@@ -100,7 +118,7 @@ const getFeedbacks = async (req, res) => {
     ]);
 
     res.json({
-      feedbacks,
+      feedbacks: feedbacksWithComplaints,
       total,
       unreadCount,
       pinnedCount,

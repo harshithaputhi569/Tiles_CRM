@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router';
 import Topbar from '../../components/Topbar';
-import { LoadingSpinner, EmptyState, RatingBadge, Stars } from '../../components/UI';
+import { LoadingSpinner, EmptyState, RatingBadge, Stars, StatusBadge } from '../../components/UI';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
@@ -33,10 +34,23 @@ import {
 
 export default function FeedbackManagement() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [feedbacks, setFeedbacks] = useState([]);
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
+
+  // Auto-fetch complaint details if opening a feedback with a complaint
+  useEffect(() => {
+    if (selected?.hasComplaint && !selected.complaint) {
+      api.get('/complaints').then(({ data }) => {
+        const found = data.find((c) => (c.feedback?._id || c.feedback) === selected._id);
+        if (found) {
+          setSelected((prev) => (prev ? { ...prev, complaint: found } : null));
+        }
+      }).catch(() => {});
+    }
+  }, [selected?._id]);
 
   // Filter States
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'unread' | 'pinned' | 'read' | 'complaint'
@@ -1551,24 +1565,77 @@ export default function FeedbackManagement() {
                 </div>
               )}
 
-              {/* Complaint Status */}
+              {/* Complaint Status & Full Details */}
               {selected.hasComplaint && (
                 <div
                   style={{
-                    padding: '12px 16px',
-                    background: 'rgba(239,68,68,0.06)',
+                    padding: '14px 16px',
+                    background: 'rgba(239,68,68,0.05)',
                     border: '1px solid rgba(239,68,68,0.3)',
-                    borderRadius: 8,
-                    fontSize: 13,
-                    color: '#dc2626',
-                    fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
+                    borderRadius: 10,
+                    marginBottom: 10,
                   }}
                 >
-                  <AlertTriangle size={18} style={{ color: '#dc2626', flexShrink: 0 }} />
-                  <span>A customer complaint was registered with this feedback submission.</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <AlertTriangle size={18} style={{ color: '#dc2626', flexShrink: 0 }} />
+                      <span style={{ fontSize: 13, fontWeight: 800, color: '#dc2626' }}>
+                        Customer Complaint Registered
+                      </span>
+                    </div>
+                    {selected.complaint?.status ? (
+                      <StatusBadge status={selected.complaint.status} />
+                    ) : (
+                      <span style={{ fontSize: 11, fontWeight: 700, background: 'rgba(239,68,68,0.15)', color: '#dc2626', padding: '2px 8px', borderRadius: 8 }}>
+                        Pending
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ background: '#ffffff', borderRadius: 8, padding: '10px 12px', border: '1px solid rgba(239,68,68,0.15)', marginTop: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                        Category:
+                      </span>
+                      <span style={{
+                        padding: '2px 8px',
+                        borderRadius: 10,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        background: 'rgba(239,68,68,0.1)',
+                        color: '#dc2626',
+                      }}>
+                        {selected.complaint?.category || 'General Issue'}
+                      </span>
+                    </div>
+
+                    <div style={{ marginTop: 6 }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 2 }}>
+                        Complaint Description:
+                      </span>
+                      <div style={{ fontSize: 13, color: 'var(--text-primary)', fontStyle: 'italic', lineHeight: 1.4 }}>
+                        "{selected.complaint?.description || selected.comments || 'No specific description provided.'}"
+                      </div>
+                    </div>
+
+                    {selected.complaint?.adminRemarks && (
+                      <div style={{ marginTop: 8, paddingTop: 6, borderTop: '1px solid rgba(0,0,0,0.06)', fontSize: 12, color: 'var(--text-secondary)' }}>
+                        <strong>Admin Remarks:</strong> {selected.complaint.adminRemarks}
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ marginTop: 10, display: 'flex', justifyContent: 'flex-end' }}>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline"
+                      style={{ fontSize: 12, borderColor: '#dc2626', color: '#dc2626', display: 'flex', alignItems: 'center', gap: 6 }}
+                      onClick={() => navigate('/admin/complaints')}
+                    >
+                      <AlertTriangle size={14} />
+                      Manage in Complaints Dashboard →
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
