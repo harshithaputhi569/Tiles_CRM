@@ -1,15 +1,34 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, Shield, BadgeCheck, Store } from 'lucide-react';
+import api from '../api/axios';
+import {
+  Mail, Lock, Shield, BadgeCheck, Store,
+  Eye, EyeOff, Phone, KeyRound, X, CheckCircle2
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Login() {
   const [tab, setTab] = useState('admin');
   const [form, setForm] = useState({ email: '', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
   const [isSplashing, setIsSplashing] = useState(true);
   const [splashFading, setSplashFading] = useState(false);
   const [progress, setProgress] = useState(0);
+
+  // Forgot password modal state
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotRole, setForgotRole] = useState('admin');
+  const [forgotForm, setForgotForm] = useState({
+    email: '',
+    phone: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [showForgotPass, setShowForgotPass] = useState(false);
+  const [showForgotConfirm, setShowForgotConfirm] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
+
   const { login, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -38,6 +57,49 @@ export default function Login() {
   const handleTabChange = (role) => {
     setTab(role);
     setForm({ email: '', password: '' });
+  };
+
+  const handleOpenForgot = () => {
+    setForgotRole(tab);
+    setForgotForm({
+      email: form.email || '',
+      phone: '',
+      newPassword: '',
+      confirmPassword: '',
+    });
+    setShowForgotPass(false);
+    setShowForgotConfirm(false);
+    setShowForgotModal(true);
+  };
+
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault();
+    if (!forgotForm.email || !forgotForm.phone || !forgotForm.newPassword) {
+      return toast.error('Please fill all required fields');
+    }
+    if (forgotForm.newPassword.length < 6) {
+      return toast.error('New password must be at least 6 characters');
+    }
+    if (forgotForm.newPassword !== forgotForm.confirmPassword) {
+      return toast.error('Passwords do not match');
+    }
+
+    setForgotLoading(true);
+    try {
+      const { data } = await api.post('/auth/reset-password', {
+        email: forgotForm.email,
+        phone: forgotForm.phone,
+        newPassword: forgotForm.newPassword,
+      });
+      toast.success(data.message || 'Password reset successfully!');
+      setTab(forgotRole);
+      setForm((prev) => ({ ...prev, email: forgotForm.email, password: '' }));
+      setShowForgotModal(false);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to reset password. Please check your details.');
+    } finally {
+      setForgotLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -301,22 +363,62 @@ export default function Login() {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Password</label>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <label className="form-label" style={{ marginBottom: 0 }}>Password</label>
+              <button
+                type="button"
+                onClick={handleOpenForgot}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#7c3aed',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  padding: 0,
+                  transition: 'opacity 0.2s',
+                }}
+                onMouseEnter={(e) => (e.target.style.opacity = '0.75')}
+                onMouseLeave={(e) => (e.target.style.opacity = '1')}
+              >
+                Forgot Password?
+              </button>
+            </div>
             <div style={{ position: 'relative' }}>
               <Lock size={16} style={{
                 position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
                 color: 'var(--text-muted)'
               }} />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 className="form-control"
-                style={{ paddingLeft: 38 }}
+                style={{ paddingLeft: 38, paddingRight: 40 }}
                 placeholder="Enter your password"
                 value={form.password}
                 autoComplete="new-password"
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                title={showPassword ? 'Hide password' : 'Show password'}
+                style={{
+                  position: 'absolute',
+                  right: 12,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-muted)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: 0,
+                }}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
 
@@ -325,6 +427,282 @@ export default function Login() {
           </button>
         </form>
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotModal && (
+        <div
+          className="modal-backdrop"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 9999,
+            background: 'rgba(15, 23, 42, 0.65)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !forgotLoading) setShowForgotModal(false);
+          }}
+        >
+          <div
+            className="modal-content fade-in"
+            style={{
+              background: '#ffffff',
+              borderRadius: 18,
+              maxWidth: 440,
+              width: '100%',
+              padding: '24px 24px',
+              boxShadow: '0 20px 50px rgba(0, 0, 0, 0.25)',
+              border: '1px solid var(--border-glass)',
+              position: 'relative',
+            }}
+          >
+            {/* Modal Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  background: 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(6,182,212,0.15))',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#7c3aed',
+                }}>
+                  <KeyRound size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: 'var(--text-primary)' }}>
+                    Reset Password
+                  </h3>
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+                    Verify your identity to create a new password
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowForgotModal(false)}
+                disabled={forgotLoading}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  cursor: 'pointer',
+                  padding: 4,
+                  borderRadius: 6,
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Role Switcher in Modal */}
+            <div style={{
+              display: 'flex',
+              background: '#f1f5f9',
+              borderRadius: 10,
+              padding: 4,
+              marginBottom: 18,
+              gap: 4,
+            }}>
+              <button
+                type="button"
+                style={{
+                  flex: 1,
+                  padding: '7px 0',
+                  borderRadius: 8,
+                  border: 'none',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  background: forgotRole === 'admin' ? '#ffffff' : 'transparent',
+                  color: forgotRole === 'admin' ? '#7c3aed' : 'var(--text-secondary)',
+                  boxShadow: forgotRole === 'admin' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
+                  transition: 'all 0.2s',
+                }}
+                onClick={() => setForgotRole('admin')}
+              >
+                <Shield size={14} /> Admin
+              </button>
+              <button
+                type="button"
+                style={{
+                  flex: 1,
+                  padding: '7px 0',
+                  borderRadius: 8,
+                  border: 'none',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  background: forgotRole === 'staff' ? '#ffffff' : 'transparent',
+                  color: forgotRole === 'staff' ? '#7c3aed' : 'var(--text-secondary)',
+                  boxShadow: forgotRole === 'staff' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
+                  transition: 'all 0.2s',
+                }}
+                onClick={() => setForgotRole('staff')}
+              >
+                <BadgeCheck size={14} /> Staff
+              </button>
+            </div>
+
+            <form onSubmit={handleForgotSubmit}>
+              {/* Email Address */}
+              <div className="form-group" style={{ marginBottom: 14 }}>
+                <label className="form-label" style={{ fontSize: 12 }}>Registered Email Address</label>
+                <div style={{ position: 'relative' }}>
+                  <Mail size={16} style={{
+                    position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+                    color: 'var(--text-muted)'
+                  }} />
+                  <input
+                    type="email"
+                    className="form-control"
+                    style={{ paddingLeft: 38, fontSize: 13, height: 40 }}
+                    placeholder={forgotRole === 'admin' ? 'admin@tileshow.com' : 'staff@tileshow.com'}
+                    value={forgotForm.email}
+                    onChange={(e) => setForgotForm({ ...forgotForm, email: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Registered Phone */}
+              <div className="form-group" style={{ marginBottom: 14 }}>
+                <label className="form-label" style={{ fontSize: 12 }}>Registered Mobile Number</label>
+                <div style={{ position: 'relative' }}>
+                  <Phone size={16} style={{
+                    position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+                    color: 'var(--text-muted)'
+                  }} />
+                  <input
+                    type="tel"
+                    className="form-control"
+                    style={{ paddingLeft: 38, fontSize: 13, height: 40 }}
+                    placeholder="e.g. 9876543210"
+                    value={forgotForm.phone}
+                    onChange={(e) => setForgotForm({ ...forgotForm, phone: e.target.value })}
+                    required
+                  />
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                  Enter the 10-digit mobile number linked to this account
+                </div>
+              </div>
+
+              {/* New Password */}
+              <div className="form-group" style={{ marginBottom: 14 }}>
+                <label className="form-label" style={{ fontSize: 12 }}>New Password</label>
+                <div style={{ position: 'relative' }}>
+                  <Lock size={16} style={{
+                    position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+                    color: 'var(--text-muted)'
+                  }} />
+                  <input
+                    type={showForgotPass ? 'text' : 'password'}
+                    className="form-control"
+                    style={{ paddingLeft: 38, paddingRight: 40, fontSize: 13, height: 40 }}
+                    placeholder="At least 6 characters"
+                    value={forgotForm.newPassword}
+                    onChange={(e) => setForgotForm({ ...forgotForm, newPassword: e.target.value })}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPass(!showForgotPass)}
+                    style={{
+                      position: 'absolute',
+                      right: 12,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--text-muted)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: 0,
+                    }}
+                  >
+                    {showForgotPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm New Password */}
+              <div className="form-group" style={{ marginBottom: 18 }}>
+                <label className="form-label" style={{ fontSize: 12 }}>Confirm New Password</label>
+                <div style={{ position: 'relative' }}>
+                  <Lock size={16} style={{
+                    position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+                    color: 'var(--text-muted)'
+                  }} />
+                  <input
+                    type={showForgotConfirm ? 'text' : 'password'}
+                    className="form-control"
+                    style={{ paddingLeft: 38, paddingRight: 40, fontSize: 13, height: 40 }}
+                    placeholder="Re-enter new password"
+                    value={forgotForm.confirmPassword}
+                    onChange={(e) => setForgotForm({ ...forgotForm, confirmPassword: e.target.value })}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotConfirm(!showForgotConfirm)}
+                    style={{
+                      position: 'absolute',
+                      right: 12,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      color: 'var(--text-muted)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: 0,
+                    }}
+                  >
+                    {showForgotConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  style={{ flex: 1, justifyContent: 'center' }}
+                  onClick={() => setShowForgotModal(false)}
+                  disabled={forgotLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ flex: 2, justifyContent: 'center', gap: 6 }}
+                  disabled={forgotLoading}
+                >
+                  {forgotLoading ? 'Updating...' : 'Reset Password'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

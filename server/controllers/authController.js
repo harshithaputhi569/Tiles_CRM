@@ -31,4 +31,50 @@ const getMe = async (req, res) => {
   res.json(req.user);
 };
 
-module.exports = { login, getMe };
+// @route POST /api/auth/reset-password
+const resetPassword = async (req, res) => {
+  try {
+    const { email, phone, newPassword } = req.body;
+    if (!email || !newPassword) {
+      return res.status(400).json({ message: 'Email and new password are required' });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      return res.status(404).json({ message: 'No account found with this email address' });
+    }
+
+    // Verify phone if user has a phone on record
+    if (user.phone) {
+      if (!phone) {
+        return res.status(400).json({ message: 'Please enter your registered mobile number for verification' });
+      }
+      const cleanUserPhone = user.phone.replace(/\D/g, '');
+      const cleanEnteredPhone = phone.replace(/\D/g, '');
+      if (
+        cleanUserPhone !== cleanEnteredPhone &&
+        !cleanUserPhone.endsWith(cleanEnteredPhone)
+      ) {
+        return res.status(400).json({ message: 'Registered mobile number does not match our records' });
+      }
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'New password must be at least 6 characters long' });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password reset successfully! You can now sign in with your new password.',
+    });
+  } catch (err) {
+    console.error('resetPassword error:', err);
+    res.status(500).json({ message: 'Failed to reset password. Please try again.' });
+  }
+};
+
+module.exports = { login, getMe, resetPassword };
