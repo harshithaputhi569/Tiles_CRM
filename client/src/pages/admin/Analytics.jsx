@@ -953,7 +953,9 @@ export default function Analytics() {
                     <span className="card-title">👥 Staff Purchase Conversion Leaderboard</span>
                     <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{dateLabel}</span>
                   </div>
-                  <div className="table-wrapper" style={{ width: '100%', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+
+                  {/* Desktop Table */}
+                  <div className="staff-leaderboard-desktop-table table-wrapper" style={{ width: '100%', maxWidth: '100%', overflowX: 'auto' }}>
                     <table style={{ width: '100%', minWidth: 540, borderCollapse: 'collapse', fontSize: 13 }}>
                       <thead>
                         <tr style={{ background: '#f8fafc', borderBottom: '2px solid rgba(124,58,237,0.1)' }}>
@@ -991,6 +993,48 @@ export default function Analytics() {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+
+                  {/* Mobile Cards */}
+                  <div className="staff-leaderboard-mobile-cards">
+                    {purchaseData.staffBreakdown.map((s) => (
+                      <div
+                        key={s._id}
+                        style={{
+                          background: '#ffffff',
+                          borderRadius: 10,
+                          border: '1px solid rgba(124,58,237,0.15)',
+                          padding: '12px 14px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 10,
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)' }}>{s.staffName}</div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                            {s.designation || 'Staff'} · {s.totalVisits} visits handled
+                          </div>
+                          <div style={{ fontSize: 11, marginTop: 4 }}>
+                            <span style={{ color: '#059669', fontWeight: 700 }}>{s.purchased} bought</span>
+                            <span style={{ color: 'var(--text-muted)' }}> · </span>
+                            <span style={{ color: '#dc2626', fontWeight: 700 }}>{s.notPurchased} left</span>
+                          </div>
+                        </div>
+                        <div style={{
+                          padding: '4px 12px',
+                          borderRadius: 20,
+                          fontWeight: 800,
+                          fontSize: 13,
+                          background: s.conversionRate >= 60 ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)',
+                          color: s.conversionRate >= 60 ? '#059669' : '#d97706',
+                          whiteSpace: 'nowrap',
+                        }}>
+                          {s.conversionRate}%
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -1045,72 +1089,145 @@ export default function Analytics() {
                   </div>
                 </div>
 
-                <div className="table-wrapper" style={{ width: '100%', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-                  {filteredVisits.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
-                      No customer visits match the selected filter.
-                    </div>
-                  ) : (
-                    <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse', fontSize: 13 }}>
-                      <thead>
-                        <tr style={{ background: '#f8fafc', borderBottom: '2px solid rgba(124,58,237,0.1)' }}>
-                          <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>Customer</th>
-                          <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>Date</th>
-                          <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>Lead Source</th>
-                          <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>Status</th>
-                          <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>Reason (If Not Purchased)</th>
-                          <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>Staff</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredVisits.map((v, idx) => (
-                          <tr key={v._id} style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', background: idx % 2 === 0 ? '#ffffff' : '#fafafa' }}>
-                            <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                              <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{v.customer?.name || 'Customer'}</div>
-                              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{v.customer?.mobile || '—'} · {v.customer?.customerType || ''}</div>
-                            </td>
-                            <td style={{ padding: '10px 14px', textAlign: 'center', fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                              {new Date(v.visitDate || v.createdAt).toLocaleDateString('en-IN')}
-                            </td>
-                            <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
-                              <span style={{
-                                display: 'inline-block',
-                                padding: '3px 10px',
-                                borderRadius: 12,
-                                background: 'rgba(124,58,237,0.08)',
-                                color: '#6d28d9',
-                                fontSize: 11,
-                                fontWeight: 600,
-                              }}>
-                                {v.source || 'Walk-in / Signboard'}
-                              </span>
-                            </td>
-                            <td style={{ padding: '10px 14px', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                              <span style={{
-                                display: 'inline-block',
-                                padding: '4px 12px',
-                                borderRadius: 20,
-                                fontWeight: 700,
-                                fontSize: 11,
-                                background: v.purchaseStatus === 'Purchased' ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-                                color: v.purchaseStatus === 'Purchased' ? '#059669' : '#dc2626',
-                                border: `1px solid ${v.purchaseStatus === 'Purchased' ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.25)'}`,
-                              }}>
-                                {v.purchaseStatus === 'Purchased' ? '✓ Purchased' : '✗ Not Purchased'}
-                              </span>
-                            </td>
-                            <td style={{ padding: '10px 14px', color: v.nonPurchaseReason ? '#dc2626' : 'var(--text-muted)', fontWeight: v.nonPurchaseReason ? 600 : 400, whiteSpace: 'nowrap' }}>
-                              {v.nonPurchaseReason || (v.purchaseStatus === 'Purchased' ? '—' : 'Not specified')}
-                            </td>
-                            <td style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-                              {v.staff?.name || '—'}
-                            </td>
+                {filteredVisits.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
+                    No customer visits match the selected filter.
+                  </div>
+                ) : (
+                  <>
+                    {/* Desktop Table View */}
+                    <div className="outcome-log-desktop-table table-wrapper" style={{ width: '100%', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                      <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse', fontSize: 13 }}>
+                        <thead>
+                          <tr style={{ background: '#f8fafc', borderBottom: '2px solid rgba(124,58,237,0.1)' }}>
+                            <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>Customer</th>
+                            <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>Date</th>
+                            <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>Lead Source</th>
+                            <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>Status</th>
+                            <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>Reason (If Not Purchased)</th>
+                            <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>Staff</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
+                        </thead>
+                        <tbody>
+                          {filteredVisits.map((v, idx) => (
+                            <tr key={v._id} style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', background: idx % 2 === 0 ? '#ffffff' : '#fafafa' }}>
+                              <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
+                                <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{v.customer?.name || 'Customer'}</div>
+                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{v.customer?.mobile || '—'} · {v.customer?.customerType || ''}</div>
+                              </td>
+                              <td style={{ padding: '10px 14px', textAlign: 'center', fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                                {new Date(v.visitDate || v.createdAt).toLocaleDateString('en-IN')}
+                              </td>
+                              <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
+                                <span style={{
+                                  display: 'inline-block',
+                                  padding: '3px 10px',
+                                  borderRadius: 12,
+                                  background: 'rgba(124,58,237,0.08)',
+                                  color: '#6d28d9',
+                                  fontSize: 11,
+                                  fontWeight: 600,
+                                }}>
+                                  {v.source || 'Walk-in / Signboard'}
+                                </span>
+                              </td>
+                              <td style={{ padding: '10px 14px', textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                <span style={{
+                                  display: 'inline-block',
+                                  padding: '4px 12px',
+                                  borderRadius: 20,
+                                  fontWeight: 700,
+                                  fontSize: 11,
+                                  background: v.purchaseStatus === 'Purchased' ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+                                  color: v.purchaseStatus === 'Purchased' ? '#059669' : '#dc2626',
+                                  border: `1px solid ${v.purchaseStatus === 'Purchased' ? 'rgba(16,185,129,0.25)' : 'rgba(239,68,68,0.25)'}`,
+                                }}>
+                                  {v.purchaseStatus === 'Purchased' ? '✓ Purchased' : '✗ Not Purchased'}
+                                </span>
+                              </td>
+                              <td style={{ padding: '10px 14px', color: v.nonPurchaseReason ? '#dc2626' : 'var(--text-muted)', fontWeight: v.nonPurchaseReason ? 600 : 400, whiteSpace: 'nowrap' }}>
+                                {v.nonPurchaseReason || (v.purchaseStatus === 'Purchased' ? '—' : 'Not specified')}
+                              </td>
+                              <td style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
+                                {v.staff?.name || '—'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Mobile Card List View */}
+                    <div className="outcome-log-mobile-cards">
+                      {filteredVisits.map((v) => (
+                        <div
+                          key={v._id}
+                          style={{
+                            background: '#ffffff',
+                            borderRadius: 12,
+                            border: v.purchaseStatus === 'Purchased' ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(239,68,68,0.2)',
+                            padding: '12px 14px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 8,
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                            <div>
+                              <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--text-primary)' }}>
+                                {v.customer?.name || 'Customer'}
+                              </div>
+                              <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+                                📱 {v.customer?.mobile || '—'} {v.customer?.customerType ? `· ${v.customer.customerType}` : ''}
+                              </div>
+                            </div>
+                            <span style={{
+                              padding: '3px 10px',
+                              borderRadius: 20,
+                              fontWeight: 700,
+                              fontSize: 11,
+                              background: v.purchaseStatus === 'Purchased' ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+                              color: v.purchaseStatus === 'Purchased' ? '#059669' : '#dc2626',
+                              whiteSpace: 'nowrap',
+                            }}>
+                              {v.purchaseStatus === 'Purchased' ? '✓ Purchased' : '✗ Not Purchased'}
+                            </span>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6, fontSize: 11, color: 'var(--text-muted)', paddingTop: 6, borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+                            <span>📅 {new Date(v.visitDate || v.createdAt).toLocaleDateString('en-IN')}</span>
+                            <span style={{
+                              padding: '2px 8px',
+                              borderRadius: 8,
+                              background: 'rgba(124,58,237,0.08)',
+                              color: '#6d28d9',
+                              fontWeight: 600,
+                            }}>
+                              {v.source || 'Walk-in'}
+                            </span>
+                            {v.staff?.name && (
+                              <span>Staff: <strong style={{ color: 'var(--text-secondary)' }}>{v.staff.name}</strong></span>
+                            )}
+                          </div>
+
+                          {v.purchaseStatus === 'Not Purchased' && v.nonPurchaseReason && (
+                            <div style={{
+                              fontSize: 11,
+                              background: 'rgba(239,68,68,0.08)',
+                              color: '#dc2626',
+                              padding: '5px 8px',
+                              borderRadius: 6,
+                              fontWeight: 600,
+                            }}>
+                              ⚠️ Reason: {v.nonPurchaseReason}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             </>
           )

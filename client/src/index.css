@@ -666,14 +666,51 @@ tbody tr:last-child td { border-bottom: none; }
 /* Repeat Visitors Journey Feed */
 .repeat-timeline-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 12px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .repeat-timeline-grid {
     grid-template-columns: 1fr;
     gap: 10px;
+  }
+}
+
+/* Outcome Log Responsive layout */
+.outcome-log-desktop-table {
+  display: block;
+}
+.outcome-log-mobile-cards {
+  display: none;
+}
+
+.staff-leaderboard-desktop-table {
+  display: block;
+}
+.staff-leaderboard-mobile-cards {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .outcome-log-desktop-table {
+    display: none;
+  }
+  .outcome-log-mobile-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .staff-leaderboard-desktop-table {
+    display: none;
+  }
+  .staff-leaderboard-mobile-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
   }
 }
 
@@ -716,7 +753,7 @@ tbody tr:last-child td { border-bottom: none; }
   font-size: 12px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .complaint-categories-body {
     flex-direction: column;
     padding: 10px 12px 16px;
