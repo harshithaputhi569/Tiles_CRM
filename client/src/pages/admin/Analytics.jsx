@@ -6,9 +6,9 @@ import {
   PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
 } from 'recharts';
 import {
-  MdShoppingBag, MdCancel, MdTrendingUp, MdPeople, MdFilterList,
-  MdShare, MdSearch, MdBarChart, MdFeedback, MdCheckCircle, MdAutorenew, MdHistory
-} from 'react-icons/md';
+  ShoppingBag, XCircle, TrendingUp, Users, Filter,
+  Share2, Search, BarChart3, MessageSquare, CheckCircle, RefreshCw, History
+} from 'lucide-react';
 import api from '../../api/axios';
 
 const COLORS = ['#7c3aed', '#06b6d4', '#ec4899', '#10b981', '#f59e0b', '#3b82f6', '#8b5cf6'];
@@ -200,7 +200,7 @@ export default function Analytics() {
 
   return (
     <>
-      <Topbar title="Analytics & Insights" subtitle="Repeat customer alerts, reasons, conversions & showroom performance" />
+      <Topbar title="Analytics & Insights" subtitle="Visitor trends & conversions" />
       <div className="page-content">
 
         {/* Section Header with Tabs & Date Filter */}
@@ -221,7 +221,7 @@ export default function Analytics() {
                 }}
                 onClick={() => setActiveTab('repeats')}
               >
-                <MdAutorenew style={{ fontSize: 18 }} />
+                <RefreshCw size={16} />
                 <span>🔁 Repeat Visitors (2 & 3 Visits)</span>
                 {repeatData?.totalRepeatCustomers > 0 && (
                   <span style={{
@@ -251,7 +251,7 @@ export default function Analytics() {
                 }}
                 onClick={() => setActiveTab('purchases')}
               >
-                <MdShoppingBag style={{ fontSize: 17 }} />
+                <ShoppingBag size={16} />
                 <span>Customer Purchases & Sources</span>
               </button>
 
@@ -269,7 +269,7 @@ export default function Analytics() {
                 }}
                 onClick={() => setActiveTab('feedback')}
               >
-                <MdFeedback style={{ fontSize: 17 }} />
+                <MessageSquare size={16} />
                 <span>Customer Feedback & Ratings</span>
               </button>
             </div>
@@ -374,7 +374,7 @@ export default function Analytics() {
                 {/* Total Repeat Customers */}
                 <div className="stat-card" style={{ borderColor: 'rgba(245,158,11,0.25)' }}>
                   <div className="stat-icon" style={{ background: 'rgba(245,158,11,0.12)' }}>
-                    <MdAutorenew style={{ color: '#d97706', fontSize: 24 }} />
+                    <RefreshCw size={22} style={{ color: '#d97706' }} />
                   </div>
                   <div className="stat-info">
                     <div className="stat-value" style={{ color: '#d97706' }}>
@@ -411,7 +411,7 @@ export default function Analytics() {
                 {/* Repeat Conversion Rate */}
                 <div className="stat-card" style={{ borderColor: 'rgba(16,185,129,0.25)' }}>
                   <div className="stat-icon" style={{ background: 'rgba(16,185,129,0.12)' }}>
-                    <MdTrendingUp style={{ color: '#059669', fontSize: 24 }} />
+                    <TrendingUp size={22} style={{ color: '#059669' }} />
                   </div>
                   <div className="stat-info">
                     <div className="stat-value" style={{ color: '#059669' }}>
@@ -530,22 +530,22 @@ export default function Analytics() {
                   style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}
                 >
                   <div>
-                    <span className="card-title">📜 Repeat Visitors Journey Log (Why They Returned & What Happened)</span>
+                    <span className="card-title">📜 Repeat Visitors Journey Log</span>
                     <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
-                      Showing {filteredRepeatVisitors.length} repeat customer histories
+                      Showing {filteredRepeatVisitors.length} repeat customer histories & return reasons
                     </div>
                   </div>
 
                   {/* Filter Toolbar */}
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <div style={{ position: 'relative', minWidth: 160 }}>
-                      <MdSearch style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: 16 }} />
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', width: '100%', maxWidth: 420 }}>
+                    <div style={{ position: 'relative', flex: '1 1 160px', minWidth: 140 }}>
+                      <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                       <input
                         className="form-control"
                         placeholder="Search customer, reason..."
                         value={repeatSearch}
                         onChange={(e) => setRepeatSearch(e.target.value)}
-                        style={{ paddingLeft: 30, height: 34, fontSize: 12 }}
+                        style={{ paddingLeft: 30, height: 36, fontSize: 12, width: '100%' }}
                       />
                     </div>
 
@@ -553,7 +553,7 @@ export default function Analytics() {
                       className="form-control"
                       value={repeatFilter}
                       onChange={(e) => setRepeatFilter(e.target.value)}
-                      style={{ height: 34, fontSize: 12, width: 170 }}
+                      style={{ height: 36, fontSize: 12, flex: '1 1 170px', minWidth: 150 }}
                     >
                       <option value="all">All Repeat Visitors</option>
                       <option value="2">Visited Exactly 2 Times</option>
@@ -578,77 +578,82 @@ export default function Analytics() {
                             background: '#ffffff',
                             borderRadius: 12,
                             border: rv.totalVisits >= 3 ? '2px solid rgba(6,182,212,0.3)' : '1px solid rgba(124,58,237,0.15)',
-                            padding: '16px 20px',
+                            padding: '16px 18px',
                             boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
                           }}
                         >
                           {/* Top Row: Customer Info & Status */}
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
-                            <div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{ flex: '1 1 200px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                                 <span style={{ fontWeight: 800, fontSize: 16, color: 'var(--text-primary)' }}>
                                   {rv.customerName}
                                 </span>
                                 <span style={{
-                                  padding: '3px 10px',
+                                  padding: '2px 8px',
                                   borderRadius: 12,
                                   background: rv.totalVisits >= 3 ? 'rgba(6,182,212,0.12)' : 'rgba(124,58,237,0.1)',
                                   color: rv.totalVisits >= 3 ? '#0891b2' : '#7c3aed',
-                                  fontWeight: 800,
-                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  fontSize: 11,
                                 }}>
                                   🔁 Visited {rv.totalVisits} Times
                                 </span>
                                 <span style={{
-                                  padding: '3px 10px',
+                                  padding: '2px 8px',
                                   borderRadius: 12,
                                   background: rv.converted ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
                                   color: rv.converted ? '#059669' : '#dc2626',
-                                  fontWeight: 800,
-                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  fontSize: 11,
                                 }}>
                                   {rv.converted ? '✓ Purchased' : '⏳ In Decision'}
                                 </span>
                               </div>
-                              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
-                                📱 {rv.mobile} · {rv.customerType} · Source: {rv.source}
+                              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4, display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
+                                <span>📱 {rv.mobile}</span>
+                                <span>·</span>
+                                <span>{rv.customerType}</span>
+                                <span>·</span>
+                                <span>Source: {rv.source}</span>
                               </div>
                             </div>
 
-                            <div style={{ textAlign: 'right' }}>
-                              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Latest Return Reason:</div>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: '#b45309', background: 'rgba(245,158,11,0.12)', padding: '2px 8px', borderRadius: 8, marginTop: 2 }}>
+                            <div style={{ textAlign: 'left', minWidth: 140 }}>
+                              <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Latest Return Reason:</div>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: '#b45309', background: 'rgba(245,158,11,0.12)', padding: '3px 8px', borderRadius: 8, marginTop: 2, display: 'inline-block' }}>
                                 {rv.latestRepeatReason}
                               </div>
                             </div>
                           </div>
 
                           {/* Chronological Visit Stepper Timeline */}
-                          <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: 10, border: '1px solid rgba(0,0,0,0.05)' }}>
+                          <div style={{ background: '#f8fafc', padding: '12px 14px', borderRadius: 10, border: '1px solid rgba(0,0,0,0.05)' }}>
                             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
                               Visit Timeline ({rv.totalVisits} Visits Logged):
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${rv.visits.length}, 1fr)`, gap: 12 }}>
+                            <div className="repeat-timeline-grid">
                               {rv.visits.map((v, idx) => (
                                 <div
                                   key={v.visitId}
                                   style={{
                                     background: '#ffffff',
-                                    padding: '10px 12px',
+                                    padding: '12px 14px',
                                     borderRadius: 8,
                                     border: '1px solid rgba(0,0,0,0.08)',
+                                    borderLeft: v.purchaseStatus === 'Purchased' ? '3px solid #10b981' : '3px solid #7c3aed',
                                     fontSize: 12,
                                   }}
                                 >
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                                    <span style={{ fontWeight: 800, color: '#7c3aed' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, gap: 8 }}>
+                                    <span style={{ fontWeight: 800, color: '#7c3aed', fontSize: 13 }}>
                                       Visit #{v.visitNumber || idx + 1}
                                     </span>
                                     <span style={{
                                       fontSize: 10,
                                       fontWeight: 700,
-                                      padding: '1px 6px',
+                                      padding: '2px 7px',
                                       borderRadius: 6,
                                       background: v.purchaseStatus === 'Purchased' ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
                                       color: v.purchaseStatus === 'Purchased' ? '#059669' : '#dc2626',
@@ -657,10 +662,10 @@ export default function Analytics() {
                                     </span>
                                   </div>
 
-                                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>
                                     📅 {new Date(v.date).toLocaleDateString('en-IN')}
                                   </div>
-                                  <div style={{ marginTop: 4 }}>
+                                  <div style={{ marginBottom: 4 }}>
                                     <strong>Purpose:</strong> {v.purpose}
                                   </div>
 
@@ -673,7 +678,7 @@ export default function Analytics() {
 
                                   {/* If visit 2 or 3 has a repeat reason */}
                                   {idx > 0 && v.repeatReason && (
-                                    <div style={{ color: '#b45309', fontWeight: 600, fontSize: 11, marginTop: 4 }}>
+                                    <div style={{ color: '#b45309', fontWeight: 600, fontSize: 11, marginTop: 4, background: 'rgba(245,158,11,0.08)', padding: '3px 6px', borderRadius: 6 }}>
                                       🔁 Why they came back: {v.repeatReason}
                                     </div>
                                   )}
@@ -684,7 +689,7 @@ export default function Analytics() {
                                     </div>
                                   )}
 
-                                  <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 6 }}>
+                                  <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 8, paddingTop: 4, borderTop: '1px solid rgba(0,0,0,0.04)' }}>
                                     Staff: {v.staffName}
                                   </div>
                                 </div>
@@ -714,7 +719,7 @@ export default function Analytics() {
                 {/* Total Visitors */}
                 <div className="stat-card" style={{ borderColor: 'rgba(124,58,237,0.2)' }}>
                   <div className="stat-icon" style={{ background: 'rgba(124,58,237,0.1)' }}>
-                    <MdPeople style={{ color: '#7c3aed', fontSize: 24 }} />
+                    <Users size={22} style={{ color: '#7c3aed' }} />
                   </div>
                   <div className="stat-info">
                     <div className="stat-value">{purchaseData?.totalVisits ?? 0}</div>
@@ -725,7 +730,7 @@ export default function Analytics() {
                 {/* Converted Customers */}
                 <div className="stat-card" style={{ borderColor: 'rgba(16,185,129,0.25)' }}>
                   <div className="stat-icon" style={{ background: 'rgba(16,185,129,0.12)' }}>
-                    <MdShoppingBag style={{ color: '#059669', fontSize: 24 }} />
+                    <ShoppingBag size={22} style={{ color: '#059669' }} />
                   </div>
                   <div className="stat-info">
                     <div className="stat-value" style={{ color: '#059669' }}>
@@ -756,7 +761,7 @@ export default function Analytics() {
                 {/* Not Purchased */}
                 <div className="stat-card" style={{ borderColor: 'rgba(239,68,68,0.25)' }}>
                   <div className="stat-icon" style={{ background: 'rgba(239,68,68,0.12)' }}>
-                    <MdCancel style={{ color: '#dc2626', fontSize: 24 }} />
+                    <XCircle size={22} style={{ color: '#dc2626' }} />
                   </div>
                   <div className="stat-info">
                     <div className="stat-value" style={{ color: '#dc2626' }}>
@@ -774,7 +779,7 @@ export default function Analytics() {
                 {/* Conversion Rate */}
                 <div className="stat-card" style={{ borderColor: 'rgba(6,182,212,0.25)' }}>
                   <div className="stat-icon" style={{ background: 'rgba(6,182,212,0.12)' }}>
-                    <MdTrendingUp style={{ color: '#0891b2', fontSize: 24 }} />
+                    <TrendingUp size={22} style={{ color: '#0891b2' }} />
                   </div>
                   <div className="stat-info">
                     <div className="stat-value" style={{ color: '#0891b2' }}>
@@ -943,20 +948,20 @@ export default function Analytics() {
 
               {/* Staff Conversion Comparison (Admin View) */}
               {purchaseData?.staffBreakdown?.length > 0 && (
-                <div className="card fade-in" style={{ marginBottom: 24 }}>
+                <div className="card fade-in" style={{ marginBottom: 24, width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
                   <div className="card-header">
                     <span className="card-title">👥 Staff Purchase Conversion Leaderboard</span>
                     <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{dateLabel}</span>
                   </div>
-                  <div className="table-responsive">
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                  <div className="table-wrapper" style={{ width: '100%', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                    <table style={{ width: '100%', minWidth: 540, borderCollapse: 'collapse', fontSize: 13 }}>
                       <thead>
                         <tr style={{ background: '#f8fafc', borderBottom: '2px solid rgba(124,58,237,0.1)' }}>
-                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: '#7c3aed' }}>Staff Member</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 700, color: '#7c3aed' }}>Visits Handled</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 700, color: '#059669' }}>Purchased</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 700, color: '#dc2626' }}>Not Purchased</th>
-                          <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 700, color: '#7c3aed' }}>Conversion Rate</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>Staff Member</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>Visits Handled</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 700, color: '#059669', whiteSpace: 'nowrap' }}>Purchased</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 700, color: '#dc2626', whiteSpace: 'nowrap' }}>Not Purchased</th>
+                          <th style={{ padding: '12px 16px', textAlign: 'center', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>Conversion Rate</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -991,7 +996,7 @@ export default function Analytics() {
               )}
 
               {/* Filterable Detailed Visits Table */}
-              <div className="card fade-in">
+              <div className="card fade-in" style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
                 <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
                   <div>
                     <span className="card-title">📋 Customer Visits & Purchase Outcome Log</span>
@@ -1000,15 +1005,15 @@ export default function Analytics() {
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                    <div style={{ position: 'relative', minWidth: 160 }}>
-                      <MdSearch style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: 16 }} />
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', width: '100%', maxWidth: 460 }}>
+                    <div style={{ position: 'relative', flex: '1 1 180px', minWidth: 150 }}>
+                      <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                       <input
                         className="form-control"
                         placeholder="Search name, phone..."
                         value={visitSearch}
                         onChange={(e) => setVisitSearch(e.target.value)}
-                        style={{ paddingLeft: 30, height: 34, fontSize: 12 }}
+                        style={{ paddingLeft: 30, height: 36, fontSize: 12, width: '100%' }}
                       />
                     </div>
 
@@ -1016,7 +1021,7 @@ export default function Analytics() {
                       className="form-control"
                       value={visitStatusFilter}
                       onChange={(e) => setVisitStatusFilter(e.target.value)}
-                      style={{ height: 34, fontSize: 12, width: 140 }}
+                      style={{ height: 36, fontSize: 12, flex: '1 1 130px', minWidth: 130 }}
                     >
                       <option value="all">All Outcomes</option>
                       <option value="Purchased">Purchased</option>
@@ -1027,7 +1032,7 @@ export default function Analytics() {
                       className="form-control"
                       value={visitSourceFilter}
                       onChange={(e) => setVisitSourceFilter(e.target.value)}
-                      style={{ height: 34, fontSize: 12, width: 160 }}
+                      style={{ height: 36, fontSize: 12, flex: '1 1 140px', minWidth: 140 }}
                     >
                       <option value="all">All Sources</option>
                       <option value="Social Media">Social Media</option>
@@ -1040,34 +1045,34 @@ export default function Analytics() {
                   </div>
                 </div>
 
-                <div className="table-responsive">
+                <div className="table-wrapper" style={{ width: '100%', maxWidth: '100%', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                   {filteredVisits.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
                       No customer visits match the selected filter.
                     </div>
                   ) : (
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                    <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse', fontSize: 13 }}>
                       <thead>
                         <tr style={{ background: '#f8fafc', borderBottom: '2px solid rgba(124,58,237,0.1)' }}>
-                          <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#7c3aed' }}>Customer</th>
-                          <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: '#7c3aed' }}>Date</th>
-                          <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#7c3aed' }}>Lead Source</th>
-                          <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: '#7c3aed' }}>Status</th>
-                          <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#7c3aed' }}>Reason (If Not Purchased)</th>
-                          <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#7c3aed' }}>Staff</th>
+                          <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>Customer</th>
+                          <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>Date</th>
+                          <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>Lead Source</th>
+                          <th style={{ padding: '10px 14px', textAlign: 'center', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>Status</th>
+                          <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>Reason (If Not Purchased)</th>
+                          <th style={{ padding: '10px 14px', textAlign: 'left', fontWeight: 700, color: '#7c3aed', whiteSpace: 'nowrap' }}>Staff</th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredVisits.map((v, idx) => (
                           <tr key={v._id} style={{ borderBottom: '1px solid rgba(0,0,0,0.05)', background: idx % 2 === 0 ? '#ffffff' : '#fafafa' }}>
-                            <td style={{ padding: '10px 14px' }}>
+                            <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                               <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{v.customer?.name || 'Customer'}</div>
                               <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{v.customer?.mobile || '—'} · {v.customer?.customerType || ''}</div>
                             </td>
-                            <td style={{ padding: '10px 14px', textAlign: 'center', fontSize: 12, color: 'var(--text-muted)' }}>
+                            <td style={{ padding: '10px 14px', textAlign: 'center', fontSize: 12, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                               {new Date(v.visitDate || v.createdAt).toLocaleDateString('en-IN')}
                             </td>
-                            <td style={{ padding: '10px 14px' }}>
+                            <td style={{ padding: '10px 14px', whiteSpace: 'nowrap' }}>
                               <span style={{
                                 display: 'inline-block',
                                 padding: '3px 10px',
@@ -1080,7 +1085,7 @@ export default function Analytics() {
                                 {v.source || 'Walk-in / Signboard'}
                               </span>
                             </td>
-                            <td style={{ padding: '10px 14px', textAlign: 'center' }}>
+                            <td style={{ padding: '10px 14px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                               <span style={{
                                 display: 'inline-block',
                                 padding: '4px 12px',
@@ -1094,10 +1099,10 @@ export default function Analytics() {
                                 {v.purchaseStatus === 'Purchased' ? '✓ Purchased' : '✗ Not Purchased'}
                               </span>
                             </td>
-                            <td style={{ padding: '10px 14px', color: v.nonPurchaseReason ? '#dc2626' : 'var(--text-muted)', fontWeight: v.nonPurchaseReason ? 600 : 400 }}>
+                            <td style={{ padding: '10px 14px', color: v.nonPurchaseReason ? '#dc2626' : 'var(--text-muted)', fontWeight: v.nonPurchaseReason ? 600 : 400, whiteSpace: 'nowrap' }}>
                               {v.nonPurchaseReason || (v.purchaseStatus === 'Purchased' ? '—' : 'Not specified')}
                             </td>
-                            <td style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-secondary)' }}>
+                            <td style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
                               {v.staff?.name || '—'}
                             </td>
                           </tr>
@@ -1224,17 +1229,60 @@ export default function Analytics() {
                       <span className="card-title">⚠️ Complaint Categories</span>
                       <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{dateLabel}</span>
                     </div>
-                    <div className="card-body chart-container">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie data={complaintCats} dataKey="count" nameKey="_id" cx="50%" cy="50%" outerRadius={85} label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}>
-                            {complaintCats.map((_, i) => (
-                              <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip content={<CustomTooltip />} />
-                        </PieChart>
-                      </ResponsiveContainer>
+                    <div className="complaint-categories-body">
+                      {/* Donut Chart */}
+                      <div className="complaint-pie-col">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={complaintCats}
+                              dataKey="count"
+                              nameKey="_id"
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={46}
+                              outerRadius={76}
+                              paddingAngle={3}
+                              label={({ percent }) => (percent >= 0.08 ? `${(percent * 100).toFixed(0)}%` : '')}
+                              labelLine={false}
+                            >
+                              {complaintCats.map((_, i) => (
+                                <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip content={<CustomTooltip />} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+
+                      {/* Legend Breakdown List: Side-by-side on desktop, wrapped on mobile */}
+                      <div className="complaint-legend-col">
+                        {complaintCats.map((cat, i) => {
+                          const totalComplaints = complaintCats.reduce((sum, c) => sum + (c.count || 0), 0);
+                          const pct = totalComplaints > 0 ? Math.round(((cat.count || 0) / totalComplaints) * 100) : 0;
+                          return (
+                            <div key={cat._id} className="complaint-legend-item">
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                                <span
+                                  style={{
+                                    width: 10,
+                                    height: 10,
+                                    borderRadius: '50%',
+                                    background: COLORS[i % COLORS.length],
+                                    flexShrink: 0,
+                                  }}
+                                />
+                                <span style={{ fontWeight: 600, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                  {cat._id}
+                                </span>
+                              </div>
+                              <span style={{ color: 'var(--text-muted)', fontWeight: 700, flexShrink: 0 }}>
+                                {cat.count} <span style={{ fontWeight: 500, fontSize: 11 }}>({pct}%)</span>
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 )}

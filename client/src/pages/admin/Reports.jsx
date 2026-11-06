@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Topbar from '../../components/Topbar';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
-import { MdFileDownload, MdFilterList, MdPictureAsPdf, MdTableChart } from 'react-icons/md';
+import { Download, Filter, FileText, FileSpreadsheet } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -187,7 +187,7 @@ export default function Reports() {
           {/* Filter Panel */}
           <div className="card fade-in">
             <div className="card-header">
-              <span className="card-title"><MdFilterList /> Filter Options</span>
+              <span className="card-title"><Filter size={16} /> Filter Options</span>
             </div>
             <div className="card-body">
               <div className="form-group">
@@ -230,7 +230,7 @@ export default function Reports() {
                   style={{ justifyContent: 'center', padding: '12px 10px', fontSize: 14, gap: 6 }}
                   onClick={handleExcelExport}
                   disabled={loadingXlsx || loadingPdf}>
-                  <MdTableChart style={{ fontSize: 18 }} />
+                  <FileSpreadsheet size={18} />
                   {loadingXlsx ? 'Generating…' : 'Export Excel'}
                 </button>
 
@@ -246,7 +246,7 @@ export default function Reports() {
                   }}
                   onClick={handlePdfExport}
                   disabled={loadingPdf || loadingXlsx}>
-                  <MdPictureAsPdf style={{ fontSize: 18 }} />
+                  <FileText size={18} />
                   {loadingPdf ? 'Generating…' : 'Export PDF'}
                 </button>
               </div>

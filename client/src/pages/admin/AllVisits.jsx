@@ -3,7 +3,21 @@ import Topbar from '../../components/Topbar';
 import { LoadingSpinner, EmptyState } from '../../components/UI';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
-import { MdSearch, MdRefresh, MdFilterList, MdWhatsapp, MdOpenInNew, MdContentCopy, MdTableChart, MdPictureAsPdf, MdPerson, MdShoppingCart, MdDateRange, MdAccessTime, MdClose } from 'react-icons/md';
+import {
+  Search,
+  RefreshCw,
+  Filter,
+  MessageCircle,
+  ExternalLink,
+  Copy,
+  FileSpreadsheet,
+  FileText,
+  User,
+  ShoppingCart,
+  Calendar,
+  Clock,
+  X,
+} from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -208,7 +222,7 @@ export default function AllVisits() {
 
   return (
     <>
-      <Topbar title="All Customer Visits" subtitle="Admin view — all staff visit records with filters and complaint tracking" />
+      <Topbar title="All Customer Visits" subtitle="Track all customer showroom visits" />
       <div className="page-content">
 
         {/* Summary Cards */}
@@ -239,7 +253,7 @@ export default function AllVisits() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: 'var(--accent-purple, #7c3aed)'
               }}>
-                <MdFilterList style={{ fontSize: 20 }} />
+                <Filter size={18} />
               </div>
               <div>
                 <strong style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)' }}>Filter Visits</strong>
@@ -253,21 +267,21 @@ export default function AllVisits() {
                 onClick={handleCsvExport}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, borderRadius: 8, height: 34, fontWeight: 600 }}
               >
-                <MdTableChart style={{ fontSize: 15 }} /> CSV
+                <FileSpreadsheet size={15} /> CSV
               </button>
               <button
                 className="btn btn-sm btn-outline"
                 onClick={handlePdfExport}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, borderRadius: 8, height: 34, fontWeight: 600, borderColor: 'rgba(124,58,237,0.3)', color: '#7c3aed' }}
               >
-                <MdPictureAsPdf style={{ fontSize: 15 }} /> PDF
+                <FileText size={15} /> PDF
               </button>
               <button
                 className="btn btn-ghost btn-sm"
                 onClick={resetFilters}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12, borderRadius: 8, height: 34, color: 'var(--text-muted)' }}
               >
-                <MdRefresh style={{ fontSize: 15 }} /> Reset
+                <RefreshCw size={14} /> Reset
               </button>
             </div>
           </div>
@@ -287,7 +301,7 @@ export default function AllVisits() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 5, marginRight: 4 }}>
-                <MdAccessTime style={{ color: 'var(--accent-purple)', fontSize: 14 }} /> Quick:
+                <Clock size={14} style={{ color: 'var(--accent-purple)' }} /> Quick:
               </span>
               {[
                 { id: 'today', label: 'Today' },
@@ -341,10 +355,10 @@ export default function AllVisits() {
                   gap: 5
                 }}
               >
-                <MdSearch style={{ color: 'var(--accent-purple)', fontSize: 13 }} /> Search Customer
+                <Search size={13} style={{ color: 'var(--accent-purple)' }} /> Search Customer
               </label>
               <div style={{ position: 'relative' }}>
-                <MdSearch style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: 16 }} />
+                <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                 <input
                   className="form-control"
                   style={{
@@ -379,7 +393,7 @@ export default function AllVisits() {
                     }}
                     title="Clear search"
                   >
-                    <MdClose style={{ fontSize: 14 }} />
+                    <X size={14} />
                   </button>
                 )}
               </div>
@@ -401,7 +415,7 @@ export default function AllVisits() {
                   gap: 5
                 }}
               >
-                <MdPerson style={{ color: 'var(--accent-purple)', fontSize: 13 }} /> Staff Member
+                <User size={13} style={{ color: 'var(--accent-purple)' }} /> Staff Member
               </label>
               <select
                 className="form-control"
@@ -437,7 +451,7 @@ export default function AllVisits() {
                   gap: 5
                 }}
               >
-                <MdShoppingCart style={{ color: 'var(--accent-purple)', fontSize: 13 }} /> Purchase Status
+                <ShoppingCart size={13} style={{ color: 'var(--accent-purple)' }} /> Purchase Status
               </label>
               <select
                 className="form-control"
@@ -475,7 +489,7 @@ export default function AllVisits() {
                   gap: 5
                 }}
               >
-                <MdDateRange style={{ color: 'var(--accent-purple)', fontSize: 13 }} /> From Date
+                <Calendar size={13} style={{ color: 'var(--accent-purple)' }} /> From Date
               </label>
               <input
                 type="date"
@@ -509,7 +523,7 @@ export default function AllVisits() {
                   gap: 5
                 }}
               >
-                <MdDateRange style={{ color: 'var(--accent-purple)', fontSize: 13 }} /> To Date
+                <Calendar size={13} style={{ color: 'var(--accent-purple)' }} /> To Date
               </label>
               <input
                 type="date"
@@ -568,7 +582,7 @@ export default function AllVisits() {
           <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
             <span className="card-title">🗂️ Visit Records ({total})</span>
             <button className="btn btn-ghost btn-sm" onClick={fetchVisits} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12 }}>
-              <MdRefresh /> Refresh
+              <RefreshCw size={14} /> Refresh
             </button>
           </div>
 
@@ -815,14 +829,14 @@ export default function AllVisits() {
                           style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg, #25d366, #128c7e)', fontSize: 12 }}
                           onClick={() => openWhatsApp(selected.customer?.mobile, link, selected.customer?.name)}
                         >
-                          <MdWhatsapp style={{ fontSize: 15 }} /> Send via WhatsApp
+                          <MessageCircle size={15} /> Send via WhatsApp
                         </button>
                         <button
                           className="btn btn-outline btn-sm"
                           style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}
                           onClick={() => copyLink(link)}
                         >
-                          <MdContentCopy style={{ fontSize: 13 }} /> Copy Link
+                          <Copy size={13} /> Copy Link
                         </button>
                         <a
                           href={link}
@@ -831,7 +845,7 @@ export default function AllVisits() {
                           className="btn btn-ghost btn-sm"
                           style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none', fontSize: 12 }}
                         >
-                          <MdOpenInNew style={{ fontSize: 14 }} /> Preview Form
+                          <ExternalLink size={14} /> Preview Form
                         </a>
                       </div>
                     );

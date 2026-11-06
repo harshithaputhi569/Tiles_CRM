@@ -3,9 +3,9 @@ import { useNavigate, Link } from 'react-router-dom';
 import Topbar from '../../components/Topbar';
 import { StatCard, LoadingSpinner, RatingBadge } from '../../components/UI';
 import {
-  MdPeople, MdFeedback, MdWarning, MdStar, MdTrendingUp, MdCheckCircle,
-  MdPending, MdPeopleAlt, MdShoppingBag, MdCancel
-} from 'react-icons/md';
+  Users, MessageSquare, AlertTriangle, Star, TrendingUp, CheckCircle,
+  UserCheck, ShoppingBag, XCircle
+} from 'lucide-react';
 import {
   BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
@@ -88,26 +88,26 @@ export default function AdminDashboard() {
 
         {/* Stat Cards */}
         <div className="stats-grid">
-          <StatCard icon={<MdPeopleAlt />} label="Unique Customers" value={metrics?.totalCustomers}
+          <StatCard icon={<Users size={20} />} label="Unique Customers" value={metrics?.totalCustomers}
             iconBg="rgba(124,58,237,0.15)" iconColor="#a78bfa" />
-          <StatCard icon={<MdPeople />} label="Total Visits" value={metrics?.totalVisits}
+          <StatCard icon={<UserCheck size={20} />} label="Total Visits" value={metrics?.totalVisits}
             iconBg="rgba(6,182,212,0.15)" iconColor="#22d3ee" />
-          <StatCard icon={<MdShoppingBag />} label="Converted Customers" value={metrics?.convertedCustomersCount ?? metrics?.purchasedVisits ?? 0}
+          <StatCard icon={<ShoppingBag size={20} />} label="Converted Customers" value={metrics?.convertedCustomersCount ?? metrics?.purchasedVisits ?? 0}
             iconBg="rgba(16,185,129,0.15)" iconColor="#059669" />
-          <StatCard icon={<MdCancel />} label="Not Purchased" value={metrics?.notPurchasedVisits ?? 0}
+          <StatCard icon={<XCircle size={20} />} label="Not Purchased" value={metrics?.notPurchasedVisits ?? 0}
             iconBg="rgba(239,68,68,0.15)" iconColor="#dc2626" />
-          <StatCard icon={<MdTrendingUp />} label="Conversion Rate"
+          <StatCard icon={<TrendingUp size={20} />} label="Conversion Rate"
             value={`${metrics?.conversionRate ?? 0}%`}
             iconBg="rgba(16,185,129,0.15)" iconColor="#34d399" />
           <div onClick={() => navigate('/admin/feedback')} style={{ cursor: 'pointer' }} title="Click to open Customer Feedback Module">
-            <StatCard icon={<MdFeedback />} label="Total Feedback" value={metrics?.totalFeedback}
+            <StatCard icon={<MessageSquare size={20} />} label="Total Feedback" value={metrics?.totalFeedback}
               iconBg="rgba(16,185,129,0.15)" iconColor="#34d399" />
           </div>
-          <StatCard icon={<MdStar />} label="Avg. Rating"
+          <StatCard icon={<Star size={20} />} label="Avg. Rating"
             value={<span style={{ fontSize: 22 }}>{metrics?.avgRating} <span style={{ fontSize: 16 }}>/ 5</span></span>}
             iconBg="rgba(245,158,11,0.15)" iconColor="#fbbf24" />
           <div onClick={() => navigate('/admin/complaints')} style={{ cursor: 'pointer' }} title="Click to view Complaints Report & Date Filters">
-            <StatCard icon={<MdWarning />} label="Complaints" value={metrics?.totalComplaints}
+            <StatCard icon={<AlertTriangle size={20} />} label="Complaints" value={metrics?.totalComplaints}
               iconBg="rgba(239,68,68,0.15)" iconColor="#f87171" />
           </div>
         </div>

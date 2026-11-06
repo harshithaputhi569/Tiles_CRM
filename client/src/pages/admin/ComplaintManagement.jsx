@@ -4,9 +4,9 @@ import { LoadingSpinner, EmptyState, StatusBadge } from '../../components/UI';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 import {
-  MdFilterList, MdFileDownload, MdCalendarToday, MdClear,
-  MdPictureAsPdf, MdTableChart, MdRefresh
-} from 'react-icons/md';
+  Filter, Download, Calendar, X,
+  FileText, FileSpreadsheet, RefreshCw
+} from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -273,7 +273,7 @@ export default function ComplaintManagement() {
                 style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
                 title="Export filtered complaints report to CSV"
               >
-                <MdTableChart /> Export CSV
+                <FileSpreadsheet size={15} /> Export CSV
               </button>
               <button
                 className="btn btn-sm btn-outline"
@@ -284,7 +284,7 @@ export default function ComplaintManagement() {
                 }}
                 title="Export filtered complaints report to PDF"
               >
-                <MdPictureAsPdf /> Export PDF
+                <FileText size={15} /> Export PDF
               </button>
               {hasActiveFilters && (
                 <button
@@ -292,7 +292,7 @@ export default function ComplaintManagement() {
                   onClick={clearAllFilters}
                   style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: 'var(--text-muted)' }}
                 >
-                  <MdClear /> Reset Filters
+                  <X size={14} /> Reset Filters
                 </button>
               )}
             </div>
@@ -335,7 +335,7 @@ export default function ComplaintManagement() {
           }}>
             <div className="form-group" style={{ margin: 0 }}>
               <label className="form-label" style={{ fontSize: 11, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
-                <MdCalendarToday style={{ fontSize: 12 }} /> Start Date (From)
+                <Calendar size={12} /> Start Date (From)
               </label>
               <input
                 type="date"
@@ -348,7 +348,7 @@ export default function ComplaintManagement() {
 
             <div className="form-group" style={{ margin: 0 }}>
               <label className="form-label" style={{ fontSize: 11, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
-                <MdCalendarToday style={{ fontSize: 12 }} /> End Date (To)
+                <Calendar size={12} /> End Date (To)
               </label>
               <input
                 type="date"

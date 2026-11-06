@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Topbar from '../../components/Topbar';
 import { LoadingSpinner, EmptyState, StatusBadge } from '../../components/UI';
-import { MdAdd, MdEdit, MdDelete, MdPersonOff, MdCheckCircle, MdSearch, MdPeople } from 'react-icons/md';
+import { Plus, Pencil, Trash2, UserX, CheckCircle, Search, Users } from 'lucide-react';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 
@@ -176,9 +176,9 @@ export default function StaffManagement() {
         {/* ── Stats strip ── */}
         <div className="staff-stats-strip">
           {[
-            { label: 'Total Staff', value: staff.length,  color: '#7c3aed', bg: 'rgba(124,58,237,0.09)', border: 'rgba(124,58,237,0.2)',  icon: <MdPeople style={{ color: '#7c3aed', fontSize: 22 }} /> },
-            { label: 'Active',      value: activeCount,   color: '#059669', bg: 'rgba(5,150,105,0.09)',  border: 'rgba(5,150,105,0.2)',   icon: <MdPeople style={{ color: '#059669', fontSize: 22 }} /> },
-            { label: 'Inactive',    value: inactiveCount, color: '#dc2626', bg: 'rgba(220,38,38,0.09)',  border: 'rgba(220,38,38,0.2)',   icon: <MdPersonOff style={{ color: '#dc2626', fontSize: 22 }} /> },
+            { label: 'Total Staff', value: staff.length,  color: '#7c3aed', bg: 'rgba(124,58,237,0.09)', border: 'rgba(124,58,237,0.2)',  icon: <Users size={20} color="#7c3aed" /> },
+            { label: 'Active',      value: activeCount,   color: '#059669', bg: 'rgba(5,150,105,0.09)',  border: 'rgba(5,150,105,0.2)',   icon: <Users size={20} color="#059669" /> },
+            { label: 'Inactive',    value: inactiveCount, color: '#dc2626', bg: 'rgba(220,38,38,0.09)',  border: 'rgba(220,38,38,0.2)',   icon: <UserX size={20} color="#dc2626" /> },
           ].map(s => (
             <div key={s.label} className="staff-stat-card" style={{ borderColor: s.border }}>
               <div className="staff-stat-icon" style={{ background: s.bg }}>
@@ -204,9 +204,9 @@ export default function StaffManagement() {
 
             <div className="staff-toolbar-actions">
               <div style={{ position: 'relative', flex: '1 1 160px', minWidth: 140 }}>
-                <MdSearch style={{
+                <Search size={15} style={{
                   position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)',
-                  color: 'var(--text-muted)', fontSize: 17, pointerEvents: 'none',
+                  color: 'var(--text-muted)', pointerEvents: 'none',
                 }} />
                 <input className="form-control"
                   style={{ paddingLeft: 32, height: 36, fontSize: 13, width: '100%' }}
@@ -227,7 +227,7 @@ export default function StaffManagement() {
               <button className="btn btn-primary"
                 style={{ height: 36, padding: '0 16px', fontSize: 13, flexShrink: 0 }}
                 onClick={openAdd}>
-                <MdAdd /> Add Staff
+                <Plus size={16} /> Add Staff
               </button>
             </div>
           </div>
@@ -331,17 +331,17 @@ export default function StaffManagement() {
                         <td style={cell({ background: bg })}>
                           <div style={{ display: 'flex', gap: 5, justifyContent: 'center', alignItems: 'center' }}>
                             <button className="btn btn-ghost btn-sm btn-icon" title="Edit" onClick={() => openEdit(s)}>
-                              <MdEdit />
+                              <Pencil size={14} />
                             </button>
                             <button
                               className={`btn btn-sm btn-icon ${s.isActive ? 'btn-danger' : 'btn-outline'}`}
                               title={s.isActive ? 'Deactivate' : 'Activate'}
                               onClick={() => toggleActive(s)}
                             >
-                              {s.isActive ? <MdPersonOff /> : <MdCheckCircle />}
+                              {s.isActive ? <UserX size={14} /> : <CheckCircle size={14} />}
                             </button>
                             <button className="btn btn-danger btn-sm btn-icon" title="Delete" onClick={() => handleDelete(s._id)}>
-                              <MdDelete />
+                              <Trash2 size={14} />
                             </button>
                           </div>
                         </td>

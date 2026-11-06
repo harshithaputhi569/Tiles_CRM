@@ -5,29 +5,27 @@ import { useNotifications } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import {
-  MdNotifications,
-  MdFeedback,
-  MdWarning,
-  MdDoneAll,
-  MdCheckCircle,
-  MdRefresh,
-  MdDeleteOutline,
-  MdStar,
-  MdPhone,
-  MdPerson,
-  MdPersonAdd,
-  MdAutorenew,
-  MdCalendarToday,
-  MdFilterList,
-  MdSearch,
-  MdOutlineRateReview,
-  MdShoppingBag,
-  MdContentCopy,
-  MdOpenInNew,
-  MdLocationOn,
-  MdInventory2,
-  MdDeleteSweep,
-} from 'react-icons/md';
+  Bell,
+  MessageSquare,
+  AlertTriangle,
+  CheckCheck,
+  CheckCircle,
+  RefreshCw,
+  Trash2,
+  Star,
+  Phone,
+  User,
+  UserPlus,
+  Calendar,
+  Filter,
+  Search,
+  MessageSquareQuote,
+  ShoppingBag,
+  Copy,
+  ExternalLink,
+  MapPin,
+  Package,
+} from 'lucide-react';
 
 const RATING_LABELS = {
   behaviour: 'Staff Behaviour',
@@ -154,7 +152,7 @@ export default function NotificationsPage() {
         <div className="stats-grid" style={{ marginBottom: 24 }}>
           <div className="stat-card">
             <div className="stat-icon" style={{ background: 'rgba(124,58,237,0.12)', color: '#7c3aed' }}>
-              <MdNotifications />
+              <Bell size={20} />
             </div>
             <div>
               <div className="stat-value">{totalCount}</div>
@@ -164,7 +162,7 @@ export default function NotificationsPage() {
 
           <div className="stat-card">
             <div className="stat-icon" style={{ background: 'rgba(6,182,212,0.12)', color: '#0891b2' }}>
-              <MdPersonAdd />
+              <UserPlus size={20} />
             </div>
             <div>
               <div className="stat-value" style={{ color: '#0891b2' }}>{visitCount}</div>
@@ -174,7 +172,7 @@ export default function NotificationsPage() {
 
           <div className="stat-card">
             <div className="stat-icon" style={{ background: 'rgba(16,185,129,0.12)', color: '#10b981' }}>
-              <MdFeedback />
+              <MessageSquare size={20} />
             </div>
             <div>
               <div className="stat-value">{feedbackCount}</div>
@@ -184,7 +182,7 @@ export default function NotificationsPage() {
 
           <div className="stat-card">
             <div className="stat-icon" style={{ background: 'rgba(239,68,68,0.12)', color: '#dc2626' }}>
-              <MdWarning />
+              <AlertTriangle size={20} />
             </div>
             <div>
               <div className="stat-value" style={{ color: complaintCount > 0 ? '#dc2626' : 'inherit' }}>
@@ -254,14 +252,14 @@ export default function NotificationsPage() {
           {/* Search & Actions */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
             <div style={{ position: 'relative', minWidth: 220 }}>
-              <MdSearch
+              <Search
+                size={16}
                 style={{
                   position: 'absolute',
                   left: 10,
                   top: '50%',
                   transform: 'translateY(-50%)',
                   color: 'var(--text-muted)',
-                  fontSize: 18,
                 }}
               />
               <input
@@ -281,7 +279,7 @@ export default function NotificationsPage() {
                 title="Mark all notifications as read"
                 style={{ display: 'flex', alignItems: 'center', gap: 6 }}
               >
-                <MdDoneAll /> Mark all as read
+                <CheckCheck size={16} /> Mark all as read
               </button>
             )}
 
@@ -296,7 +294,7 @@ export default function NotificationsPage() {
                 title="Clear all notifications"
                 style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#ef4444' }}
               >
-                <MdDeleteSweep style={{ fontSize: 18 }} /> Clear all
+                <Trash2 size={16} /> Clear all
               </button>
             )}
 
@@ -307,7 +305,7 @@ export default function NotificationsPage() {
                 style={{ display: 'flex', alignItems: 'center', gap: 6 }}
                 title="Register a new customer visit"
               >
-                <MdPersonAdd /> + Register Visit
+                <UserPlus size={16} /> + Register Visit
               </Link>
             )}
 
@@ -317,7 +315,7 @@ export default function NotificationsPage() {
               title="Refresh notifications"
               style={{ padding: '6px 10px' }}
             >
-              <MdRefresh style={{ fontSize: 18 }} />
+              <RefreshCw size={16} />
             </button>
           </div>
         </div>
@@ -413,15 +411,15 @@ export default function NotificationsPage() {
                         }}
                       >
                         {isComplaint ? (
-                          <MdWarning />
+                          <AlertTriangle size={14} />
                         ) : isVisit ? (
                           meta.isRepeatVisit ? (
-                            <MdAutorenew />
+                            <RefreshCw size={14} />
                           ) : (
-                            <MdPersonAdd />
+                            <UserPlus size={14} />
                           )
                         ) : (
-                          <MdStar />
+                          <Star size={14} />
                         )}
                         {isComplaint
                           ? 'Customer Complaint'
@@ -479,7 +477,7 @@ export default function NotificationsPage() {
                           style={{ fontSize: 12, color: 'var(--primary)' }}
                           title="Mark as read"
                         >
-                          <MdCheckCircle style={{ marginRight: 4 }} /> Mark Read
+                          <CheckCircle size={14} style={{ marginRight: 4 }} /> Mark Read
                         </button>
                       )}
                       <button
@@ -488,7 +486,7 @@ export default function NotificationsPage() {
                         style={{ color: 'var(--text-muted)' }}
                         title="Remove notification"
                       >
-                        <MdDeleteOutline style={{ fontSize: 16 }} />
+                        <Trash2 size={15} />
                       </button>
                     </div>
                   </div>
@@ -521,12 +519,12 @@ export default function NotificationsPage() {
                         Customer
                       </div>
                       <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <MdPerson style={{ color: 'var(--primary)' }} />
+                        <User size={14} style={{ color: 'var(--primary)' }} />
                         {meta.customerName || 'Customer'}
                       </div>
                       {meta.customerMobile && (
                         <div style={{ fontSize: 12, color: '#0891b2', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600 }}>
-                          <MdPhone />
+                          <Phone size={13} />
                           <a href={`tel:${meta.customerMobile}`} style={{ color: 'inherit', textDecoration: 'none' }}>
                             {meta.customerMobile}
                           </a>
@@ -534,7 +532,7 @@ export default function NotificationsPage() {
                       )}
                       {meta.address && (
                         <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <MdLocationOn style={{ fontSize: 12 }} />
+                          <MapPin size={12} />
                           {meta.address}
                         </div>
                       )}
@@ -559,7 +557,7 @@ export default function NotificationsPage() {
                         Visit Date & Purpose
                       </div>
                       <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <MdCalendarToday style={{ color: 'var(--text-muted)', fontSize: 12 }} />
+                        <Calendar size={13} style={{ color: 'var(--text-muted)' }} />
                         {meta.visitDate
                           ? new Date(meta.visitDate).toLocaleDateString('en-IN', {
                               day: 'numeric',
@@ -842,7 +840,7 @@ export default function NotificationsPage() {
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, color: '#dc2626', fontSize: 13 }}>
-                          <MdWarning /> Complaint Category: {meta.complaintCategory || 'Other'}
+                          <AlertTriangle size={14} /> Complaint Category: {meta.complaintCategory || 'Other'}
                         </div>
                         {user?.role === 'admin' && (
                           <Link
@@ -882,7 +880,7 @@ export default function NotificationsPage() {
                           className="btn btn-xs btn-primary"
                           style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}
                         >
-                          <MdPerson /> View Customer Visit Details →
+                          <User size={13} /> View Customer Visit Details →
                         </Link>
                       ) : (
                         <Link
@@ -890,7 +888,7 @@ export default function NotificationsPage() {
                           className="btn btn-xs btn-primary"
                           style={{ fontSize: 12, display: 'inline-flex', alignItems: 'center', gap: 4 }}
                         >
-                          <MdOutlineRateReview /> View Feedback Details →
+                          <MessageSquareQuote size={13} /> View Feedback Details →
                         </Link>
                       )}
 
@@ -901,7 +899,7 @@ export default function NotificationsPage() {
                           onClick={() => copyToClipboard(meta.feedbackLink, 'Customer Feedback Link')}
                           style={{ fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}
                         >
-                          <MdContentCopy /> Copy Feedback Link
+                          <Copy size={13} /> Copy Feedback Link
                         </button>
                       )}
                     </div>

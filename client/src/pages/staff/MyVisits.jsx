@@ -3,7 +3,17 @@ import Topbar from '../../components/Topbar';
 import { LoadingSpinner, EmptyState, StatusBadge } from '../../components/UI';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
-import { MdSearch, MdRefresh, MdWhatsapp, MdOpenInNew, MdContentCopy, MdFilterList, MdShoppingCart, MdDateRange, MdAccessTime, MdClose } from 'react-icons/md';
+import {
+  Search,
+  RefreshCw,
+  MessageCircle,
+  ExternalLink,
+  Copy,
+  ShoppingCart,
+  Calendar,
+  Clock,
+  X,
+} from 'lucide-react';
 
 const PURCHASE_COLORS = {
   Purchased: { bg: 'rgba(16,185,129,0.12)', color: '#059669', border: 'rgba(16,185,129,0.3)' },
@@ -147,7 +157,7 @@ export default function MyVisits() {
 
   return (
     <>
-      <Topbar title="My Customer Visits" subtitle="View your registered visits, send feedback links, and track complaint status" />
+      <Topbar title="My Customer Visits" subtitle="Track visits & customer feedback" />
       <div className="page-content">
 
         {/* Summary Stats */}
@@ -184,7 +194,7 @@ export default function MyVisits() {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 5, marginRight: 4 }}>
-                <MdAccessTime style={{ color: 'var(--accent-purple)', fontSize: 14 }} /> Date Range:
+                <Clock size={14} style={{ color: 'var(--accent-purple)' }} /> Date Range:
               </span>
               {[
                 { id: 'today', label: 'Today' },
@@ -237,10 +247,10 @@ export default function MyVisits() {
                   gap: 5
                 }}
               >
-                <MdSearch style={{ color: 'var(--accent-purple)', fontSize: 13 }} /> Search Customer
+                <Search size={13} style={{ color: 'var(--accent-purple)' }} /> Search Customer
               </label>
               <div style={{ position: 'relative' }}>
-                <MdSearch style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', fontSize: 16 }} />
+                <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                 <input
                   className="form-control"
                   style={{
@@ -275,7 +285,7 @@ export default function MyVisits() {
                     }}
                     title="Clear search"
                   >
-                    <MdClose style={{ fontSize: 14 }} />
+                    <X size={14} />
                   </button>
                 )}
               </div>
@@ -296,7 +306,7 @@ export default function MyVisits() {
                   gap: 5
                 }}
               >
-                <MdShoppingCart style={{ color: 'var(--accent-purple)', fontSize: 13 }} /> Purchase Status
+                <ShoppingCart size={13} style={{ color: 'var(--accent-purple)' }} /> Purchase Status
               </label>
               <select
                 className="form-control"
@@ -333,7 +343,7 @@ export default function MyVisits() {
                   gap: 5
                 }}
               >
-                <MdDateRange style={{ color: 'var(--accent-purple)', fontSize: 13 }} /> From Date
+                <Calendar size={13} style={{ color: 'var(--accent-purple)' }} /> From Date
               </label>
               <input
                 type="date"
@@ -366,7 +376,7 @@ export default function MyVisits() {
                   gap: 5
                 }}
               >
-                <MdDateRange style={{ color: 'var(--accent-purple)', fontSize: 13 }} /> To Date
+                <Calendar size={13} style={{ color: 'var(--accent-purple)' }} /> To Date
               </label>
               <input
                 type="date"
@@ -400,7 +410,7 @@ export default function MyVisits() {
                 }}
                 onClick={() => { setFilters({ search: '', purchaseStatus: '', startDate: getDaysAgoStr(30), endDate: getTodayStr(), preset: '30d' }); setPage(1); }}
               >
-                <MdRefresh style={{ fontSize: 15 }} /> Reset Filters
+                <RefreshCw size={14} /> Reset Filters
               </button>
             </div>
           </div>
@@ -411,7 +421,7 @@ export default function MyVisits() {
           <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
             <span className="card-title">📋 Visit Records ({total})</span>
             <button className="btn btn-ghost btn-sm" onClick={fetchVisits} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12 }}>
-              <MdRefresh /> Refresh
+              <RefreshCw size={14} /> Refresh
             </button>
           </div>
 
@@ -673,14 +683,14 @@ export default function MyVisits() {
                               selected.customer?.name
                             )}
                           >
-                            <MdWhatsapp style={{ fontSize: 16 }} /> Send via WhatsApp
+                            <MessageCircle size={15} /> Send via WhatsApp
                           </button>
                           <button
                             className="btn btn-outline btn-sm"
                             style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
                             onClick={() => copyLink(link)}
                           >
-                            <MdContentCopy style={{ fontSize: 14 }} /> Copy Link
+                            <Copy size={13} /> Copy Link
                           </button>
                           <a
                             href={link}
@@ -689,7 +699,7 @@ export default function MyVisits() {
                             className="btn btn-ghost btn-sm"
                             style={{ display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none', fontSize: 13 }}
                           >
-                            <MdOpenInNew style={{ fontSize: 14 }} /> Preview Form
+                            <ExternalLink size={14} /> Preview Form
                           </a>
                         </div>
                       );

@@ -1,23 +1,23 @@
-﻿import { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import Topbar from '../../components/Topbar';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
 import {
-  MdPersonAdd,
-  MdPersonSearch,
-  MdCheckCircle,
-  MdShoppingBag,
-  MdCancel,
-  MdWhatsapp,
-  MdVisibility,
-  MdContentCopy,
-  MdOpenInNew,
-  MdPhoneIphone,
-  MdCelebration,
-  MdContentPaste,
-  MdLanguage,
-  MdSettings,
-} from 'react-icons/md';
+  UserPlus,
+  UserSearch,
+  CheckCircle,
+  ShoppingBag,
+  XCircle,
+  MessageCircle,
+  Eye,
+  Copy,
+  ExternalLink,
+  Smartphone,
+  PartyPopper,
+  ClipboardCopy,
+  Globe,
+  Settings,
+} from 'lucide-react';
 
 const CUSTOMER_TYPES = [
   'New Customer',
@@ -289,7 +289,7 @@ export default function RegisterVisit() {
 
   return (
     <>
-      <Topbar title="Register Customer Visit" subtitle="Record customer visit, purchase status, sources & repeat visit reasons" />
+      <Topbar title="Register Customer Visit" subtitle="Record visit & customer details" />
       <div className="page-content">
         {/* Stepper */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 32, maxWidth: 640 }}>
@@ -390,7 +390,7 @@ export default function RegisterVisit() {
                         {customerHistory?.isRepeatVisitor ? (
                           <span style={{ fontSize: 20 }}>🔁</span>
                         ) : (
-                          <MdCheckCircle style={{ color: '#34d399', fontSize: 20 }} />
+                          <CheckCircle size={20} color="#34d399" />
                         )}
                         <span
                           style={{
@@ -521,7 +521,7 @@ export default function RegisterVisit() {
                       }}
                     >
                       <div style={{ fontSize: 12, color: '#a78bfa', fontWeight: 700 }}>
-                        <MdPersonSearch style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                        <UserSearch size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />
                         New Customer (Visit #1) — Please fill in their contact details
                       </div>
                     </div>
@@ -1011,7 +1011,7 @@ export default function RegisterVisit() {
                     ← Back
                   </button>
                   <button type="submit" className="btn btn-primary" disabled={saving}>
-                    <MdPersonAdd />
+                    <UserPlus size={16} />
                     {saving ? 'Registering...' : `Register Visit ${customerHistory?.isRepeatVisitor ? `#${customerHistory.nextVisitNumber}` : ''}`}
                   </button>
                 </div>
@@ -1170,7 +1170,7 @@ export default function RegisterVisit() {
                           fontSize: 12,
                           fontWeight: 700,
                         }}>
-                          <MdPhoneIphone style={{ fontSize: 14 }} /> {custName} ({cleanDigits.length === 10 ? `+91 ${cleanDigits}` : rawMobile})
+                          <Smartphone size={14} /> {custName} ({cleanDigits.length === 10 ? `+91 ${cleanDigits}` : rawMobile})
                         </span>
                       )}
                     </div>
@@ -1206,7 +1206,7 @@ export default function RegisterVisit() {
                             setShowDomainConfig(!showDomainConfig);
                           }}
                         >
-                          <MdLanguage /> Set Live Domain for Underline
+                          <Globe size={14} /> Set Live Domain for Underline
                         </button>
                       </div>
                     ) : (
@@ -1314,7 +1314,7 @@ export default function RegisterVisit() {
                           toast.success('Form link copied to clipboard!');
                         }}
                       >
-                        <MdContentCopy /> Copy Link
+                        <Copy size={14} /> Copy Link
                       </button>
                     </div>
 
@@ -1338,7 +1338,7 @@ export default function RegisterVisit() {
                         }}
                         title="Opens WhatsApp Web directly with full color emojis"
                       >
-                        <MdWhatsapp style={{ fontSize: 18 }} /> Send via WhatsApp
+                        <MessageCircle size={17} /> Send via WhatsApp
                       </a>
 
                       <button
@@ -1358,7 +1358,7 @@ export default function RegisterVisit() {
                         }}
                         title="Copy pre-formatted message with all emojis to paste into WhatsApp Desktop or Web"
                       >
-                        <MdContentPaste style={{ fontSize: 16 }} /> Copy WhatsApp Message
+                        <ClipboardCopy size={15} /> Copy WhatsApp Message
                       </button>
 
                       <button
@@ -1374,7 +1374,7 @@ export default function RegisterVisit() {
                         }}
                         onClick={() => setShowPreviewModal(true)}
                       >
-                        <MdVisibility style={{ fontSize: 16 }} /> Live Form Preview
+                        <Eye size={15} /> Live Form Preview
                       </button>
 
                       <a
@@ -1391,7 +1391,7 @@ export default function RegisterVisit() {
                           padding: '10px 14px',
                         }}
                       >
-                        <MdOpenInNew style={{ fontSize: 16 }} /> Open in New Tab
+                        <ExternalLink size={15} /> Open in New Tab
                       </a>
                     </div>
                   </div>
@@ -1408,7 +1408,7 @@ export default function RegisterVisit() {
 
               <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
                 <button className="btn btn-primary" onClick={reset}>
-                  <MdPersonAdd /> Register Another Visit
+                  <UserPlus size={16} /> Register Another Visit
                 </button>
               </div>
             </div>
@@ -1464,7 +1464,7 @@ export default function RegisterVisit() {
                     fontSize: 16,
                   }}
                 >
-                  <MdVisibility />
+                  <Eye size={16} />
                 </div>
                 <div>
                   <div style={{ fontWeight: 800, fontSize: 14 }}>Customer Feedback & Complaint Form Preview</div>
@@ -1481,7 +1481,7 @@ export default function RegisterVisit() {
                   className="btn btn-ghost btn-sm"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 12, textDecoration: 'none' }}
                 >
-                  <MdOpenInNew /> Open in Full Tab
+                  <ExternalLink size={14} /> Open in Full Tab
                 </a>
                 <button
                   type="button"

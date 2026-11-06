@@ -1,18 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  MdMenu,
-  MdNotifications,
-  MdCheck,
-  MdOpenInNew,
-  MdStar,
-  MdWarning,
-  MdPerson,
-  MdPersonAdd,
-  MdAutorenew,
-  MdDeleteSweep,
-  MdClose,
-} from 'react-icons/md';
+  Menu,
+  Bell,
+  Check,
+  ExternalLink,
+  Star,
+  AlertTriangle,
+  User,
+  UserPlus,
+  RefreshCw,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useSidebar } from '../context/SidebarContext';
 import { useNotifications } from '../context/NotificationContext';
 import { useAuth } from '../context/AuthContext';
@@ -104,20 +104,20 @@ export default function Topbar({ title, subtitle }) {
   const getNotifStyle = (n) => {
     if (n.type === 'complaint' || n.metadata?.hasComplaint) {
       return {
-        icon: <MdWarning />,
+        icon: <AlertTriangle size={16} />,
         bg: 'rgba(239,68,68,0.12)',
         color: '#dc2626',
       };
     }
     if (n.type === 'visit') {
       return {
-        icon: n.metadata?.isRepeatVisit ? <MdAutorenew /> : <MdPersonAdd />,
+        icon: n.metadata?.isRepeatVisit ? <RefreshCw size={16} /> : <UserPlus size={16} />,
         bg: n.metadata?.isRepeatVisit ? 'rgba(124,58,237,0.14)' : 'rgba(6,182,212,0.14)',
         color: n.metadata?.isRepeatVisit ? '#7c3aed' : '#0891b2',
       };
     }
     return {
-      icon: <MdStar />,
+      icon: <Star size={16} />,
       bg: 'rgba(245,158,11,0.12)',
       color: '#d97706',
     };
@@ -127,7 +127,7 @@ export default function Topbar({ title, subtitle }) {
     <header className="topbar">
       <div className="topbar-left">
         <button className="hamburger-btn" onClick={open} aria-label="Toggle sidebar menu">
-          <MdMenu />
+          <Menu size={20} />
         </button>
         <div>
           <div className="topbar-title">{title}</div>
@@ -158,7 +158,7 @@ export default function Topbar({ title, subtitle }) {
               transition: 'all 0.2s',
             }}
           >
-            <MdNotifications style={{ fontSize: 20 }} />
+            <Bell size={18} />
             {unreadCount > 0 && (
               <span
                 style={{
@@ -248,7 +248,7 @@ export default function Topbar({ title, subtitle }) {
                       }}
                       title="Mark all notifications as read"
                     >
-                      <MdCheck /> Mark all read
+                      <Check size={14} /> Mark all read
                     </button>
                   )}
                   {liveNotifications.length > 0 && (
@@ -273,7 +273,7 @@ export default function Topbar({ title, subtitle }) {
                       }}
                       title="Clear all notifications"
                     >
-                      <MdDeleteSweep style={{ fontSize: 16 }} /> Clear all
+                      <Trash2 size={14} /> Clear all
                     </button>
                   )}
                 </div>
@@ -381,7 +381,7 @@ export default function Topbar({ title, subtitle }) {
                                 onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.5')}
                                 title="Dismiss notification"
                               >
-                                <MdClose />
+                                <X size={13} />
                               </button>
                             </div>
                           </div>
@@ -492,7 +492,7 @@ export default function Topbar({ title, subtitle }) {
                     gap: 4,
                   }}
                 >
-                  View All Live Details <MdOpenInNew />
+                  View All Live Details <ExternalLink size={13} />
                 </button>
               </div>
             </div>

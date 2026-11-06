@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Topbar from '../../components/Topbar';
 import api from '../../api/axios';
 import toast from 'react-hot-toast';
-import { MdSend } from 'react-icons/md';
+import { Send } from 'lucide-react';
 
 const COMPLAINT_CATS = ['Staff Behaviour', 'Waiting Time', 'Product Availability', 'Pricing', 'Billing', 'Product Information', 'Delivery', 'Other'];
 
@@ -223,7 +223,7 @@ export default function SubmitFeedback() {
               </div>
 
               <button type="submit" className="btn btn-primary" style={{ justifyContent: 'center', padding: 14, fontSize: 15 }} disabled={saving || visits.length === 0}>
-                <MdSend />
+                <Send size={16} />
                 {saving ? 'Submitting...' : 'Submit Feedback'}
               </button>
             </div>

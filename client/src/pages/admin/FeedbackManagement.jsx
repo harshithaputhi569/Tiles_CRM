@@ -309,7 +309,7 @@ export default function FeedbackManagement() {
     <>
       <Topbar
         title="Customer Feedback Module"
-        subtitle="Dedicated hub for all customer reviews, ratings, search & date filters, and pinned feedbacks"
+        subtitle="Customer reviews, ratings & feedback"
       />
 
       <div className="page-content fade-in">
@@ -456,29 +456,18 @@ export default function FeedbackManagement() {
           className="card feedback-filter-card fade-in"
           style={{
             marginBottom: 20,
-            padding: '20px 24px',
             background: '#ffffff',
             borderRadius: 'var(--radius-lg)',
             border: '1px solid var(--border-glass)',
             boxShadow: 'var(--shadow-card)',
-            overflow: 'visible',
+            width: '100%',
+            maxWidth: '100%',
           }}
         >
           {/* Header row: Tabs & Batch Action */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 12,
-              flexWrap: 'wrap',
-              borderBottom: '1px solid var(--border-glass)',
-              paddingBottom: 16,
-              marginBottom: 16,
-            }}
-          >
+          <div className="feedback-filter-tabs-wrap">
             {/* Filter Tabs */}
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <div className="feedback-filter-tabs">
               <button
                 className={`btn btn-sm ${activeTab === 'all' ? 'btn-primary' : 'btn-ghost'}`}
                 style={{
@@ -616,7 +605,7 @@ export default function FeedbackManagement() {
             </div>
 
             {/* Quick Actions (Mark all read, refresh) */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
               {counts.unreadCount > 0 && (
                 <button
                   className="btn btn-sm btn-outline"
@@ -645,22 +634,10 @@ export default function FeedbackManagement() {
             </div>
           </div>
 
-          {/* Search & Date Filter Bar — Symmetrically Aligned Grid */}
-          <div
-            className={`feedback-filter-grid ${user?.role === 'admin' ? 'admin-view' : 'staff-view'}`}
-            style={{
-              display: 'grid',
-              gridTemplateColumns:
-                user?.role === 'admin'
-                  ? 'minmax(220px, 2.2fr) minmax(130px, 1fr) minmax(130px, 1fr) minmax(160px, 1.2fr) minmax(150px, 1.1fr)'
-                  : 'minmax(260px, 2.5fr) minmax(135px, 1fr) minmax(135px, 1fr) minmax(165px, 1.2fr)',
-              gap: 14,
-              alignItems: 'flex-start',
-              width: '100%',
-            }}
-          >
+          {/* Search & Date Filter Bar — Responsive CSS Grid */}
+          <div className={`feedback-filter-grid ${user?.role === 'admin' ? 'admin-view' : 'staff-view'}`}>
             {/* Search Input */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%' }}>
               <span
                 style={{
                   display: 'inline-flex',
@@ -675,7 +652,7 @@ export default function FeedbackManagement() {
               >
                 <Search size={12} style={{ color: 'var(--accent-purple)' }} /> Search
               </span>
-              <div style={{ position: 'relative' }}>
+              <div style={{ position: 'relative', width: '100%' }}>
                 <Search
                   size={15}
                   style={{
@@ -700,6 +677,7 @@ export default function FeedbackManagement() {
                     fontSize: 13,
                     background: '#ffffff',
                     border: '1px solid var(--border-glass)',
+                    width: '100%',
                   }}
                 />
                 {search && (
@@ -728,7 +706,7 @@ export default function FeedbackManagement() {
             </div>
 
             {/* Date Range: From */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%' }}>
               <span
                 style={{
                   display: 'inline-flex',
@@ -759,12 +737,13 @@ export default function FeedbackManagement() {
                   background: '#ffffff',
                   border: '1px solid var(--border-glass)',
                   color: 'var(--text-primary)',
+                  width: '100%',
                 }}
               />
             </div>
 
             {/* Date Range: To */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%' }}>
               <span
                 style={{
                   display: 'inline-flex',
@@ -795,13 +774,14 @@ export default function FeedbackManagement() {
                   background: '#ffffff',
                   border: '1px solid var(--border-glass)',
                   color: 'var(--text-primary)',
+                  width: '100%',
                 }}
               />
             </div>
 
             {/* Staff Dropdown (admin view) */}
             {user?.role === 'admin' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%' }}>
                 <span
                   style={{
                     display: 'inline-flex',
@@ -827,6 +807,7 @@ export default function FeedbackManagement() {
                     fontSize: 13,
                     background: '#ffffff',
                     border: '1px solid var(--border-glass)',
+                    width: '100%',
                   }}
                 >
                   <option value="">All Staff Members</option>
@@ -840,7 +821,7 @@ export default function FeedbackManagement() {
             )}
 
             {/* Rating Filter Dropdown */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%' }}>
               <span
                 style={{
                   display: 'inline-flex',
@@ -866,6 +847,7 @@ export default function FeedbackManagement() {
                   fontSize: 13,
                   background: '#ffffff',
                   border: '1px solid var(--border-glass)',
+                  width: '100%',
                 }}
               >
                 <option value="">All Star Ratings</option>
@@ -966,7 +948,7 @@ export default function FeedbackManagement() {
         </div>
 
         {/* ===== FEEDBACKS TABLE ===== */}
-        <div className="card fade-in">
+        <div className="card fade-in" style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
           {loading ? (
             <LoadingSpinner />
           ) : feedbacks.length === 0 ? (
@@ -982,8 +964,16 @@ export default function FeedbackManagement() {
               }
             />
           ) : (
-            <div className="table-wrapper">
-              <table>
+            <div
+              className="table-wrapper"
+              style={{
+                width: '100%',
+                maxWidth: '100%',
+                overflowX: 'auto',
+                WebkitOverflowScrolling: 'touch',
+              }}
+            >
+              <table style={{ width: '100%', minWidth: 640 }}>
                 <thead>
                   <tr>
                     <th style={{ width: 44, textAlign: 'center' }} title="Pinned Status">
@@ -1300,7 +1290,7 @@ export default function FeedbackManagement() {
           className="modal-overlay"
           onClick={(e) => e.target === e.currentTarget && setSelected(null)}
         >
-          <div className="modal" style={{ maxWidth: 660, maxHeight: '90vh', overflowY: 'auto' }}>
+          <div className="modal" style={{ width: '100%', maxWidth: 660, maxHeight: '90vh', overflowY: 'auto' }}>
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span className="modal-title" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>

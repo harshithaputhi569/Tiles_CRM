@@ -141,12 +141,56 @@ export default function MyPerformance() {
 
   const metrics = perf
     ? [
-        { label: 'Staff Behaviour', value: perf.avgBehaviour, max: 5, color: '#7c3aed' },
-        { label: 'Helpfulness', value: perf.avgHelpfulness, max: 5, color: '#06b6d4' },
-        { label: 'Product Knowledge', value: perf.avgProductKnowledge, max: 5, color: '#ec4899' },
-        { label: 'Customer Satisfaction', value: `${perf.satisfactionRate}%`, raw: perf.satisfactionRate, max: 100, color: '#10b981' },
-        { label: 'Purchase Conversion', value: `${purchaseData?.conversionRate ?? 0}%`, raw: purchaseData?.conversionRate ?? 0, max: 100, color: '#8b5cf6' },
-        { label: 'Avg. Overall Rating', value: perf.avgRating, max: 5, color: '#f59e0b' },
+        {
+          label: 'Staff Behaviour',
+          icon: '🤝',
+          subText: 'Courtesy, greeting & professionalism',
+          value: perf.avgBehaviour,
+          max: 5,
+          color: '#7c3aed',
+        },
+        {
+          label: 'Helpfulness',
+          icon: '💬',
+          subText: 'Attentiveness & guiding customer needs',
+          value: perf.avgHelpfulness,
+          max: 5,
+          color: '#06b6d4',
+        },
+        {
+          label: 'Product Knowledge',
+          icon: '💡',
+          subText: 'Tile styles, specs & recommendations',
+          value: perf.avgProductKnowledge,
+          max: 5,
+          color: '#ec4899',
+        },
+        {
+          label: 'Customer Satisfaction',
+          icon: '😊',
+          subText: 'Feedback rated 4★ and 5★',
+          value: `${perf.satisfactionRate}%`,
+          raw: perf.satisfactionRate,
+          max: 100,
+          color: '#10b981',
+        },
+        {
+          label: 'Purchase Conversion',
+          icon: '🛍️',
+          subText: 'Visits converted to successful orders',
+          value: `${purchaseData?.conversionRate ?? 0}%`,
+          raw: purchaseData?.conversionRate ?? 0,
+          max: 100,
+          color: '#8b5cf6',
+        },
+        {
+          label: 'Avg. Overall Rating',
+          icon: '⭐',
+          subText: 'Cumulative average customer rating',
+          value: perf.avgRating,
+          max: 5,
+          color: '#f59e0b',
+        },
       ]
     : [];
 
@@ -308,20 +352,121 @@ export default function MyPerformance() {
               </div>
 
               {/* Metric Bars */}
-              <div className="card fade-in">
-                <div className="card-header">
+              <div className="card fade-in" style={{ display: 'flex', flexDirection: 'column' }}>
+                <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span className="card-title">📊 Key Metrics Breakdown</span>
+                  <span style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: 'var(--accent-purple)',
+                    background: 'rgba(124, 58, 237, 0.08)',
+                    padding: '2px 8px',
+                    borderRadius: 12,
+                    border: '1px solid rgba(124, 58, 237, 0.15)'
+                  }}>
+                    6 KPIs
+                  </span>
                 </div>
-                <div className="card-body">
-                  {metrics.map((m) => (
-                    <div key={m.label} style={{ marginBottom: 16 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                        <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{m.label}</span>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: m.color }}>{m.value}</span>
+                <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '16px' }}>
+                  {metrics.map((m) => {
+                    const rawVal = parseFloat(m.raw ?? m.value) || 0;
+                    const pct = Math.min(100, Math.max(0, (rawVal / m.max) * 100));
+
+                    return (
+                      <div
+                        key={m.label}
+                        style={{
+                          padding: '11px 13px',
+                          borderRadius: 12,
+                          background: 'rgba(248, 250, 252, 0.8)',
+                          border: '1px solid rgba(226, 232, 240, 0.9)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 8,
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
+                            <div style={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: 8,
+                              background: `${m.color}15`,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: 16,
+                              flexShrink: 0
+                            }}>
+                              {m.icon}
+                            </div>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{
+                                fontSize: 13,
+                                fontWeight: 700,
+                                color: 'var(--text-primary)',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }}>
+                                {m.label}
+                              </div>
+                              <div style={{
+                                fontSize: 11,
+                                color: 'var(--text-muted)',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                              }}>
+                                {m.subText}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div style={{
+                            display: 'inline-flex',
+                            alignItems: 'baseline',
+                            gap: 2,
+                            padding: '3px 8px',
+                            borderRadius: 8,
+                            background: `${m.color}15`,
+                            border: `1px solid ${m.color}35`,
+                            flexShrink: 0
+                          }}>
+                            <span style={{ fontSize: 13, fontWeight: 800, color: m.color }}>
+                              {m.value}
+                            </span>
+                            {m.max === 5 && (
+                              <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--text-muted)' }}>
+                                / 5.0
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Visible High-Quality Progress Bar */}
+                        <div style={{
+                          width: '100%',
+                          height: 6,
+                          borderRadius: 999,
+                          background: '#e2e8f0',
+                          overflow: 'hidden',
+                          position: 'relative',
+                          boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.05)'
+                        }}>
+                          <div style={{
+                            height: '100%',
+                            width: `${pct}%`,
+                            borderRadius: 999,
+                            background: `linear-gradient(90deg, ${m.color}cc 0%, ${m.color} 100%)`,
+                            boxShadow: `0 0 6px ${m.color}50`,
+                            transition: 'width 0.6s ease'
+                          }} />
+                        </div>
                       </div>
-                      <ProgressBar value={parseFloat(m.raw ?? m.value)} max={m.max} color={m.color} />
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>

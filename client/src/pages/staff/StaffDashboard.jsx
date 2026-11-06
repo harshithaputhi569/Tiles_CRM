@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 import Topbar from '../../components/Topbar';
 import { StatCard, LoadingSpinner, RatingBadge, EmptyState } from '../../components/UI';
 import {
-  MdPeople, MdFeedback, MdStar, MdTrendingUp,
-  MdShoppingBag, MdCancel, MdList, MdReceipt
-} from 'react-icons/md';
+  Users, MessageSquare, Star, TrendingUp,
+  ShoppingBag, XCircle, ClipboardList, Receipt, AlertTriangle
+} from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer, Legend
@@ -204,11 +204,11 @@ export default function StaffDashboard() {
 
           <div className="card-body">
             <div className="stats-grid" style={{ marginBottom: 20 }}>
-              <StatCard icon={<MdPeople />} label="Visits Handled" value={purchaseData?.totalVisits ?? 0} iconBg="rgba(124,58,237,0.12)" iconColor="#7c3aed" />
-              <StatCard icon={<MdShoppingBag />} label="Converted Customers" value={purchaseData?.convertedCustomersCount ?? purchaseData?.purchasedCount ?? 0} iconBg="rgba(16,185,129,0.12)" iconColor="#059669" />
-              <StatCard icon={<MdReceipt />} label="Total Billing Value" value={purchaseData?.totalBillingValue > 0 ? `₹${Number(purchaseData.totalBillingValue).toLocaleString('en-IN')}` : '₹0'} iconBg="rgba(16,185,129,0.18)" iconColor="#047857" />
-              <StatCard icon={<MdCancel />} label="Not Purchased" value={purchaseData?.notPurchasedCount ?? 0} iconBg="rgba(239,68,68,0.12)" iconColor="#dc2626" />
-              <StatCard icon={<MdTrendingUp />} label="My Conversion Rate" value={`${purchaseData?.conversionRate ?? 0}%`} iconBg="rgba(6,182,212,0.12)" iconColor="#0891b2" />
+              <StatCard icon={<Users size={20} />} label="Visits Handled" value={purchaseData?.totalVisits ?? 0} iconBg="rgba(124,58,237,0.12)" iconColor="#7c3aed" />
+              <StatCard icon={<ShoppingBag size={20} />} label="Converted Customers" value={purchaseData?.convertedCustomersCount ?? purchaseData?.purchasedCount ?? 0} iconBg="rgba(16,185,129,0.12)" iconColor="#059669" />
+              <StatCard icon={<Receipt size={20} />} label="Total Billing Value" value={purchaseData?.totalBillingValue > 0 ? `₹${Number(purchaseData.totalBillingValue).toLocaleString('en-IN')}` : '₹0'} iconBg="rgba(16,185,129,0.18)" iconColor="#047857" />
+              <StatCard icon={<XCircle size={20} />} label="Not Purchased" value={purchaseData?.notPurchasedCount ?? 0} iconBg="rgba(239,68,68,0.12)" iconColor="#dc2626" />
+              <StatCard icon={<TrendingUp size={20} />} label="My Conversion Rate" value={`${purchaseData?.conversionRate ?? 0}%`} iconBg="rgba(6,182,212,0.12)" iconColor="#0891b2" />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16 }}>
@@ -522,7 +522,7 @@ export default function StaffDashboard() {
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>Latest 5 visits — click "View All" to manage and share feedback links</div>
             </div>
             <Link to="/staff/my-visits" className="btn btn-xs btn-outline" style={{ fontSize: 11, padding: '4px 10px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
-              <MdList /> View All →
+              <ClipboardList size={13} /> View All →
             </Link>
           </div>
           {loading ? <LoadingSpinner /> : recentVisits.length === 0 ? (
@@ -576,10 +576,10 @@ export default function StaffDashboard() {
 
         {/* Section 4: Feedback Stats */}
         <div className="stats-grid">
-          <StatCard icon={<MdFeedback />} label="Total Feedback" value={totalFeedback} iconBg="rgba(124,58,237,0.15)" iconColor="#a78bfa" />
-          <StatCard icon={<MdStar />} label="Avg. Rating" value={<span>{avgRating}<span style={{ fontSize: 14, fontWeight: 400 }}>/5</span></span>} iconBg="rgba(245,158,11,0.15)" iconColor="#fbbf24" />
-          <StatCard icon={<MdTrendingUp />} label="Satisfaction Rate" value={`${satisfaction}%`} iconBg="rgba(16,185,129,0.15)" iconColor="#34d399" />
-          <StatCard icon={<MdPeople />} label="Complaints Received" value={complaints} iconBg="rgba(239,68,68,0.15)" iconColor="#f87171" />
+          <StatCard icon={<MessageSquare size={20} />} label="Total Feedback" value={totalFeedback} iconBg="rgba(124,58,237,0.15)" iconColor="#a78bfa" />
+          <StatCard icon={<Star size={20} />} label="Avg. Rating" value={<span>{avgRating}<span style={{ fontSize: 14, fontWeight: 400 }}>/5</span></span>} iconBg="rgba(245,158,11,0.15)" iconColor="#fbbf24" />
+          <StatCard icon={<TrendingUp size={20} />} label="Satisfaction Rate" value={`${satisfaction}%`} iconBg="rgba(16,185,129,0.15)" iconColor="#34d399" />
+          <StatCard icon={<AlertTriangle size={20} />} label="Complaints Received" value={complaints} iconBg="rgba(239,68,68,0.15)" iconColor="#f87171" />
         </div>
 
         {/* Chart + Recent Feedback */}

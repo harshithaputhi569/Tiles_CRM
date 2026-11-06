@@ -18,6 +18,9 @@ export const AuthProvider = ({ children }) => {
       setUser(data);
       return { success: true, role: data.role };
     } catch (err) {
+      if (!err.response) {
+        return { success: false, message: 'Backend server is not running on port 5000. Please start the server.' };
+      }
       return { success: false, message: err.response?.data?.message || 'Login failed' };
     } finally {
       setLoading(false);

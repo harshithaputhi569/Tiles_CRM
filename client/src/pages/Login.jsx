@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { MdEmail, MdLock, MdAdminPanelSettings, MdBadge, MdStorefront } from 'react-icons/md';
+import { Mail, Lock, Shield, BadgeCheck, Store } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Login() {
@@ -138,7 +138,7 @@ export default function Login() {
               boxShadow: '0 12px 35px rgba(124, 58, 237, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.6) inset',
               animation: 'pulseLogo 2s infinite ease-in-out',
             }}>
-              <MdStorefront style={{ color: '#ffffff', fontSize: 44 }} />
+              <Store size={40} color="#ffffff" />
             </div>
 
             {/* Existing Shop Name */}
@@ -255,7 +255,7 @@ export default function Login() {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             margin: '0 auto 16px', boxShadow: '0 0 40px rgba(124,58,237,0.4)'
           }}>
-            <MdStorefront style={{ color: 'white', fontSize: 32 }} />
+            <Store size={32} color="white" />
           </div>
           <h1>TileShow</h1>
           <p>Customer Feedback & Performance CRM</p>
@@ -268,14 +268,14 @@ export default function Login() {
             className={`login-tab${tab === 'admin' ? ' active' : ''}`}
             onClick={() => handleTabChange('admin')}
           >
-            <MdAdminPanelSettings style={{ marginRight: 6 }} /> Admin
+            <Shield size={16} style={{ marginRight: 6 }} /> Admin
           </button>
           <button
             type="button"
             className={`login-tab${tab === 'staff' ? ' active' : ''}`}
             onClick={() => handleTabChange('staff')}
           >
-            <MdBadge style={{ marginRight: 6 }} /> Staff
+            <BadgeCheck size={16} style={{ marginRight: 6 }} /> Staff
           </button>
         </div>
 
@@ -283,9 +283,9 @@ export default function Login() {
           <div className="form-group">
             <label className="form-label">Email Address</label>
             <div style={{ position: 'relative' }}>
-              <MdEmail style={{
+              <Mail size={16} style={{
                 position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-                color: 'var(--text-muted)', fontSize: 18
+                color: 'var(--text-muted)'
               }} />
               <input
                 type="email"
@@ -303,9 +303,9 @@ export default function Login() {
           <div className="form-group">
             <label className="form-label">Password</label>
             <div style={{ position: 'relative' }}>
-              <MdLock style={{
+              <Lock size={16} style={{
                 position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-                color: 'var(--text-muted)', fontSize: 18
+                color: 'var(--text-muted)'
               }} />
               <input
                 type="password"

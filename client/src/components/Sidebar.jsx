@@ -3,55 +3,54 @@ import { useAuth } from '../context/AuthContext';
 import { useSidebar } from '../context/SidebarContext';
 import { useNotifications } from '../context/NotificationContext';
 import {
-  MdDashboard, MdPeople, MdFeedback, MdWarning, MdBarChart,
-  MdFileDownload, MdPersonAdd, MdStar, MdLogout,
-  MdStorefront, MdClose, MdMenu, MdList, MdNotifications,
-} from 'react-icons/md';
+  LayoutDashboard, Users, MessageSquare, AlertTriangle, BarChart3,
+  UserPlus, Star, LogOut, Store, X, Menu, ClipboardList
+} from 'lucide-react';
 
 const adminNav = [
   { label: 'MAIN', items: [
-    { to: '/admin/dashboard',     icon: <MdDashboard />,     label: 'Dashboard' },
-    { to: '/admin/analytics',     icon: <MdBarChart />,      label: 'Analytics' },
+    { to: '/admin/dashboard',     icon: <LayoutDashboard size={18} />,     label: 'Dashboard' },
+    { to: '/admin/analytics',     icon: <BarChart3 size={18} />,      label: 'Analytics' },
   ]},
   { label: 'VISITS', items: [
-    { to: '/admin/visits',        icon: <MdList />,          label: 'All Visits' },
+    { to: '/admin/visits',        icon: <ClipboardList size={18} />,          label: 'All Visits' },
   ]},
   { label: 'MANAGEMENT', items: [
-    { to: '/admin/staff',         icon: <MdPeople />,        label: 'Staff' },
-    { to: '/admin/feedback',      icon: <MdFeedback />,      label: 'Feedback',   hasBadge: true },
-    { to: '/admin/complaints',    icon: <MdWarning />,       label: 'Complaints' },
+    { to: '/admin/staff',         icon: <Users size={18} />,        label: 'Staff' },
+    { to: '/admin/feedback',      icon: <MessageSquare size={18} />,      label: 'Feedback',   hasBadge: true },
+    { to: '/admin/complaints',    icon: <AlertTriangle size={18} />,       label: 'Complaints' },
   ]},
 ];
 
 const staffNav = [
   { label: 'MAIN', items: [
-    { to: '/staff/dashboard',     icon: <MdDashboard />,     label: 'Dashboard' },
-    { to: '/staff/performance',   icon: <MdStar />,          label: 'Performance' },
+    { to: '/staff/dashboard',     icon: <LayoutDashboard size={18} />,     label: 'Dashboard' },
+    { to: '/staff/performance',   icon: <Star size={18} />,          label: 'Performance' },
   ]},
   { label: 'VISITS', items: [
-    { to: '/staff/visit',         icon: <MdPersonAdd />,     label: 'Register Visit' },
-    { to: '/staff/my-visits',     icon: <MdList />,          label: 'My Visits' },
+    { to: '/staff/visit',         icon: <UserPlus size={18} />,     label: 'Register Visit' },
+    { to: '/staff/my-visits',     icon: <ClipboardList size={18} />,          label: 'My Visits' },
   ]},
   { label: 'FEEDBACK', items: [
-    { to: '/staff/feedback',      icon: <MdFeedback />,      label: 'Customer Feedback', hasBadge: true },
+    { to: '/staff/feedback',      icon: <MessageSquare size={18} />,      label: 'Customer Feedback', hasBadge: true },
   ]},
 ];
 
 // Flat list for the bottom nav bar (mobile) — max 5 items
 const adminBottomNav = [
-  { to: '/admin/dashboard',     icon: <MdDashboard />,     label: 'Home' },
-  { to: '/admin/visits',        icon: <MdList />,          label: 'Visits' },
-  { to: '/admin/feedback',      icon: <MdFeedback />,      label: 'Feedback', hasBadge: true },
-  { to: '/admin/complaints',    icon: <MdWarning />,       label: 'Complaints' },
-  { to: '/admin/analytics',     icon: <MdBarChart />,      label: 'Analytics' },
+  { to: '/admin/dashboard',     icon: <LayoutDashboard size={18} />,     label: 'Home' },
+  { to: '/admin/visits',        icon: <ClipboardList size={18} />,          label: 'Visits' },
+  { to: '/admin/feedback',      icon: <MessageSquare size={18} />,      label: 'Feedback', hasBadge: true },
+  { to: '/admin/complaints',    icon: <AlertTriangle size={18} />,       label: 'Complaints' },
+  { to: '/admin/analytics',     icon: <BarChart3 size={18} />,      label: 'Analytics' },
 ];
 
 const staffBottomNav = [
-  { to: '/staff/dashboard',     icon: <MdDashboard />,     label: 'Home' },
-  { to: '/staff/visit',         icon: <MdPersonAdd />,     label: 'Register' },
-  { to: '/staff/my-visits',     icon: <MdList />,          label: 'Visits' },
-  { to: '/staff/feedback',      icon: <MdFeedback />,      label: 'Feedback', hasBadge: true },
-  { to: '/staff/performance',   icon: <MdStar />,          label: 'Perf' },
+  { to: '/staff/dashboard',     icon: <LayoutDashboard size={18} />,     label: 'Home' },
+  { to: '/staff/visit',         icon: <UserPlus size={18} />,     label: 'Register' },
+  { to: '/staff/my-visits',     icon: <ClipboardList size={18} />,          label: 'Visits' },
+  { to: '/staff/feedback',      icon: <MessageSquare size={18} />,      label: 'Feedback', hasBadge: true },
+  { to: '/staff/performance',   icon: <Star size={18} />,          label: 'Perf' },
 ];
 
 export default function Sidebar() {
@@ -88,7 +87,7 @@ export default function Sidebar() {
               background: 'linear-gradient(135deg, #7c3aed, #06b6d4)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
             }}>
-              <MdStorefront style={{ color: 'white', fontSize: 18 }} />
+              <Store size={18} color="white" />
             </div>
             <div>
               <div className="logo-text">TileShow</div>
@@ -96,7 +95,7 @@ export default function Sidebar() {
             </div>
           </div>
           <button className="sidebar-close-btn" onClick={close} aria-label="Close menu">
-            <MdClose />
+            <X size={18} />
           </button>
         </div>
 
@@ -146,7 +145,7 @@ export default function Sidebar() {
 
         <div className="sidebar-footer">
           <button className="logout-btn" onClick={handleLogout}>
-            <MdLogout /> Logout
+            <LogOut size={16} /> Logout
           </button>
         </div>
       </aside>
@@ -187,7 +186,7 @@ export default function Sidebar() {
         ))}
         {/* More / logout button */}
         <button className="bottom-nav-item bottom-nav-more" onClick={open} aria-label="More options">
-          <span className="bottom-nav-icon"><MdMenu /></span>
+          <span className="bottom-nav-icon"><Menu size={18} /></span>
           <span className="bottom-nav-label">More</span>
         </button>
       </nav>
