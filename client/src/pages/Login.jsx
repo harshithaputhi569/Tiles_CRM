@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
 import {
   Mail, Lock, Shield, BadgeCheck, Store,
-  Eye, EyeOff, Phone, KeyRound, X, CheckCircle2
+  Eye, EyeOff, KeyRound, X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -21,7 +21,6 @@ export default function Login() {
   const [forgotRole, setForgotRole] = useState('admin');
   const [forgotForm, setForgotForm] = useState({
     email: '',
-    phone: '',
     newPassword: '',
     confirmPassword: '',
   });
@@ -63,7 +62,6 @@ export default function Login() {
     setForgotRole(tab);
     setForgotForm({
       email: form.email || '',
-      phone: '',
       newPassword: '',
       confirmPassword: '',
     });
@@ -74,7 +72,7 @@ export default function Login() {
 
   const handleForgotSubmit = async (e) => {
     e.preventDefault();
-    if (!forgotForm.email || !forgotForm.phone || !forgotForm.newPassword) {
+    if (!forgotForm.email || !forgotForm.newPassword) {
       return toast.error('Please fill all required fields');
     }
     if (forgotForm.newPassword.length < 6) {
@@ -88,7 +86,6 @@ export default function Login() {
     try {
       const { data } = await api.post('/auth/reset-password', {
         email: forgotForm.email,
-        phone: forgotForm.phone,
         newPassword: forgotForm.newPassword,
       });
       toast.success(data.message || 'Password reset successfully!');
@@ -96,7 +93,7 @@ export default function Login() {
       setForm((prev) => ({ ...prev, email: forgotForm.email, password: '' }));
       setShowForgotModal(false);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to reset password. Please check your details.');
+      toast.error(err.response?.data?.message || 'Failed to reset password. Please check your email.');
     } finally {
       setForgotLoading(false);
     }
@@ -576,29 +573,6 @@ export default function Login() {
                     onChange={(e) => setForgotForm({ ...forgotForm, email: e.target.value })}
                     required
                   />
-                </div>
-              </div>
-
-              {/* Registered Phone */}
-              <div className="form-group" style={{ marginBottom: 14 }}>
-                <label className="form-label" style={{ fontSize: 12 }}>Registered Mobile Number</label>
-                <div style={{ position: 'relative' }}>
-                  <Phone size={16} style={{
-                    position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-                    color: 'var(--text-muted)'
-                  }} />
-                  <input
-                    type="tel"
-                    className="form-control"
-                    style={{ paddingLeft: 38, fontSize: 13, height: 40 }}
-                    placeholder="e.g. 9876543210"
-                    value={forgotForm.phone}
-                    onChange={(e) => setForgotForm({ ...forgotForm, phone: e.target.value })}
-                    required
-                  />
-                </div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
-                  Enter the 10-digit mobile number linked to this account
                 </div>
               </div>
 

@@ -34,7 +34,7 @@ const getMe = async (req, res) => {
 // @route POST /api/auth/reset-password
 const resetPassword = async (req, res) => {
   try {
-    const { email, phone, newPassword } = req.body;
+    const { email, newPassword } = req.body;
     if (!email || !newPassword) {
       return res.status(400).json({ message: 'Email and new password are required' });
     }
@@ -43,21 +43,6 @@ const resetPassword = async (req, res) => {
     const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.status(404).json({ message: 'No account found with this email address' });
-    }
-
-    // Verify phone if user has a phone on record
-    if (user.phone) {
-      if (!phone) {
-        return res.status(400).json({ message: 'Please enter your registered mobile number for verification' });
-      }
-      const cleanUserPhone = user.phone.replace(/\D/g, '');
-      const cleanEnteredPhone = phone.replace(/\D/g, '');
-      if (
-        cleanUserPhone !== cleanEnteredPhone &&
-        !cleanUserPhone.endsWith(cleanEnteredPhone)
-      ) {
-        return res.status(400).json({ message: 'Registered mobile number does not match our records' });
-      }
     }
 
     if (newPassword.length < 6) {
