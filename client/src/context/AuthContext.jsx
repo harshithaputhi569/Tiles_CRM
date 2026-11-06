@@ -19,7 +19,13 @@ export const AuthProvider = ({ children }) => {
       return { success: true, role: data.role };
     } catch (err) {
       if (!err.response) {
-        return { success: false, message: 'Backend server is not running on port 5000. Please start the server.' };
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        return {
+          success: false,
+          message: isLocal
+            ? 'Backend server is not running on port 5000. Please start the server.'
+            : 'Connecting to backend... If the server was idle, please wait ~30 seconds for Render to wake up and try again.'
+        };
       }
       return { success: false, message: err.response?.data?.message || 'Login failed' };
     } finally {

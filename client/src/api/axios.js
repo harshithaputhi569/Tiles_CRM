@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-// In production (Vercel), VITE_API_URL = https://your-app.onrender.com/api
-// In local dev, it's empty and the Vite proxy handles /api → localhost:5000
+// In production, fallback to live Render backend if VITE_API_URL is not set
+// In local dev, Vite proxy handles /api → localhost:5000
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://tiles-crm.onrender.com/api' : '/api'),
 });
 
 api.interceptors.request.use((config) => {

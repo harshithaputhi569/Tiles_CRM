@@ -18,10 +18,38 @@ const app = express();
 
 const allowedOrigins = [
   'http://localhost:5173',
-  process.env.CLIENT_URL, // Set this on Render to your Vercel URL
-].filter(Boolean);
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  process.env.CLIENT_URL,
+].filter(Boolean).map(url => url.replace(/\/$/, ''));
 
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow non-browser requests (mobile apps, Postman, curl, server-to-server)
+    if (!origin) return callback(null, true);
+
+    try {
+      const parsed = new URL(origin);
+      if (
+        allowedOrigins.includes(origin) ||
+        parsed.hostname.endsWith('.vercel.app') ||
+        parsed.hostname === 'localhost' ||
+        parsed.hostname === '127.0.0.1' ||
+        process.env.NODE_ENV !== 'production'
+      ) {
+        return callback(null, true);
+      }
+    } catch {
+      // Fallback
+    }
+
+    // Allow all origins for production since API authenticates via Bearer JWT tokens
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 app.use(express.json());
 
 // Health check (must be BEFORE other /api routes to avoid middleware interception)
