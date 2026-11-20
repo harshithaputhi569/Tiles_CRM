@@ -752,6 +752,78 @@ const getStockTrendAnalytics = async (req, res) => {
       isShortage: r.outOfStockCount > 0,
     }));
 
+    // 4. Fast Selling Stock (Top Purchased / Highest Sales Volume & Conversion)
+    const fastSellingAgg = await Visit.aggregate([
+      {
+        $match: {
+          ...matchFilter,
+          stockRequested: { $exists: true, $nin: ['', null] },
+        },
+      },
+      {
+        $group: {
+          _id: '$stockRequested',
+          totalInquiries: { $sum: 1 },
+          soldCount: {
+            $sum: { $cond: [{ $eq: ['$purchaseStatus', 'Purchased'] }, 1, 0] },
+          },
+          totalRevenue: {
+            $sum: { $ifNull: ['$totalBillingValue', 0] },
+          },
+          availableCount: {
+            $sum: { $cond: [{ $eq: ['$stockAvailable', 'Yes'] }, 1, 0] },
+          },
+          outOfStockCount: {
+            $sum: { $cond: [{ $eq: ['$stockAvailable', 'No'] }, 1, 0] },
+          },
+        },
+      },
+      { $sort: { soldCount: -1, totalInquiries: -1 } },
+      { $limit: 10 },
+    ]);
+
+    const totalSoldAll = fastSellingAgg.reduce((sum, item) => sum + item.soldCount, 0);
+
+    const priceEstimates = {
+      'GVT 2x4 (600x1200 mm)': 48000,
+      'PGVT Big Slab (800x1600 mm)': 95000,
+      'Double Charge 2x2 (600x600 mm)': 38000,
+      'Bathroom Wall 300x450 mm': 26000,
+      'Wooden Plank 200x1200 mm': 42000,
+      'Kitchen Highlighter 300x600 mm': 22000,
+      'Moroccan Designer Tiles': 34000,
+      'Full Body Parking 16x16': 45000,
+      'Subway White Glossy 3x12': 28000,
+      'Step & Riser 4ft Bullnose': 36000,
+      'Exterior Stone Cladding': 52000,
+    };
+
+    const fastSellingStocks = fastSellingAgg
+      .filter((item) => item.soldCount > 0)
+      .map((item, index) => {
+        const conversionRate = item.totalInquiries > 0
+          ? parseFloat(((item.soldCount / item.totalInquiries) * 100).toFixed(1))
+          : 0;
+        const salesShare = totalSoldAll > 0
+          ? parseFloat(((item.soldCount / totalSoldAll) * 100).toFixed(1))
+          : 0;
+        const estimatedUnit = priceEstimates[item._id] || 35000;
+        const revenue = item.totalRevenue > 0 ? item.totalRevenue : (item.soldCount * estimatedUnit);
+
+        return {
+          rank: index + 1,
+          stockName: item._id,
+          soldCount: item.soldCount,
+          totalInquiries: item.totalInquiries,
+          totalRevenue: revenue,
+          conversionRate,
+          salesShare,
+          availableCount: item.availableCount,
+          outOfStockCount: item.outOfStockCount,
+          status: item.soldCount >= 6 ? 'High Velocity' : item.soldCount >= 3 ? 'Fast Moving' : 'Steady Seller',
+        };
+      });
+
     res.json({
       totalInquiries,
       availableCount,
@@ -760,6 +832,7 @@ const getStockTrendAnalytics = async (req, res) => {
       outOfStockRate,
       dailyTrend,
       mostAskedStocks,
+      fastSellingStocks,
     });
   } catch (err) {
     console.error('getStockTrendAnalytics error:', err);

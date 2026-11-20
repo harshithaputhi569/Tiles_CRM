@@ -44,6 +44,7 @@ export default function AdminDashboard() {
   const [complaintCats, setComplaintCats] = useState([]);
   const [unreadFeedbacks, setUnreadFeedbacks] = useState([]);
   const [complaints, setComplaints] = useState([]);
+  const [stockData, setStockData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const markFeedbackRead = async (id, e) => {
@@ -60,7 +61,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [m, t, r, s, c, fb, comp] = await Promise.all([
+        const [m, t, r, s, c, fb, comp, stk] = await Promise.all([
           api.get('/analytics/dashboard'),
           api.get('/analytics/visitor-trend?months=6'),
           api.get('/analytics/rating-distribution'),
@@ -68,6 +69,7 @@ export default function AdminDashboard() {
           api.get('/analytics/complaint-categories'),
           api.get('/feedback?unreadOnly=true&limit=6'),
           api.get('/complaints'),
+          api.get('/analytics/stock-trend'),
         ]);
         setMetrics(m.data);
         setVisitorTrend(t.data);
@@ -76,6 +78,7 @@ export default function AdminDashboard() {
         setComplaintCats(c.data);
         setUnreadFeedbacks(fb.data.feedbacks || []);
         setComplaints(comp.data || []);
+        setStockData(stk.data || null);
       } catch (err) { console.error(err); }
       finally { setLoading(false); }
     };
@@ -511,6 +514,395 @@ export default function AdminDashboard() {
               </table>
             </div>
           )}
+        </div>
+
+        {/* Stock Availability & Fast Selling Stock Section */}
+        <div className="analytics-grid" style={{ marginBottom: 20 }}>
+          {/* Card 1: Stock Availability & Demand Trend (All Time) */}
+          <div className="card fade-in" style={{
+            background: '#ffffff',
+            padding: '20px 22px',
+            borderRadius: 14,
+            border: '1px solid rgba(124,58,237,0.18)',
+            boxShadow: '0 2px 10px rgba(124,58,237,0.04)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            gap: 16,
+          }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 8 }}>
+                <div style={{ fontWeight: 800, fontSize: 14, color: '#7c3aed', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 18 }}>📦</span> Stock Availability & Demand Trend (All Time)
+                </div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span style={{
+                    padding: '3px 10px',
+                    borderRadius: 20,
+                    fontSize: 11,
+                    fontWeight: 800,
+                    background: 'rgba(16,185,129,0.12)',
+                    color: '#059669',
+                    border: '1px solid rgba(16,185,129,0.3)',
+                  }}>
+                    ✓ {stockData?.availableCount ?? 0} In Stock ({stockData?.availabilityRate ?? 0}%)
+                  </span>
+                  {stockData?.outOfStockCount > 0 && (
+                    <span style={{
+                      padding: '3px 10px',
+                      borderRadius: 20,
+                      fontSize: 11,
+                      fontWeight: 800,
+                      background: 'rgba(239,68,68,0.12)',
+                      color: '#dc2626',
+                      border: '1px solid rgba(239,68,68,0.3)',
+                    }}>
+                      ✗ {stockData.outOfStockCount} Out of Stock
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 14 }}>
+                Showroom customer stock requests: In Stock (Yes) vs Out of Stock (No)
+              </div>
+
+              {/* Trend Chart: Available vs Out of Stock */}
+              {(!stockData?.dailyTrend || stockData.dailyTrend.length === 0) ? (
+                <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '30px 0' }}>
+                  No stock inquiries recorded.
+                </div>
+              ) : (
+                <div style={{ height: 210, width: '100%', marginBottom: 16 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={stockData.dailyTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" />
+                      <XAxis dataKey="label" tick={{ fill: '#606080', fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fill: '#606080', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend wrapperStyle={{ fontSize: 12, paddingTop: 6 }} />
+                      <Bar dataKey="available" name="Yes (Stock Available)" fill="#10b981" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="outOfStock" name="No (Stock Not Available)" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              {/* WHICH STOCK CUSTOMER ASKED MORE (Top Demand) */}
+              <div style={{
+                borderTop: '1px solid var(--border-glass)',
+                paddingTop: 14,
+                marginTop: 4,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <div style={{ fontWeight: 800, fontSize: 13, color: '#7c3aed', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>🔥</span> Which Stock Customers Asked More (Top Demand)
+                  </div>
+                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                    Ranked by customer requests
+                  </span>
+                </div>
+
+                {(!stockData?.mostAskedStocks || stockData.mostAskedStocks.length === 0) ? (
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '16px 0' }}>
+                    No stock inquiries logged yet.
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {stockData.mostAskedStocks.slice(0, 5).map((stk) => (
+                      <div
+                        key={stk.stockName}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '8px 12px',
+                          background: stk.isShortage ? 'rgba(239,68,68,0.04)' : '#f8fafc',
+                          borderRadius: 8,
+                          border: stk.isShortage ? '1px solid rgba(239,68,68,0.2)' : '1px solid rgba(0,0,0,0.05)',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{
+                            width: 22, height: 22, borderRadius: '50%',
+                            background: stk.rank === 1 ? '#7c3aed' : stk.rank === 2 ? '#0891b2' : '#64748b',
+                            color: '#ffffff', fontSize: 11, fontWeight: 800,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}>
+                            {stk.rank}
+                          </span>
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: 12, color: 'var(--text-primary)' }}>
+                              {stk.stockName}
+                            </div>
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                              {stk.totalAsked} customer request{stk.totalAsked !== 1 ? 's' : ''} ({stk.demandPercentage}% of inquiries)
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, textAlign: 'right' }}>
+                          <div style={{ fontSize: 11 }}>
+                            <span style={{ color: '#059669', fontWeight: 700 }}>✓ {stk.availableCount} In Stock</span>
+                            {stk.outOfStockCount > 0 && (
+                              <span style={{ color: '#dc2626', fontWeight: 700, marginLeft: 8 }}>
+                                ✗ {stk.outOfStockCount} Out
+                              </span>
+                            )}
+                          </div>
+                          {stk.outOfStockCount > 0 ? (
+                            <span style={{
+                              padding: '2px 8px',
+                              borderRadius: 10,
+                              fontSize: 10,
+                              fontWeight: 800,
+                              background: 'rgba(239,68,68,0.12)',
+                              color: '#dc2626',
+                            }}>
+                              Stock Shortage
+                            </span>
+                          ) : (
+                            <span style={{
+                              padding: '2px 8px',
+                              borderRadius: 10,
+                              fontSize: 10,
+                              fontWeight: 800,
+                              background: 'rgba(16,185,129,0.12)',
+                              color: '#059669',
+                            }}>
+                              Available
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div style={{
+              background: '#f8fafc',
+              padding: '10px 14px',
+              borderRadius: 10,
+              fontSize: 12,
+              color: 'var(--text-secondary)',
+              border: '1px solid rgba(0,0,0,0.05)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 8,
+              marginTop: 10,
+            }}>
+              <span>💡 Total customer inquiries: <strong>{stockData?.totalInquiries || 0}</strong></span>
+              <Link to="/admin/analytics" style={{ color: 'var(--accent-purple)', fontWeight: 700, fontSize: 12, textDecoration: 'none' }}>
+                View Full Stock Analytics →
+              </Link>
+            </div>
+          </div>
+
+          {/* Card 2: Fast Selling Stock (Top Performing Tiles) */}
+          <div className="card fade-in" style={{
+            background: '#ffffff',
+            padding: '20px 22px',
+            borderRadius: 14,
+            border: '1px solid rgba(16,185,129,0.25)',
+            boxShadow: '0 2px 10px rgba(16,185,129,0.04)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            gap: 16,
+          }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, flexWrap: 'wrap', gap: 8 }}>
+                <div style={{ fontWeight: 800, fontSize: 14, color: '#059669', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 18 }}>🚀</span> Fast Selling Stock (Top Performing Tiles)
+                </div>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <span style={{
+                    padding: '3px 10px',
+                    borderRadius: 20,
+                    fontSize: 11,
+                    fontWeight: 800,
+                    background: 'rgba(16,185,129,0.12)',
+                    color: '#059669',
+                    border: '1px solid rgba(16,185,129,0.3)',
+                  }}>
+                    ⚡ {stockData?.fastSellingStocks?.length || 0} Fast Movers
+                  </span>
+                  <span style={{
+                    padding: '3px 10px',
+                    borderRadius: 20,
+                    fontSize: 11,
+                    fontWeight: 800,
+                    background: 'rgba(124,58,237,0.1)',
+                    color: '#7c3aed',
+                    border: '1px solid rgba(124,58,237,0.25)',
+                  }}>
+                    {metrics?.convertedCustomersCount ?? metrics?.purchasedVisits ?? 0} Total Purchases
+                  </span>
+                </div>
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 14 }}>
+                Tile designs with highest sales conversions, order volume, and revenue velocity
+              </div>
+
+              {/* Fast Selling Summary KPI Strip */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: 8,
+                marginBottom: 16,
+              }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(6,182,212,0.04) 100%)',
+                  border: '1px solid rgba(16,185,129,0.2)',
+                  borderRadius: 10,
+                  padding: '10px 12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Top Sold Tile</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#059669', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={stockData?.fastSellingStocks?.[0]?.stockName}>
+                    {stockData?.fastSellingStocks?.[0]?.stockName?.split(' ')[0] || 'GVT'} ⭐
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 2 }}>
+                    {stockData?.fastSellingStocks?.[0]?.soldCount || 0} orders
+                  </div>
+                </div>
+
+                <div style={{
+                  background: 'linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(245,158,11,0.04) 100%)',
+                  border: '1px solid rgba(124,58,237,0.2)',
+                  borderRadius: 10,
+                  padding: '10px 12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Highest Conversion</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: '#7c3aed', marginTop: 2 }}>
+                    {Math.max(...(stockData?.fastSellingStocks?.map((s) => s.conversionRate) || [0]))}%
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 2 }}>Inquiry to Purchase</div>
+                </div>
+
+                <div style={{
+                  background: 'linear-gradient(135deg, rgba(6,182,212,0.08) 0%, rgba(16,185,129,0.04) 100%)',
+                  border: '1px solid rgba(6,182,212,0.2)',
+                  borderRadius: 10,
+                  padding: '10px 12px',
+                  textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>Stock Revenue</div>
+                  <div style={{ fontSize: 13, fontWeight: 800, color: '#0891b2', marginTop: 2 }}>
+                    ₹{((stockData?.fastSellingStocks?.reduce((acc, s) => acc + (s.totalRevenue || 0), 0) || 0) / 100000).toFixed(1)}L
+                  </div>
+                  <div style={{ fontSize: 10, color: 'var(--text-secondary)', marginTop: 2 }}>Billing Value</div>
+                </div>
+              </div>
+
+              {/* Fast Selling Stock List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {(!stockData?.fastSellingStocks || stockData.fastSellingStocks.length === 0) ? (
+                  <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'center', padding: '24px 0' }}>
+                    No completed purchases recorded yet. As visitors purchase tiles, top-selling designs appear here.
+                  </div>
+                ) : (
+                  stockData.fastSellingStocks.slice(0, 5).map((stk, idx) => {
+                    const rankMedal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`;
+                    const badgeBg = idx === 0 ? 'rgba(245,158,11,0.12)' : idx === 1 ? 'rgba(148,163,184,0.15)' : 'rgba(16,185,129,0.1)';
+                    const badgeColor = idx === 0 ? '#b45309' : idx === 1 ? '#475569' : '#059669';
+
+                    return (
+                      <div
+                        key={stk.stockName}
+                        style={{
+                          padding: '10px 14px',
+                          background: '#f8fafc',
+                          borderRadius: 10,
+                          border: idx === 0 ? '1px solid rgba(245,158,11,0.3)' : '1px solid rgba(0,0,0,0.05)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 6,
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <span style={{ fontSize: 16 }}>{rankMedal}</span>
+                            <div>
+                              <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)' }}>
+                                {stk.stockName}
+                              </div>
+                              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                                <strong style={{ color: '#059669' }}>{stk.soldCount} orders sold</strong> · {stk.conversionRate}% purchase conversion
+                              </div>
+                            </div>
+                          </div>
+
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>
+                              ₹{stk.totalRevenue ? stk.totalRevenue.toLocaleString('en-IN') : '—'}
+                            </div>
+                            <span style={{
+                              display: 'inline-block',
+                              padding: '2px 8px',
+                              borderRadius: 12,
+                              fontSize: 10,
+                              fontWeight: 800,
+                              background: badgeBg,
+                              color: badgeColor,
+                              marginTop: 2,
+                            }}>
+                              {stk.status}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Conversion & Demand Visual Progress Bar */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{
+                            flex: 1,
+                            height: 5,
+                            background: '#e2e8f0',
+                            borderRadius: 4,
+                            overflow: 'hidden',
+                          }}>
+                            <div style={{
+                              width: `${Math.min(100, Math.max(15, stk.conversionRate))}%`,
+                              height: '100%',
+                              background: idx === 0 ? 'linear-gradient(90deg, #f59e0b, #10b981)' : '#10b981',
+                              borderRadius: 4,
+                            }} />
+                          </div>
+                          <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, minWidth: 50, textAlign: 'right' }}>
+                            {stk.salesShare}% share
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            <div style={{
+              background: '#f8fafc',
+              padding: '10px 14px',
+              borderRadius: 10,
+              fontSize: 12,
+              color: 'var(--text-secondary)',
+              border: '1px solid rgba(0,0,0,0.05)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 8,
+              marginTop: 10,
+            }}>
+              <span>⚡ Fast selling tiles generate highest showroom turnover</span>
+              <Link to="/admin/analytics" style={{ color: '#059669', fontWeight: 700, fontSize: 12, textDecoration: 'none' }}>
+                View Conversion Details →
+              </Link>
+            </div>
+          </div>
         </div>
 
         {/* Charts Row 1 */}
